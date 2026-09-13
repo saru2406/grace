@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { X, Star, Check, Info } from 'lucide-react';
 import { calculateFps, calculateResolutionComparison } from '../services/fpsEngine.js';
 import { getGameHero } from '../services/steamGrid.js';
 import { getGameMetadata, getGameReleaseInfo } from '../data/gameMetadata.js';
+import { enrichSingleGame } from '../services/igdb.js';
 
 export function GameDetailModal({
   game,
@@ -16,11 +18,13 @@ export function GameDetailModal({
 }) {
   const [heroUrl, setHeroUrl] = useState('');
   const [reqTab, setReqTab] = useState('recommended'); // 'minimum' | 'recommended'
+  const [igdbData, setIgdbData] = useState(null);
 
   useEffect(() => {
     if (!game) return;
     let cancelled = false;
     setHeroUrl(game.coverUrl);
+    setIgdbData(null);
 
     if (game.steamGridId) {
       getGameHero(game.steamGridId).then(hero => {
@@ -29,6 +33,12 @@ export function GameDetailModal({
         }
       }).catch(console.warn);
     }
+
+    enrichSingleGame(game).then(data => {
+      if (!cancelled && data) {
+        setIgdbData(data);
+      }
+    }).catch(console.warn);
 
     function handleKeyDown(e) {
       if (e.key === 'Escape') onClose();
@@ -88,9 +98,7 @@ export function GameDetailModal({
           onClick={onClose}
           aria-label="Close"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <X size={16} />
         </button>
 
         {/* Hero Banner Header */}
@@ -109,7 +117,7 @@ export function GameDetailModal({
             <div className="modal-hero-text">
               <h2 id="modal-title" className="modal-title">{game.title}</h2>
               <p id="modal-genre" className="modal-genre">
-                {game.genre} • {releaseInfo.isUnreleased ? `Upcoming (${releaseInfo.shortLabel})` : releaseInfo.fullLabel} • {metadata.developer}
+                {igdbData?.genres?.[0] || game.genre} • {releaseInfo.isUnreleased ? `Upcoming (${releaseInfo.shortLabel})` : releaseInfo.fullLabel} • {igdbData?.developer || game.developer || metadata.developer}
               </p>
               
               {/* Quick Info Badges: Metacritic, Steam, Proton */}
@@ -120,9 +128,7 @@ export function GameDetailModal({
                 </div>
                 {metadata.steamRating && (
                   <div className="steam-rating-badge" title="Steam User Reviews">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
+                    <Star size={13} fill="currentColor" stroke="none" />
                     <span>{metadata.steamRating}</span>
                   </div>
                 )}
@@ -259,9 +265,7 @@ export function GameDetailModal({
               <div className="rig-check-banner">
                 {isConfigured ? (
                   <>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                    <Check size={14} strokeWidth={2.5} />
                     <div>
                       <strong>Rig Check:</strong>{' '}
                       {reqTab === 'recommended' ? 'Meets recommended hardware tier.' : 'Exceeds minimum requirements.'}
@@ -269,11 +273,7 @@ export function GameDetailModal({
                   </>
                 ) : (
                   <>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="16" x2="12" y2="12" />
-                      <line x1="12" y1="8" x2="12.01" y2="8" />
-                    </svg>
+                    <Info size={14} />
                     <div>Select hardware to compare against requirements.</div>
                   </>
                 )}
@@ -311,11 +311,7 @@ export function GameDetailModal({
                 </div>
               </div>
               <div className="proton-verdict-note">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="16" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-                </svg>
+                <Info size={14} />
                 <span className="proton-note-text">{metadata.proton.status}</span>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Search, X, SearchX, Plus } from 'lucide-react';
 import { GameCard } from './GameCard.jsx';
 import { getSystemPeriod } from '../services/systemTrending.js';
 
@@ -18,15 +19,14 @@ export function GamesGrid({
   favoriteIds,
   onOpenSearchModal,
   userSettings = {},
-  steamUser,
-  steamGameCount = 0
+  customGameCount = 0
 }) {
   const systemPeriod = React.useMemo(() => getSystemPeriod(), []);
 
   const categories = React.useMemo(() => [
     { id: 'all', label: 'All Titles' },
     { id: 'favorites', label: 'Favourites' },
-    ...(steamUser ? [{ id: 'steam', label: `Steam Owned (${steamGameCount})` }] : []),
+    { id: 'recently-added', label: `Recently Added${customGameCount > 0 ? ` (${customGameCount})` : ''}` },
     { id: 'trending', label: `Popular (${systemPeriod.monthShort} ${systemPeriod.year})` },
     { id: 'aaa', label: 'AAA Visuals' },
     { id: 'esports', label: 'Esports' },
@@ -34,7 +34,7 @@ export function GamesGrid({
     { id: 'rpg', label: 'RPG' },
     { id: 'shooter', label: 'Shooters' },
     { id: 'racing', label: 'Sim & Racing' }
-  ], [systemPeriod, steamUser, steamGameCount]);
+  ], [systemPeriod, customGameCount]);
 
   return (
     <>
@@ -55,10 +55,7 @@ export function GamesGrid({
 
         <div className="search-sort-group">
           <div className="search-box">
-            <svg className="search-icon-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <Search className="search-icon-svg" size={13} strokeWidth={2.5} />
             <input
               type="text"
               id="game-search-input"
@@ -74,9 +71,7 @@ export function GamesGrid({
                 onClick={() => onSearchChange('')}
                 aria-label="Clear search"
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
+                <X size={13} strokeWidth={2} />
               </button>
             )}
           </div>
@@ -100,10 +95,7 @@ export function GamesGrid({
         {items.length === 0 ? (
           <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '36px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
+              <SearchX size={32} strokeWidth={1.8} />
             </div>
             <div style={{ fontWeight: 600, fontSize: '15px', color: '#ffffff', marginBottom: '6px' }}>
               {searchQuery ? `No games matching "${searchQuery}"` : 'No games found'}
@@ -120,10 +112,7 @@ export function GamesGrid({
                   className="btn-primary"
                   onClick={() => onOpenSearchModal(searchQuery)}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
+                  <Plus size={14} strokeWidth={2.5} style={{ marginRight: 6 }} />
                   Search &amp; Add "{searchQuery}"
                 </button>
               )}

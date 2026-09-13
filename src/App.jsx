@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useDeferredValue } from 'react';
+import { PanelLeft, Plus } from 'lucide-react';
 import { GPUS, CPUS, SYSTEM_PRESETS } from './data/hardware.js';
 import { DEFAULT_GAMES } from './data/games.js';
 import { calculateFps } from './services/fpsEngine.js';
@@ -11,15 +12,15 @@ import {
 import { searchGamesWithContext } from './services/gameSearch.js';
 
 import { AmbientBackdrop } from './components/AmbientBackdrop.jsx';
-import { Header } from './components/Header.jsx';
+import { ArcSidebar } from './components/ArcSidebar.jsx';
 import { SystemStatusBar } from './components/SystemStatusBar.jsx';
-import { SpecsSidebar } from './components/SpecsSidebar.jsx';
 import { GameCarousel } from './components/GameCarousel.jsx';
 import { GamesGrid } from './components/GamesGrid.jsx';
-import { GameDetailPage } from './components/GameDetailPage.jsx';
-import { SteamGridSearchModal } from './components/SteamGridSearchModal.jsx';
-import { SteamImportModal } from './components/SteamImportModal.jsx';
 import { Footer } from './components/Footer.jsx';
+
+// Code-split heavy modals and detail page for instant initial load
+const GameDetailPage = React.lazy(() => import('./components/GameDetailPage.jsx').then(m => ({ default: m.GameDetailPage })));
+const SteamGridSearchModal = React.lazy(() => import('./components/SteamGridSearchModal.jsx').then(m => ({ default: m.SteamGridSearchModal })));
 
 const LOCAL_STORAGE_CUSTOM_GAMES = 'fps_estimator_custom_games';
 const LOCAL_STORAGE_SPECS = 'fps_estimator_specs';
@@ -85,6 +86,22 @@ export function App() {
 
   // Remember library scroll position when navigating into game details
   const libraryScrollPosRef = useRef(0);
+
+  // Arc Sidebar collapse & mobile drawer state
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Keyboard shortcut (Ctrl+B / Cmd+B) to toggle sidebar
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.key === 'b' || e.key === 'B') && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setIsSidebarCollapsed(prev => !prev);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Background artwork sync: driven by current active carousel slide on home, and game wide art on full game page
   const [carouselBg, setCarouselBg] = useState(
@@ -213,6 +230,7 @@ export function App() {
   // Library Controls
   const [category, setCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [sortBy, setSortBy] = useState('trending');
 
   // Modals & Popout
@@ -220,7 +238,6 @@ export function App() {
   const [activeDetailGame, setActiveDetailGame] = useState(null);
   const [isSteamGridSearchOpen, setIsSteamGridSearchOpen] = useState(false);
   const [steamGridSearchInitialQuery, setSteamGridSearchInitialQuery] = useState('');
-  const [isSteamImportOpen, setIsSteamImportOpen] = useState(false);
 
   // Authentication states
   const [steamUser, setSteamUser] = useState(getStoredSteamUser);
@@ -293,17 +310,17 @@ export function App() {
       });
     } else if (category === 'favorites') {
       filtered = filtered.filter(item => favoriteGameIds.includes(item.game.id));
-    } else if (category === 'steam') {
-      filtered = filtered.filter(item => item.isSteamOwned);
+    } else if (category === 'recently-added') {
+      filtered = filtered.filter(item => item.game.id.startsWith('custom-') || item.game.isCustom);
     } else if (category !== 'all') {
       filtered = filtered.filter(item => item.game.category === category);
     }
 
-    if (searchQuery.trim()) {
-      filtered = searchGamesWithContext(filtered, searchQuery);
+    if (deferredSearchQuery.trim()) {
+      filtered = searchGamesWithContext(filtered, deferredSearchQuery);
       // Fallback: if category filter yielded 0 results for search query, search all games
       if (filtered.length === 0 && category !== 'all') {
-        filtered = searchGamesWithContext(processedGames, searchQuery);
+        filtered = searchGamesWithContext(processedGames, deferredSearchQuery);
       }
       // When searching under default popularity/trending sort, preserve relevance+popularity ranking
       if (sortBy === 'trending') {
@@ -330,7 +347,7 @@ export function App() {
           return 0;
       }
     });
-  }, [processedGames, category, favoriteGameIds, searchQuery, sortBy, systemPeriod]);
+  }, [processedGames, category, favoriteGameIds, deferredSearchQuery, sortBy, systemPeriod]);
 
   // System Status Bar summary metrics
   const isConfigured = Boolean(specs.gpu && specs.cpu);
@@ -481,16 +498,17 @@ export function App() {
       return;
     }
 
-    let coverUrl = 'https://cdn2.steamgriddb.com/thumb/f39b781760a403dedaa05587e8889c1a.jpg';
-    let heroUrl = '';
-    let wideCoverUrl = '';
-    let logoUrl = '';
+    const sid = steamItem.steamAppId || (typeof steamItem.id === 'number' ? steamItem.id : null);
+    let coverUrl = steamItem.thumb || steamItem.url || (sid ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sid}/library_600x900.jpg` : 'https://cdn2.steamgriddb.com/thumb/f39b781760a403dedaa05587e8889c1a.jpg');
+    let heroUrl = steamItem.heroUrl || (sid ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sid}/library_hero.jpg` : '');
+    let wideCoverUrl = steamItem.wideCoverUrl || (sid ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sid}/header.jpg` : '');
+    let logoUrl = steamItem.logoUrl || '';
     try {
       const [grid, hero, wide, logo] = await Promise.allSettled([
-        getGameGrid(steamItem.id),
-        getGameHero(steamItem.id),
-        getGameWideCover(steamItem.id),
-        getGameLogo(steamItem.id, steamItem.types?.includes('steam') ? steamItem.steamAppId : undefined, steamItem.name)
+        getGameGrid(steamItem.id, sid),
+        getGameHero(steamItem.id, sid),
+        getGameWideCover(steamItem.id, sid),
+        getGameLogo(steamItem.id, sid, steamItem.name)
       ]);
       if (grid.status === 'fulfilled' && (grid.value?.thumb || grid.value?.url)) {
         coverUrl = grid.value.thumb || grid.value.url;
@@ -525,7 +543,7 @@ export function App() {
     }
 
     const newGame = {
-      id: `custom-${steamItem.id}`,
+      id: `custom-${steamItem.id || Date.now()}`,
       title: steamItem.name,
       genre: 'PC Game',
       publisher: steamItem.publisher || 'PC Publisher',
@@ -534,7 +552,10 @@ export function App() {
       releaseMonth: releaseDate ? releaseDate.getMonth() + 1 : undefined,
       releaseDay: releaseDate ? releaseDate.getDate() : undefined,
       releaseDate: releaseDate ? releaseDate.toISOString() : undefined,
+      addedAt: Date.now(),
+      isCustom: true,
       steamGridId: steamItem.id,
+      steamAppId: sid,
       coverUrl,
       heroUrl,
       wideCoverUrl,
@@ -548,7 +569,7 @@ export function App() {
       ramRecommended: 16,
       supportsRayTracing: releaseYear >= 2020,
       rtImpact: 0.40,
-      description: 'Added directly from SteamGridDB database.'
+      description: 'Added directly from game catalog search.'
     };
 
     setCustomGames(prev => {
@@ -688,12 +709,11 @@ export function App() {
     <>
       <AmbientBackdrop bgUrl={currentAmbientBg} isActive={isAmbientActive} />
 
-      <div className={`app-container ${isMobile ? 'mobile-device' : ''}`}>
-        {/* Header with Gamer Settings Popout */}
-        <Header
+      <div className={`app-shell ${isMobile ? 'mobile-device' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        {/* Arc Unified Left Sidebar */}
+        <ArcSidebar
           steamUser={steamUser}
           profileName={profileName}
-          onOpenSteamModal={() => setIsSteamImportOpen(true)}
           onOpenSteamGridSearch={(q) => {
             setSteamGridSearchInitialQuery(q || '');
             setIsSteamGridSearchOpen(true);
@@ -705,28 +725,85 @@ export function App() {
           onResetData={handleResetAllData}
           userSettings={userSettings}
           onUpdateSetting={handleUpdateSetting}
-          specs={specs}
+          gpu={specs.gpu}
+          cpu={specs.cpu}
+          ram={specs.ram}
+          resolution={specs.resolution}
+          preset={specs.preset}
+          upscaling={specs.upscaling}
+          rayTracing={specs.rayTracing}
+          gpuBrandFilter={gpuBrandFilter}
+          cpuBrandFilter={cpuBrandFilter}
+          onSelectGpu={(gpu) => setSpecs(prev => ({ ...prev, gpu }))}
+          onSelectCpu={(cpu) => setSpecs(prev => ({ ...prev, cpu }))}
+          onSelectRam={(ram) => setSpecs(prev => ({ ...prev, ram }))}
+          onSelectResolution={(resolution) => setSpecs(prev => ({ ...prev, resolution }))}
+          onSelectPreset={(preset) => setSpecs(prev => ({ ...prev, preset }))}
+          onSelectUpscaling={(upscaling) => setSpecs(prev => ({ ...prev, upscaling }))}
+          onToggleRayTracing={(rayTracing) => setSpecs(prev => ({ ...prev, rayTracing }))}
+          onSetGpuBrandFilter={setGpuBrandFilter}
+          onSetCpuBrandFilter={setCpuBrandFilter}
+          onResetSpecs={handleResetSpecs}
+          onApplyPreset={handleApplyPreset}
+          savedRigTemplates={savedRigTemplates}
+          onSaveRigTemplate={handleSaveRigTemplate}
+          onDeleteRigTemplate={handleDeleteRigTemplate}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+          isMobileOpen={isMobileSidebarOpen}
+          onCloseMobile={() => setIsMobileSidebarOpen(false)}
         />
 
-        {/* Main Two-Column Layout */}
-        <div className="app-layout">
-          {/* Left: Home or Game Detail */}
+        {/* Main Content Viewport */}
+        <div className="main-viewport">
+          {/* Mobile floating top bar */}
+          <div className="arc-mobile-header">
+            <button
+              type="button"
+              className="arc-mobile-toggle-btn"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              aria-label="Open sidebar"
+            >
+              <PanelLeft size={18} />
+              <span>Rig & Menu</span>
+            </button>
+            <span className="arc-mobile-brand">FPS Estimator</span>
+            <button
+              type="button"
+              className="arc-mobile-search-btn"
+              onClick={() => {
+                setSteamGridSearchInitialQuery('');
+                setIsSteamGridSearchOpen(true);
+              }}
+              title="Add game"
+              aria-label="Add game"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+
           <main className="main-content">
             {activeDetailGame ? (
-              <GameDetailPage
-                game={activeDetailGame}
-                gpu={specs.gpu}
-                cpu={specs.cpu}
-                ram={specs.ram}
-                resolution={specs.resolution}
-                preset={specs.preset}
-                upscaling={specs.upscaling}
-                rayTracing={specs.rayTracing}
-                isFavorite={favoriteGameIds.includes(activeDetailGame.id)}
-                onToggleFavorite={() => handleToggleFavorite(activeDetailGame.id)}
-                onBack={handleBackToLibrary}
-                onWideArtChange={handleWideArtChange}
-              />
+              <React.Suspense fallback={
+                <div className="empty-state" style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div className="spinner" />
+                </div>
+              }>
+                <GameDetailPage
+                  game={activeDetailGame}
+                  gpu={specs.gpu}
+                  cpu={specs.cpu}
+                  ram={specs.ram}
+                  resolution={specs.resolution}
+                  preset={specs.preset}
+                  upscaling={specs.upscaling}
+                  rayTracing={specs.rayTracing}
+                  isFavorite={favoriteGameIds.includes(activeDetailGame.id)}
+                  onToggleFavorite={() => handleToggleFavorite(activeDetailGame.id)}
+                  onBack={handleBackToLibrary}
+                  onWideArtChange={handleWideArtChange}
+                />
+              </React.Suspense>
             ) : (
               <>
                 <GameCarousel
@@ -765,59 +842,27 @@ export function App() {
                     setIsSteamGridSearchOpen(true);
                   }}
                   userSettings={userSettings}
-                  steamUser={steamUser}
-                  steamGameCount={steamGameCount}
+                  customGameCount={customGames.length}
                 />
               </>
             )}
           </main>
 
-          {/* Right: Specs Sidebar (always visible) */}
-          <SpecsSidebar
-            gpu={specs.gpu}
-            cpu={specs.cpu}
-            ram={specs.ram}
-            resolution={specs.resolution}
-            preset={specs.preset}
-            upscaling={specs.upscaling}
-            rayTracing={specs.rayTracing}
-            gpuBrandFilter={gpuBrandFilter}
-            cpuBrandFilter={cpuBrandFilter}
-            onSelectGpu={(gpu) => setSpecs(prev => ({ ...prev, gpu }))}
-            onSelectCpu={(cpu) => setSpecs(prev => ({ ...prev, cpu }))}
-            onSelectRam={(ram) => setSpecs(prev => ({ ...prev, ram }))}
-            onSelectResolution={(resolution) => setSpecs(prev => ({ ...prev, resolution }))}
-            onSelectPreset={(preset) => setSpecs(prev => ({ ...prev, preset }))}
-            onSelectUpscaling={(upscaling) => setSpecs(prev => ({ ...prev, upscaling }))}
-            onToggleRayTracing={(rayTracing) => setSpecs(prev => ({ ...prev, rayTracing }))}
-            onSetGpuBrandFilter={setGpuBrandFilter}
-            onSetCpuBrandFilter={setCpuBrandFilter}
-            onResetSpecs={handleResetSpecs}
-            onApplyPreset={handleApplyPreset}
-            savedRigTemplates={savedRigTemplates}
-            onSaveRigTemplate={handleSaveRigTemplate}
-            onDeleteRigTemplate={handleDeleteRigTemplate}
-          />
+          {/* Global Footer */}
+          <Footer />
         </div>
-
-        {/* Global Footer with Copyright Notice */}
-        <Footer />
       </div>
 
-      <SteamGridSearchModal
-        isOpen={isSteamGridSearchOpen}
-        onClose={() => setIsSteamGridSearchOpen(false)}
-        onAddGame={handleAddSteamGridGame}
-        initialQuery={steamGridSearchInitialQuery}
-      />
-
-      <SteamImportModal
-        isOpen={isSteamImportOpen}
-        onClose={() => setIsSteamImportOpen(false)}
-        onImportProfile={handleImportSteamProfile}
-        currentSteamUser={steamUser}
-        onDisconnectSteam={handleDisconnectSteam}
-      />
+      {isSteamGridSearchOpen && (
+        <React.Suspense fallback={null}>
+          <SteamGridSearchModal
+            isOpen={isSteamGridSearchOpen}
+            onClose={() => setIsSteamGridSearchOpen(false)}
+            onAddGame={handleAddSteamGridGame}
+            initialQuery={steamGridSearchInitialQuery}
+          />
+        </React.Suspense>
+      )}
 
     </>
   );

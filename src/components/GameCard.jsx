@@ -57,6 +57,7 @@ export function GameCard({
           src={game.coverUrl || DEFAULT_PLACEHOLDER_COVER}
           alt={game.title}
           loading="lazy"
+          decoding="async"
           ref={(el) => {
             if (el && el.complete && el.naturalWidth > 0 && !loaded) {
               setLoaded(true);

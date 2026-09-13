@@ -5,17 +5,22 @@
 
 const GAMING_ALIASES = {
   // Resident Evil aliases
-  're': ['resident evil: requiem', 'resident evil 4 remake', 'resident evil village', 'resident evil', 're4', 're9', 're8'],
+  're': ['resident evil: requiem', 'resident evil 4 remake (2023)', 'resident evil 4 (2005)', 'resident evil village', 'resident evil', 're4', 're9', 're8'],
   're9': ['resident evil: requiem', 'resident evil 9'],
   'requiem': ['resident evil: requiem'],
-  're4': ['resident evil 4 remake', 'resident evil 4'],
-  're4r': ['resident evil 4 remake'],
+  're4': ['resident evil 4 remake (2023)', 'resident evil 4 (2005)'],
+  're4r': ['resident evil 4 remake (2023)'],
+  're4 remake': ['resident evil 4 remake (2023)'],
+  're4 2005': ['resident evil 4 (2005)'],
+  're4 original': ['resident evil 4 (2005)'],
+  'resident evil 4 2005': ['resident evil 4 (2005)'],
+  'resident evil 4 remake': ['resident evil 4 remake (2023)'],
   're8': ['resident evil village'],
   're7': ['resident evil 7: biohazard'],
   're2': ['resident evil 2'],
   're3': ['resident evil 3'],
   'village': ['resident evil village'],
-  'biohazard': ['resident evil: requiem', 'resident evil 4 remake', 'resident evil village', 'resident evil'],
+  'biohazard': ['resident evil: requiem', 'resident evil 4 remake (2023)', 'resident evil 4 (2005)', 'resident evil village', 'resident evil'],
 
   // Minecraft aliases
   'mine': ['minecraft'],
@@ -150,7 +155,7 @@ export function searchGamesWithContext(games, query) {
 
   const rawQ = query.toLowerCase().trim();
   const cleanQ = rawQ.replace(/[^a-z0-9]/g, '');
-  const tokens = rawQ.split(/\s+/).filter(Boolean);
+  const tokens = rawQ.split(/[\s,]+/).filter(Boolean);
 
   // Check if entire query or any token maps to gaming aliases
   const aliasTargets = new Set();
@@ -176,9 +181,8 @@ export function searchGamesWithContext(games, query) {
     const game = item.game || item;
     const title = (game.title || '').toLowerCase();
     const cleanTitle = title.replace(/[^a-z0-9]/g, '');
+    const titleWords = title.split(/[\s:,\-_./+]+/).filter(Boolean);
     const genre = (game.genre || '').toLowerCase();
-    const publisher = (game.publisher || '').toLowerCase();
-    const desc = (game.description || '').toLowerCase();
 
     // Extract tags (array or string)
     const tags = Array.isArray(game.tags)
@@ -186,60 +190,79 @@ export function searchGamesWithContext(games, query) {
       : (typeof game.tags === 'string' ? game.tags.toLowerCase().split(/\s*,\s*|\s+/) : []);
 
     let score = 0;
+    let matchedAny = false;
 
-    // 1. Tag exact or prefix match (e.g. "re9", "re", "re4", "mc", "cs")
-    if (tags.includes(rawQ) || (cleanQ && tags.includes(cleanQ))) {
-      score += 130;
-    } else if (tags.some(t => t.startsWith(rawQ) || (cleanQ && t.startsWith(cleanQ)))) {
-      score += 95;
-    } else if (tags.some(t => t.includes(rawQ) || (cleanQ && t.includes(cleanQ)))) {
-      score += 70;
-    }
-
-    // 2. Exact title match
+    // 1. Exact title match
     if (title === rawQ || (cleanQ && cleanTitle === cleanQ)) {
-      score += 115;
+      score += 250;
+      matchedAny = true;
     }
-    // 3. Title starts with search query (e.g. "mine" -> "minecraft")
-    else if (title.startsWith(rawQ) || (cleanQ && cleanTitle.startsWith(cleanQ))) {
+    // 2. Title starts with query (only for queries >= 3 chars, or exact first word match for short queries)
+    else if (cleanQ.length >= 3 && (title.startsWith(rawQ) || cleanTitle.startsWith(cleanQ))) {
+      score += 170;
+      matchedAny = true;
+    } else if (cleanQ.length < 3 && titleWords[0] && (titleWords[0] === rawQ || titleWords[0].replace(/[^a-z0-9]/g, '') === cleanQ)) {
+      score += 170;
+      matchedAny = true;
+    }
+    // 3. Word in title starts with query (only for queries >= 3 chars, or exact word match for short queries)
+    else if (cleanQ.length >= 3 && titleWords.some(w => w.startsWith(rawQ) || (cleanQ && w.replace(/[^a-z0-9]/g, '').startsWith(cleanQ)))) {
+      score += 130;
+      matchedAny = true;
+    } else if (cleanQ.length < 3 && titleWords.some(w => w === rawQ || w.replace(/[^a-z0-9]/g, '') === cleanQ)) {
+      score += 130;
+      matchedAny = true;
+    }
+    // 4. Substring anywhere in title (queries >= 4 chars only to avoid false matches)
+    else if (cleanQ.length >= 4 && (title.includes(rawQ) || cleanTitle.includes(cleanQ))) {
       score += 85;
-    }
-    // 4. Word within title starts with query (e.g. "craft" -> "minecraft")
-    else if (title.includes(rawQ) || (cleanQ && cleanTitle.includes(cleanQ))) {
-      score += 60;
+      matchedAny = true;
     }
 
-    // 5. Alias match (e.g. "re" -> RE4/RE9, "mine" -> Minecraft, "cs" -> CS2)
+    // 5. Tag match
+    if (tags.includes(rawQ) || (cleanQ && tags.includes(cleanQ))) {
+      score += 140;
+      matchedAny = true;
+    } else if (cleanQ.length >= 3 && tags.some(t => t.startsWith(rawQ) || t.startsWith(cleanQ))) {
+      score += 90;
+      matchedAny = true;
+    }
+
+    // 6. Gaming Alias match (e.g. "cs" -> Counter-Strike 2, "re" -> Resident Evil, "gta" -> GTA V)
     aliasTargets.forEach(target => {
       const cleanTarget = target.replace(/[^a-z0-9]/g, '');
       if (title.includes(target) || cleanTitle.includes(cleanTarget) || tags.includes(target) || tags.includes(cleanTarget)) {
-        score += 80;
+        score += 160;
+        matchedAny = true;
       }
     });
 
-    // 6. Individual tokens match title, tags, or description
-    let tokenMatches = 0;
-    for (const token of tokens) {
-      const cleanTok = token.replace(/[^a-z0-9]/g, '');
-      if (tags.includes(token) || (cleanTok && tags.includes(cleanTok))) {
-        tokenMatches += 2.0;
-      } else if (title.includes(token) || (cleanTok && cleanTitle.includes(cleanTok))) {
-        tokenMatches += 1.5;
-      } else if (genre.includes(token)) {
-        tokenMatches += 0.8;
-      } else if (publisher.includes(token) || desc.includes(token)) {
-        tokenMatches += 0.4;
+    // 7. Multi-token query handling
+    if (tokens.length > 1) {
+      let matchedTokens = 0;
+      for (const tok of tokens) {
+        const cTok = tok.replace(/[^a-z0-9]/g, '');
+        if (!cTok) continue;
+        const matchesTitle = titleWords.some(w => w === tok || (tok.length >= 3 && w.startsWith(tok)) || (tok.length >= 4 && w.includes(tok)));
+        const matchesTag = tags.some(t => t === tok || (tok.length >= 3 && t.startsWith(tok)));
+        const matchesGenre = genre.includes(tok);
+        if (matchesTitle || matchesTag || matchesGenre) {
+          matchedTokens++;
+        }
+      }
+      if (matchedTokens === tokens.length) {
+        score += 120;
+        matchedAny = true;
+      } else if (matchedTokens > 0 && matchedTokens >= tokens.length - 1) {
+        score += 60;
+        matchedAny = true;
       }
     }
 
-    if (tokenMatches > 0) {
-      score += tokenMatches * 20;
-    }
-
-    // 7. Factor in game popularity so most popular matching games rank first
-    if (score > 0) {
+    // 8. Factor in popularity score so top games rank cleanly
+    if (matchedAny && score > 0) {
       const pop = typeof game.popularity === 'number' ? game.popularity : 85;
-      score += (pop * 0.35);
+      score += (pop * 0.25);
       scored.push({ item, score, popularity: pop });
     }
   }

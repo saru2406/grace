@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowRight, Star } from "lucide-react";
-import { GAME_METADATA, getGameReleaseInfo } from "../data/gameMetadata.js";
+import { ArrowRight, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { GAME_METADATA } from "../data/gameMetadata.js";
 import { getGameWideCover, getGameHero } from "../services/steamGrid.js";
 import { getSystemPeriod, getGameTrendingScore } from "../services/systemTrending.js";
 import { DEFAULT_PLACEHOLDER_COVER } from "../services/gameAssets.js";
@@ -73,13 +73,17 @@ export function GameCarousel({
     return () => { cancelled = true; };
   }, [currentIndex, activeGame]);
 
+  const [slideDir, setSlideDir] = useState('next');
+
   const nextSlide = useCallback(() => {
     if (!featuredGames || featuredGames.length <= 1) return;
+    setSlideDir('next');
     setCurrentIndex(prev => (prev + 1) % featuredGames.length);
   }, [featuredGames]);
 
   const prevSlide = useCallback(() => {
     if (!featuredGames || featuredGames.length <= 1) return;
+    setSlideDir('prev');
     setCurrentIndex(prev => (prev - 1 + featuredGames.length) % featuredGames.length);
   }, [featuredGames]);
 
@@ -92,7 +96,6 @@ export function GameCarousel({
   if (!featuredGames || !featuredGames.length || !activeGame) return null;
 
   const metadata = GAME_METADATA[activeGame.id] || { metacritic: 88, proton: { tier: "Verified" }, hltb: { main: 25 } };
-  const releaseInfo = getGameReleaseInfo(activeGame);
   const isBorked = metadata.proton?.tier === "Borked";
   const protonTier = isBorked ? "Unsupported" : (metadata.proton?.tier || "Verified");
 
@@ -117,6 +120,7 @@ export function GameCarousel({
           key={wideArtUrl}
           src={wideArtUrl}
           alt=""
+          decoding="async"
           className={"carousel-bg-img" + (wideArtLoaded ? " loaded" : "")}
           ref={(el) => {
             if (el && el.complete && el.naturalWidth > 0 && loadedWideArtUrl !== wideArtUrl) {
@@ -136,13 +140,11 @@ export function GameCarousel({
       </div>
 
       {/* Slide Content */}
-      <div className="carousel-content">
+      <div key={activeGame.id + '-' + slideDir} className={`carousel-content ${slideDir === 'next' ? 'carousel-slide-anim-next' : 'carousel-slide-anim-prev'}`}>
         {/* Left: Text Info */}
         <div className="carousel-left">
           <div className="carousel-meta-row">
-            <span className="carousel-badge-featured">TRENDING &bull; {systemPeriod.monthShort.toUpperCase()} {systemPeriod.year}</span>
-            <span className="carousel-badge-genre">{activeGame.genre}</span>
-            <span className="carousel-badge-year">{releaseInfo.badgeLabel}</span>
+            <span className="carousel-badge-featured">TRENDING</span>
           </div>
           {activeGame.logoUrl ? (
             <div className="carousel-logo-wrap">
@@ -150,6 +152,7 @@ export function GameCarousel({
                 key={activeGame.id + "-logo"}
                 src={activeGame.logoUrl}
                 alt={activeGame.title}
+                decoding="async"
                 className="carousel-logo-img"
               />
             </div>
@@ -160,7 +163,13 @@ export function GameCarousel({
           <div className="carousel-stats-strip">
             <div className="carousel-stat-pill"><span className="carousel-stat-lbl">METASCORE</span><span className="carousel-stat-num">{metadata.metacritic}</span></div>
             {metadata.steamRating && (
-              <div className="carousel-stat-pill"><span className="carousel-stat-lbl">STEAM</span><span className="carousel-stat-num">&#9733; {metadata.steamRating}</span></div>
+              <div className="carousel-stat-pill">
+                <span className="carousel-stat-lbl">STEAM</span>
+                <span className="carousel-stat-num" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                  <Star size={11} fill="currentColor" />
+                  {metadata.steamRating}
+                </span>
+              </div>
             )}
             <div className={"carousel-stat-pill" + (isBorked ? " stat-borked" : "")}><span className="carousel-stat-lbl">PROTON</span><span className="carousel-stat-num">{protonTier}</span></div>
             {metadata.hltb?.main > 0 && <div className="carousel-stat-pill"><span className="carousel-stat-lbl">CAMPAIGN</span><span className="carousel-stat-num">{metadata.hltb.main}h</span></div>}
@@ -271,6 +280,7 @@ export function GameCarousel({
               key={activeGame.id + "-box"}
               src={activeGame.coverUrl}
               alt={activeGame.title}
+              decoding="async"
               className={"carousel-poster-img" + (boxArtLoaded ? " loaded" : "")}
               ref={(el) => {
                 if (el && el.complete && el.naturalWidth > 0 && loadedBoxGameId !== activeGame.id) {
@@ -298,7 +308,9 @@ export function GameCarousel({
           prevSlide();
         }}
         aria-label="Previous"
-      >&#8249;</button>
+      >
+        <ChevronLeft size={20} strokeWidth={2.5} />
+      </button>
       <button
         type="button"
         className="carousel-arrow carousel-arrow-right"
@@ -308,7 +320,9 @@ export function GameCarousel({
           nextSlide();
         }}
         aria-label="Next"
-      >&#8250;</button>
+      >
+        <ChevronRight size={20} strokeWidth={2.5} />
+      </button>
 
       <div className="carousel-dots">
         {featuredGames.map((g, idx) => (

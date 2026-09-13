@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ImageOff } from 'lucide-react';
+import { ImageOff, X } from 'lucide-react';
 import { searchGames, getGameGrid } from '../services/steamGrid.js';
 
 export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery = '' }) {
@@ -70,9 +70,7 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
           onClick={onClose}
           aria-label="Close"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <X size={16} />
         </button>
 
         <div className="modal-header">
@@ -98,15 +96,21 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
               style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }}
               aria-label="Clear input"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
+              <X size={14} />
             </button>
           )}
         </div>
 
         <div id="steamgrid-search-results" className="search-results-grid">
-          {loading && <div className="spinner"></div>}
+          {loading && Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="search-result-card skeleton-card-placeholder" aria-hidden="true">
+              <div style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.06)' }} className="skeleton-loading" />
+              <div className="search-result-title" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div className="skeleton-loading" style={{ height: '14px', width: '80%', borderRadius: '4px' }} />
+                <div className="skeleton-loading" style={{ height: '10px', width: '40%', borderRadius: '3px' }} />
+              </div>
+            </div>
+          ))}
           {!loading && query.trim().length < 1 && (
             <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
               Start typing above to search the global PC games database instantly...
@@ -174,7 +178,7 @@ function SearchResultCard({ item, onSelect }) {
       title={`Click to add ${item.name} to your library`}
     >
       <div style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.06)', position: 'relative', overflow: 'hidden' }}>
-        {isLoading && <div className="carousel-poster-skeleton" />}
+        {isLoading && <div className="carousel-poster-skeleton skeleton-loading" />}
         {!isLoading && !thumb && (
           <div className="search-result-thumb search-result-thumb-missing" aria-label={`No cover image available for ${item.name}`}>
             <ImageOff size={24} strokeWidth={1.8} />
@@ -185,6 +189,8 @@ function SearchResultCard({ item, onSelect }) {
             className="search-result-thumb"
             src={thumb}
             alt={item.name}
+            loading="lazy"
+            decoding="async"
             onError={() => setThumb(null)}
           />
         )}

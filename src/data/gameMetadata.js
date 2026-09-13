@@ -869,6 +869,38 @@ export const GAME_METADATA = {
     }
   },
 
+  'resident-evil-4-remake': {
+    developer: 'Capcom',
+    publisher: 'Capcom',
+    metacritic: 93,
+    steamRating: 'Overwhelmingly Positive (97%)',
+    hltb: { main: 16, extra: 22, completionist: 60 },
+    proton: {
+      tier: 'Verified',
+      antiCheat: 'Denuvo Anti-Tamper',
+      worksOnline: true,
+      status: 'Steam Deck Verified • Platinum. RE Engine runs like a dream on Proton with direct ray tracing support.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10 64-bit',
+        cpu: 'AMD Ryzen 3 1200 / Intel Core i5-7500',
+        gpu: 'AMD Radeon RX 560 / NVIDIA GeForce GTX 1050 Ti',
+        vram: '4 GB',
+        ram: '8 GB',
+        storage: '68 GB'
+      },
+      recommended: {
+        os: 'Windows 10/11 64-bit',
+        cpu: 'AMD Ryzen 5 3600 / Intel Core i7 8700',
+        gpu: 'AMD Radeon RX 5700 / NVIDIA GeForce GTX 1070',
+        vram: '8 GB',
+        ram: '16 GB',
+        storage: '68 GB SSD'
+      }
+    }
+  },
+
   'resident-evil-4': {
     developer: 'Capcom',
     publisher: 'Capcom',
@@ -897,6 +929,38 @@ export const GAME_METADATA = {
         vram: '8 GB',
         ram: '16 GB',
         storage: '68 GB SSD'
+      }
+    }
+  },
+
+  'resident-evil-4-2005': {
+    developer: 'Capcom Production Studio 4 / QLOC',
+    publisher: 'Capcom',
+    metacritic: 84,
+    steamRating: 'Very Positive (91%)',
+    hltb: { main: 15.5, extra: 20, completionist: 31 },
+    proton: {
+      tier: 'Verified',
+      antiCheat: 'None',
+      worksOnline: true,
+      status: 'Steam Deck Verified • Platinum. Classic MT Framework 2005 release runs at high FPS with minimal resource usage.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10 64-bit',
+        cpu: 'Intel Core 2 Duo 2.4 GHz / AMD Athlon X2 2.8 GHz',
+        gpu: 'NVIDIA GeForce 8800GTS / AMD Radeon HD 4850',
+        vram: '1 GB',
+        ram: '2 GB',
+        storage: '15 GB'
+      },
+      recommended: {
+        os: 'Windows 10/11 64-bit',
+        cpu: 'Intel Core 2 Quad 2.7 GHz / AMD Phenom II X4 3.0 GHz',
+        gpu: 'NVIDIA GeForce GTX 560 / AMD Radeon HD 6950',
+        vram: '2 GB',
+        ram: '4 GB',
+        storage: '15 GB SSD'
       }
     }
   },

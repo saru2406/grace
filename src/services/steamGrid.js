@@ -83,10 +83,33 @@ export async function searchGames(query) {
     }
   }
 
+  // Fallback to Steam store API if SteamGridDB returned no results (or required API key)
+  if (results.length === 0) {
+    try {
+      const searchTerm = aliases[rawQ] || query.trim();
+      const storeRes = await fetch(`/api/steam-store-search?term=${encodeURIComponent(searchTerm)}`);
+      if (storeRes.ok) {
+        const storeData = await storeRes.json();
+        if (storeData && Array.isArray(storeData.items)) {
+          results = storeData.items.map(item => ({
+            id: item.id,
+            steamAppId: item.id,
+            name: item.name,
+            thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+            url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+            heroUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_hero.jpg`,
+            wideCoverUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('Steam store search fallback failed:', e);
+    }
+  }
+
   return results;
 }
 
-/**
 /**
  * Get grid poster cover (600x900) for a game ID or steamAppId
  */
@@ -104,8 +127,9 @@ export async function getGameGrid(gameId, steamAppId) {
     }
   }
 
-  if (steamAppId) {
-    const endpoint = `/grids/steam/${steamAppId}?dimensions=600x900`;
+  const numericId = steamAppId || (typeof gameId === 'number' || /^\d+$/.test(String(gameId)) ? gameId : null);
+  if (numericId) {
+    const endpoint = `/grids/steam/${numericId}?dimensions=600x900`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const item = response.data[0];
@@ -116,8 +140,8 @@ export async function getGameGrid(gameId, steamAppId) {
       };
     }
     return {
-      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_600x900.jpg`,
-      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_600x900.jpg`
+      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/library_600x900.jpg`,
+      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/library_600x900.jpg`
     };
   }
 

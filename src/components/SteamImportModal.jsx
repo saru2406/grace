@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import {
   SAMPLE_STEAM_PROFILES,
   resolveSteamAccount,
@@ -134,9 +135,7 @@ export function SteamImportModal({
           onClick={onClose}
           aria-label="Close"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <X size={16} />
         </button>
 
         <div className="modal-header">

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Plus, Download, User } from 'lucide-react';
 import { SettingsPopout } from './SettingsPopout';
 
 export function Header({
@@ -47,10 +48,7 @@ export function Header({
           title="Search and add games (Ctrl+K or /)"
         >
           <div className="add-pill-left">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
+            <Plus size={14} strokeWidth={2} />
             <span className="add-pill-text">Add game...</span>
           </div>
           <kbd className="add-pill-kbd">Ctrl+K</kbd>
@@ -74,12 +72,7 @@ export function Header({
               style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }}
             />
           ) : (
-            /* Import / Download-into-box icon */
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
+            <Download size={14} strokeWidth={2} />
           )}
           <span id="steam-btn-text">
             {steamUser ? steamUser.name : 'Steam Import'}
@@ -100,10 +93,7 @@ export function Header({
             title="Rig Options & Preferences"
             aria-label="Preferences"
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
+            <User size={17} strokeWidth={2} />
           </button>
 
           <SettingsPopout

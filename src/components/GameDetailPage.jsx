@@ -148,6 +148,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
         <img
           src={heroUrl || game.coverUrl}
           alt=""
+          decoding="async"
           style={{ display: "none" }}
           ref={(el) => {
             if (el && el.complete && el.naturalWidth > 0 && !heroLoaded) {
@@ -173,6 +174,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
               className={`gdp-thumb ${thumbLoaded ? "loaded" : ""}`}
               src={game.coverUrl}
               alt={game.title}
+              decoding="async"
               ref={(el) => {
                 if (el && el.complete && el.naturalWidth > 0 && !thumbLoaded) {
                   setThumbLoaded(true);
@@ -193,6 +195,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
                   className={`gdp-logo-img ${logoLoaded ? "loaded" : ""}`}
                   src={logoUrl}
                   alt={game.title}
+                  decoding="async"
                   onLoad={() => setLogoLoaded(true)}
                   onError={() => setLogoFailed(true)}
                 />

@@ -161,6 +161,26 @@ export default defineConfig({
             }
           });
         });
+
+        server.middlewares.use('/api/steam-store-search', async (req, res) => {
+          try {
+            const parsedUrl = new URL(req.url, 'http://localhost:5173');
+            const term = parsedUrl.searchParams.get('term') || '';
+            if (!term.trim()) {
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ total: 0, items: [] }));
+              return;
+            }
+            const storeUrl = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(term.trim())}&l=english&cc=US`;
+            const steamRes = await httpsGet(storeUrl);
+            res.setHeader('Content-Type', 'application/json');
+            res.end(steamRes.data || JSON.stringify({ total: 0, items: [] }));
+          } catch (err) {
+            console.error('Steam store search error:', err);
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ total: 0, items: [] }));
+          }
+        });
       }
     }
   ],
@@ -179,6 +199,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/igdb/, ''),
         headers: igdbProxyHeaders
+      },
+      '/api/steamstore': {
+        target: 'https://store.steampowered.com/api',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/steamstore/, '')
       }
     }
   }
