@@ -1,3 +1,5 @@
+import { DEFAULT_GAMES } from '../data/games.js';
+
 const API_BASE_PROXY = '/api/steamgriddb';
 
 const cache = new Map();
@@ -17,6 +19,10 @@ async function fetchSteamGrid(endpoint) {
       }
     });
     if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return null;
+      }
       const data = await res.json();
       cache.set(endpoint, data);
       return data;
@@ -26,6 +32,39 @@ async function fetchSteamGrid(endpoint) {
   }
 
   return null;
+}
+
+/**
+ * Search local curated game database as an instant offline/fallback catalog
+ */
+function searchLocalCatalog(query) {
+  if (!query || !query.trim()) return [];
+  const q = query.trim().toLowerCase();
+  const cleanQ = q.replace(/[^a-z0-9]/g, '');
+  if (!cleanQ) return [];
+
+  const matches = DEFAULT_GAMES.filter(g => {
+    const title = (g.title || '').toLowerCase();
+    const cleanTitle = title.replace(/[^a-z0-9]/g, '');
+    const tags = Array.isArray(g.tags) ? g.tags.map(t => String(t).toLowerCase()) : [];
+    return (
+      title.includes(q) ||
+      cleanTitle.includes(cleanQ) ||
+      q.includes(cleanTitle) ||
+      tags.some(t => t.includes(q) || t.includes(cleanQ))
+    );
+  });
+
+  return matches.map(g => ({
+    id: g.steamGridId || g.steamAppId || g.id,
+    steamAppId: g.steamAppId,
+    name: g.title,
+    thumb: g.coverUrl,
+    url: g.coverUrl,
+    heroUrl: g.heroUrl || g.wideCoverUrl,
+    wideCoverUrl: g.wideCoverUrl || g.heroUrl,
+    release_date: g.releaseYear ? Math.floor(new Date(`${g.releaseYear}-01-01`).getTime() / 1000) : undefined
+  }));
 }
 
 /**
@@ -83,27 +122,63 @@ export async function searchGames(query) {
     }
   }
 
-  // Fallback to Steam store API if SteamGridDB returned no results (or required API key)
+  // Fallback 1: Steam store API via serverless / local proxy
   if (results.length === 0) {
+    const searchTerm = aliases[rawQ] || query.trim();
     try {
-      const searchTerm = aliases[rawQ] || query.trim();
       const storeRes = await fetch(`/api/steam-store-search?term=${encodeURIComponent(searchTerm)}`);
       if (storeRes.ok) {
-        const storeData = await storeRes.json();
-        if (storeData && Array.isArray(storeData.items)) {
-          results = storeData.items.map(item => ({
-            id: item.id,
-            steamAppId: item.id,
-            name: item.name,
-            thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
-            url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
-            heroUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_hero.jpg`,
-            wideCoverUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`
-          }));
+        const contentType = storeRes.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const storeData = await storeRes.json();
+          if (storeData && Array.isArray(storeData.items) && storeData.items.length > 0) {
+            results = storeData.items.map(item => ({
+              id: item.id,
+              steamAppId: item.id,
+              name: item.name,
+              thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+              url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+              heroUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_hero.jpg`,
+              wideCoverUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`
+            }));
+          }
         }
       }
     } catch (e) {
-      console.warn('Steam store search fallback failed:', e);
+      console.warn('Steam store search proxy failed:', e);
+    }
+
+    // Fallback 2: Direct Steam store search via public CORS proxy (in case /api function is unreachable)
+    if (results.length === 0) {
+      try {
+        const directUrl = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(searchTerm)}&l=english&cc=US`;
+        const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`;
+        const corsRes = await fetch(corsProxyUrl);
+        if (corsRes.ok) {
+          const storeData = await corsRes.json();
+          if (storeData && Array.isArray(storeData.items) && storeData.items.length > 0) {
+            results = storeData.items.map(item => ({
+              id: item.id,
+              steamAppId: item.id,
+              name: item.name,
+              thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+              url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+              heroUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_hero.jpg`,
+              wideCoverUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`
+            }));
+          }
+        }
+      } catch (corsErr) {
+        console.warn('Public CORS proxy fallback failed:', corsErr);
+      }
+    }
+
+    // Fallback 3: Local Curated Games Catalog (Always available even completely offline)
+    if (results.length === 0) {
+      const localMatches = searchLocalCatalog(searchTerm);
+      if (localMatches.length > 0) {
+        results = localMatches;
+      }
     }
   }
 
