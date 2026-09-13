@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Sliders, X, Check, Copy, RotateCcw } from 'lucide-react';
+import { Sliders, X, Check, Copy, RotateCcw, RefreshCw, CheckCircle2, AlertTriangle, XCircle, Globe } from 'lucide-react';
+import { runAllApiDiagnostics } from '../services/apiDiagnostics.js';
 
 export function SettingsPopout({
   isOpen,
@@ -14,6 +15,21 @@ export function SettingsPopout({
 }) {
   const popoutRef = useRef(null);
   const [copied, setCopied] = useState(false);
+  const [apiTesting, setApiTesting] = useState(false);
+  const [apiResults, setApiResults] = useState(null);
+
+  const handleRunApiTests = async () => {
+    if (apiTesting) return;
+    setApiTesting(true);
+    try {
+      const results = await runAllApiDiagnostics();
+      setApiResults(results);
+    } catch (err) {
+      console.error('API testing error:', err);
+    } finally {
+      setApiTesting(false);
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -179,7 +195,64 @@ export function SettingsPopout({
           </label>
         </div>
 
-        {/* 7. Connected Accounts */}
+        {/* 7. API Connection Verification */}
+        <div className="popout-section">
+          <div className="popout-section-title-row">
+            <span className="popout-section-title">API Connection Status</span>
+            {apiResults && (
+              <span className="popout-active-val" style={{ fontSize: '10px' }}>
+                {apiResults.filter(r => r.ok).length}/{apiResults.length} Operational
+              </span>
+            )}
+          </div>
+          <p className="popout-description-text">
+            Test if local <code className="popout-code">.env</code> keys for SteamGridDB and IGDB are active and working.
+          </p>
+
+          <button
+            id="test-api-btn"
+            type="button"
+            className={`btn-test-apis ${apiTesting ? 'testing' : ''}`}
+            onClick={handleRunApiTests}
+            disabled={apiTesting}
+          >
+            <RefreshCw size={13} className={apiTesting ? 'spin-animation' : ''} />
+            <span>{apiTesting ? 'Verifying Endpoints...' : (apiResults ? 'Re-verify API Connections' : 'Test API Connections')}</span>
+          </button>
+
+          {apiResults && (
+            <div className="api-diag-results">
+              {apiResults.map(item => (
+                <div key={item.id} className={`api-diag-card status-${item.status}`}>
+                  <div className="api-diag-card-header">
+                    <div className="api-diag-title-row">
+                      {item.ok ? (
+                        <CheckCircle2 size={13} className="api-icon-success" />
+                      ) : item.status === 'unconfigured' || item.status === 'unauthorized' ? (
+                        <AlertTriangle size={13} className="api-icon-warning" />
+                      ) : (
+                        <XCircle size={13} className="api-icon-error" />
+                      )}
+                      <span className="api-diag-name">{item.name}</span>
+                    </div>
+                    <div className="api-diag-status-pill">
+                      {item.latency !== undefined && <span className="api-latency">{item.latency}ms</span>}
+                      <span className={`api-badge ${item.ok ? 'badge-ok' : item.status === 'unconfigured' ? 'badge-warning' : 'badge-error'}`}>
+                        {item.ok ? 'Active' : item.status === 'unconfigured' ? 'No Key' : item.status === 'unauthorized' ? 'Unauthorized' : 'Offline'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="api-diag-body">
+                    <div className="api-diag-msg">{item.message}</div>
+                    {item.hint && <div className="api-diag-hint">{item.hint}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 8. Connected Accounts */}
         <div className="popout-section">
           <div className="popout-section-title">Accounts</div>
           <div id="settings-accounts-summary" className="popout-accounts-summary">
