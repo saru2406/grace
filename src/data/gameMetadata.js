@@ -5,6 +5,38 @@
 // - Minimum & Recommended system requirements
 
 export const GAME_METADATA = {
+  'minecraft': {
+    developer: 'Mojang Studios',
+    publisher: 'Xbox Game Studios',
+    metacritic: 93,
+    steamRating: 'Overwhelmingly Positive',
+    hltb: { main: 90, extra: 200, completionist: 500 },
+    proton: {
+      tier: 'Native',
+      antiCheat: 'None (DRM-Free)',
+      worksOnline: true,
+      status: 'Native Linux runtime via OpenJDK & Prism Launcher. Exceptional cross-platform performance.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10/11 64-bit',
+        cpu: 'Intel Core i3-3210 / AMD A8-7600',
+        gpu: 'Intel HD Graphics 4000 / AMD Radeon R5',
+        vram: '2 GB',
+        ram: '4 GB',
+        storage: '4 GB SSD'
+      },
+      recommended: {
+        os: 'Windows 11 64-bit',
+        cpu: 'Intel Core i5-4690 / AMD Ryzen 5 1500X',
+        gpu: 'GeForce 700 Series / AMD Radeon Rx 200',
+        vram: '4 GB',
+        ram: '8 GB',
+        storage: '8 GB NVMe SSD'
+      }
+    }
+  },
+
   'cyberpunk-2077': {
     developer: 'CD PROJEKT RED',
     publisher: 'CD PROJEKT RED',
@@ -553,7 +585,7 @@ export const GAME_METADATA = {
     developer: 'Capcom',
     publisher: 'Capcom',
     metacritic: 88,
-    steamRating: 'Anticipated 2025',
+    steamRating: '',
     hltb: { main: 35, extra: 75, completionist: 160 },
     proton: {
       tier: 'Silver',
@@ -865,6 +897,70 @@ export const GAME_METADATA = {
         vram: '8 GB',
         ram: '16 GB',
         storage: '68 GB SSD'
+      }
+    }
+  },
+
+  'resident-evil-9': {
+    developer: 'Capcom',
+    publisher: 'Capcom',
+    metacritic: 92,
+    steamRating: '',
+    hltb: { main: 18, extra: 26, completionist: 65 },
+    proton: {
+      tier: 'Platinum',
+      antiCheat: 'Standard Capcom DRM',
+      worksOnline: true,
+      status: 'Expected day-one compatibility via RE Engine VKD3D DX12 layer.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10/11 64-bit',
+        cpu: 'Intel Core i5-10400 / AMD Ryzen 5 3600',
+        gpu: 'NVIDIA GeForce RTX 2060 / AMD Radeon RX 5700',
+        vram: '6 GB',
+        ram: '16 GB',
+        storage: '85 GB SSD'
+      },
+      recommended: {
+        os: 'Windows 11 64-bit',
+        cpu: 'Intel Core i7-12700 / AMD Ryzen 7 5800X',
+        gpu: 'NVIDIA GeForce RTX 3070 / AMD Radeon RX 6800',
+        vram: '8 GB',
+        ram: '16 GB',
+        storage: '85 GB NVMe SSD'
+      }
+    }
+  },
+
+  'resident-evil-village': {
+    developer: 'Capcom',
+    publisher: 'Capcom',
+    metacritic: 84,
+    steamRating: 'Overwhelmingly Positive (95%)',
+    hltb: { main: 10, extra: 16, completionist: 38 },
+    proton: {
+      tier: 'Verified',
+      antiCheat: 'Denuvo Anti-Tamper',
+      worksOnline: true,
+      status: 'Steam Deck Verified • Platinum. Flawless 60+ FPS framerates on Linux.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10 64-bit',
+        cpu: 'AMD Ryzen 3 1200 / Intel Core i5-7500',
+        gpu: 'AMD Radeon RX 560 / NVIDIA GeForce GTX 1050 Ti',
+        vram: '4 GB',
+        ram: '8 GB',
+        storage: '50 GB'
+      },
+      recommended: {
+        os: 'Windows 10/11 64-bit',
+        cpu: 'AMD Ryzen 5 3600 / Intel Core i7 8700',
+        gpu: 'AMD Radeon RX 5700 / NVIDIA GeForce GTX 1070',
+        vram: '8 GB',
+        ram: '16 GB',
+        storage: '50 GB SSD'
       }
     }
   },
@@ -1477,37 +1573,7 @@ export const GAME_METADATA = {
     }
   },
 
-  'gta-vi': {
-    developer: 'Rockstar Games',
-    publisher: 'Rockstar Games',
-    metacritic: 97,
-    steamRating: 'Overwhelmingly Positive (99%)',
-    hltb: { main: 65, extra: 130, completionist: 220 },
-    proton: {
-      tier: 'Gold',
-      antiCheat: 'BattlEye / Rockstar Social Club DRM',
-      worksOnline: true,
-      status: 'Rockstar Games Launcher with modern VKD3D DirectX 12 support under Proton Experimental.'
-    },
-    requirements: {
-      minimum: {
-        os: 'Windows 10/11 64-bit',
-        cpu: 'Intel Core i7-10700K / AMD Ryzen 7 5700X',
-        gpu: 'NVIDIA RTX 2070 Super / AMD RX 6700 XT',
-        vram: '8 GB',
-        ram: '16 GB',
-        storage: '150 GB NVMe SSD'
-      },
-      recommended: {
-        os: 'Windows 11 64-bit',
-        cpu: 'Intel Core i7-14700K / AMD Ryzen 7 7800X3D',
-        gpu: 'NVIDIA RTX 4070 Ti Super / AMD RX 7900 XT',
-        vram: '16 GB',
-        ram: '32 GB',
-        storage: '150 GB Gen4 NVMe SSD'
-      }
-    }
-  },
+
 
   'doom-the-dark-ages': {
     developer: 'id Software',
@@ -1635,6 +1701,134 @@ export const GAME_METADATA = {
         storage: '100 GB NVMe SSD'
       }
     }
+  },
+
+  'pragmata': {
+    developer: 'Capcom',
+    publisher: 'Capcom',
+    metacritic: 90,
+    steamRating: 'Very Positive (89%)',
+    hltb: { main: 18, extra: 28, completionist: 45 },
+    proton: {
+      tier: 'Platinum',
+      antiCheat: 'Capcom Denuvo',
+      worksOnline: true,
+      status: 'RE Engine optimized with native Direct3D 12 and DirectX Raytracing pipeline.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10 64-bit',
+        cpu: 'Intel Core i5-10600K / AMD Ryzen 5 3600X',
+        gpu: 'NVIDIA RTX 2060 / AMD RX 6600',
+        vram: '6 GB',
+        ram: '16 GB',
+        storage: '85 GB SSD'
+      },
+      recommended: {
+        os: 'Windows 11 64-bit',
+        cpu: 'Intel Core i7-13700K / AMD Ryzen 7 7800X3D',
+        gpu: 'NVIDIA RTX 4070 Ti / AMD RX 7900 XT',
+        vram: '12 GB',
+        ram: '32 GB',
+        storage: '85 GB NVMe SSD'
+      }
+    }
+  },
+
+  'borderlands-4': {
+    developer: 'Gearbox Software',
+    publisher: '2K Games',
+    metacritic: 88,
+    steamRating: 'Very Positive (87%)',
+    hltb: { main: 32, extra: 60, completionist: 110 },
+    proton: {
+      tier: 'Gold',
+      antiCheat: 'SHiFT Network / Denuvo',
+      worksOnline: true,
+      status: 'Unreal Engine 5 DX12 title with seamless co-op multiplayer.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10 64-bit',
+        cpu: 'Intel Core i5-9600K / AMD Ryzen 5 3600',
+        gpu: 'NVIDIA GTX 1660 Super / AMD RX 5600 XT',
+        vram: '6 GB',
+        ram: '16 GB',
+        storage: '120 GB SSD'
+      },
+      recommended: {
+        os: 'Windows 11 64-bit',
+        cpu: 'Intel Core i7-12700 / AMD Ryzen 7 5800X3D',
+        gpu: 'NVIDIA RTX 3070 / AMD RX 6800',
+        vram: '8 GB',
+        ram: '32 GB',
+        storage: '120 GB NVMe SSD'
+      }
+    }
+  },
+
+  'expedition-33': {
+    developer: 'Sandfall Interactive',
+    publisher: 'Kepler Interactive',
+    metacritic: 89,
+    steamRating: 'Very Positive (91%)',
+    hltb: { main: 30, extra: 50, completionist: 75 },
+    proton: {
+      tier: 'Platinum',
+      antiCheat: 'None (Single Player)',
+      worksOnline: true,
+      status: 'UE5 Lumen and Nanite rendering with stellar DX12 Proton compatibility.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10 64-bit',
+        cpu: 'Intel Core i7-8700K / AMD Ryzen 5 3600',
+        gpu: 'NVIDIA RTX 2060 Super / AMD RX 5700 XT',
+        vram: '8 GB',
+        ram: '16 GB',
+        storage: '70 GB SSD'
+      },
+      recommended: {
+        os: 'Windows 11 64-bit',
+        cpu: 'Intel Core i7-13700 / AMD Ryzen 7 7700X',
+        gpu: 'NVIDIA RTX 4070 / AMD RX 7800 XT',
+        vram: '12 GB',
+        ram: '32 GB',
+        storage: '70 GB NVMe SSD'
+      }
+    }
+  },
+
+  'mafia-the-old-country': {
+    developer: 'Hangar 13',
+    publisher: '2K Games',
+    metacritic: 87,
+    steamRating: 'Very Positive (88%)',
+    hltb: { main: 20, extra: 35, completionist: 50 },
+    proton: {
+      tier: 'Gold',
+      antiCheat: 'Denuvo Anti-Tamper',
+      worksOnline: true,
+      status: 'Illusion Engine DX12 with high quality volumetric global illumination.'
+    },
+    requirements: {
+      minimum: {
+        os: 'Windows 10 64-bit',
+        cpu: 'Intel Core i5-10400 / AMD Ryzen 5 3600',
+        gpu: 'NVIDIA RTX 2060 / AMD RX 5700',
+        vram: '6 GB',
+        ram: '16 GB',
+        storage: '90 GB SSD'
+      },
+      recommended: {
+        os: 'Windows 11 64-bit',
+        cpu: 'Intel Core i7-12700K / AMD Ryzen 7 5800X',
+        gpu: 'NVIDIA RTX 3070 Ti / AMD RX 6800 XT',
+        vram: '8 GB',
+        ram: '32 GB',
+        storage: '90 GB NVMe SSD'
+      }
+    }
   }
 };
 
@@ -1642,51 +1836,62 @@ export function getGameReleaseInfo(game) {
   if (!game) {
     return {
       releaseDate: null,
-      shortLabel: 'TBA',
-      fullLabel: 'TBA',
-      badgeLabel: 'TBA',
+      shortLabel: '',
+      fullLabel: '',
+      badgeLabel: '',
       isUnreleased: false
     };
   }
 
-  const now = new Date();
-  const releaseYear = Number(game.releaseYear || 0);
-  const releaseMonth = Number(game.releaseMonth || 0);
-  const releaseDay = Number(game.releaseDay || 1);
+  const currentYear = new Date().getFullYear();
+
+  // Only trust the isUpcoming flag if there's no evidence the game is already out.
+  // If releaseYear is in the past, ignore the flag — IGDB will correct it on the detail page.
+  const yearClearlyPast = game.releaseYear && game.releaseYear < currentYear;
+
+  if ((game.isUpcoming === true || game.isUnreleased === true) && !yearClearlyPast) {
+    const yearText = game.releaseYear ? `Expected ${game.releaseYear}` : 'Upcoming';
+    return {
+      releaseDate: null,
+      shortLabel: yearText,
+      fullLabel: yearText,
+      badgeLabel: game.releaseYear ? `Upcoming • ${game.releaseYear}` : 'Upcoming',
+      isUnreleased: true
+    };
+  }
 
   let releaseDate = null;
-
   if (game.releaseDate) {
     const parsed = new Date(game.releaseDate);
     if (!Number.isNaN(parsed.getTime())) releaseDate = parsed;
-  }
-
-  if (!releaseDate && releaseYear && releaseMonth) {
-    releaseDate = new Date(releaseYear, releaseMonth - 1, releaseDay || 1);
+  } else if (game.releaseYear && game.releaseMonth) {
+    releaseDate = new Date(game.releaseYear, game.releaseMonth - 1, game.releaseDay || 1);
+  } else if (game.releaseYear) {
+    // Only have the year — treat as Jan 1 of that year for comparison purposes
+    releaseDate = new Date(game.releaseYear, 0, 1);
   }
 
   const shortLabel = releaseDate
     ? new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(releaseDate)
-    : (releaseYear ? String(releaseYear) : 'TBA');
+    : (game.releaseYear ? String(game.releaseYear) : '');
 
   const fullLabel = releaseDate
     ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(releaseDate)
-    : (releaseYear ? String(releaseYear) : 'TBA');
+    : (game.releaseYear ? String(game.releaseYear) : '');
 
-  const isUnreleased = releaseYear
-    ? (releaseMonth
-        ? Boolean(releaseDate && releaseDate > now)
-        : releaseYear > now.getFullYear())
-    : false;
+  // If explicitly flagged released, or date is clearly in the past
+  const now = new Date();
+  const isUnreleased = releaseDate ? releaseDate > now : false;
 
   return {
     releaseDate,
     shortLabel,
     fullLabel,
-    badgeLabel: isUnreleased ? `Unreleased • ${shortLabel}` : shortLabel,
+    badgeLabel: isUnreleased ? `Upcoming • ${shortLabel}` : shortLabel,
     isUnreleased
   };
 }
+
 
 // Fallback generator for custom or imported games
 export function getGameMetadata(game) {

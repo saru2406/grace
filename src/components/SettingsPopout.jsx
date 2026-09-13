@@ -1,20 +1,23 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Sliders, X, Check, Copy, RotateCcw } from 'lucide-react';
 
 export function SettingsPopout({
   isOpen,
   onClose,
-  theme,
-  onSelectTheme,
+  userSettings = {},
+  onUpdateSetting,
+  specs = {},
   steamUser,
-  googleUser,
+  profileName,
+  onProfileNameChange,
   onResetData
 }) {
   const popoutRef = useRef(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(e) {
       if (isOpen && popoutRef.current && !popoutRef.current.contains(e.target)) {
-        // Only close if not clicking the toggle button
         const toggleBtn = document.getElementById('open-settings-btn');
         if (!toggleBtn || !toggleBtn.contains(e.target)) {
           onClose();
@@ -40,17 +43,33 @@ export function SettingsPopout({
 
   if (!isOpen) return null;
 
+  const targetFps = userSettings.targetFps || 60;
+  const fpsDetail = userSettings.fpsDetail || 'detailed';
+  const showBottlenecks = userSettings.showBottlenecks !== false;
+  const ambientBlur = userSettings.ambientBlur !== false;
+
+  const handleCopySpecs = () => {
+    const gpuName = specs?.gpu?.name || 'Unselected GPU';
+    const cpuName = specs?.cpu?.name || 'Unselected CPU';
+    const ramSize = specs?.ram ? `${specs.ram}GB RAM` : '16GB RAM';
+    const resNode = specs?.resolution ? specs.resolution.toUpperCase() : '1440P';
+    const presetNode = specs?.preset ? specs.preset.toUpperCase() : 'HIGH';
+
+    const text = `PC Rig: ${gpuName} • ${cpuName} • ${ramSize} | Testing @ ${resNode} ${presetNode}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    }).catch(() => {});
+  };
+
   return (
     <div id="settings-popout" className="profile-popout" ref={popoutRef}>
       <div className="popout-arrow"></div>
 
       <div className="popout-header">
         <div className="popout-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          <span>Preferences</span>
+          <Sliders size={15} />
+          <span>Preferences &amp; Rig Options</span>
         </div>
         <button
           id="close-settings-popout"
@@ -59,78 +78,122 @@ export function SettingsPopout({
           onClick={onClose}
           aria-label="Close"
         >
-          ✕
+          <X size={14} />
         </button>
       </div>
 
-      {/* Theme Setting */}
+      {/* 1. Target Framerate Baseline */}
       <div className="popout-section">
-        <div className="popout-section-title">Theme</div>
-        <div className="theme-options-grid" id="theme-options-grid">
-          <div
-            className={`theme-card-option ${theme === 'ambient' ? 'active' : ''}`}
-            data-theme="ambient"
-            onClick={() => onSelectTheme('ambient')}
-          >
-            <div className="theme-preview-dots">
-              <span className="theme-dot" style={{ background: 'linear-gradient(135deg, #ffffff, #94a3b8)' }}></span>
-              <span className="theme-dot" style={{ background: '#64748b' }}></span>
-            </div>
-            <span className="theme-name">Game Blur (Default)</span>
-          </div>
+        <div className="popout-section-title-row">
+          <span className="popout-section-title">Target Refresh Rate</span>
+          <span className="popout-active-val">{targetFps} FPS</span>
+        </div>
+        <div className="popout-segmented-grid">
+          {[60, 120, 144, 240].map(fps => (
+            <button
+              key={fps}
+              type="button"
+              className={`popout-seg-btn ${targetFps === fps ? 'active' : ''}`}
+              onClick={() => onUpdateSetting && onUpdateSetting('targetFps', fps)}
+            >
+              {fps} Hz
+            </button>
+          ))}
+        </div>
+      </div>
 
-          <div
-            className={`theme-card-option ${theme === 'amoled' ? 'active' : ''}`}
-            data-theme="amoled"
-            onClick={() => onSelectTheme('amoled')}
+      {/* 2. FPS Card Detail Mode */}
+      <div className="popout-section">
+        <div className="popout-section-title-row">
+          <span className="popout-section-title">Card FPS Display</span>
+        </div>
+        <div className="popout-segmented-grid">
+          <button
+            type="button"
+            className={`popout-seg-btn ${fpsDetail === 'detailed' ? 'active' : ''}`}
+            onClick={() => onUpdateSetting && onUpdateSetting('fpsDetail', 'detailed')}
           >
-            <div className="theme-preview-dots">
-              <span className="theme-dot" style={{ background: '#000000', border: '1px solid rgba(255, 255, 255, 0.3)' }}></span>
-              <span className="theme-dot" style={{ background: '#ffffff' }}></span>
-            </div>
-            <span className="theme-name">AMOLED Black</span>
-          </div>
+            AVG + 1% Lows
+          </button>
+          <button
+            type="button"
+            className={`popout-seg-btn ${fpsDetail === 'simple' ? 'active' : ''}`}
+            onClick={() => onUpdateSetting && onUpdateSetting('fpsDetail', 'simple')}
+          >
+            AVG Only
+          </button>
+        </div>
+      </div>
 
-          <div
-            className={`theme-card-option ${theme === 'midnight' ? 'active' : ''}`}
-            data-theme="midnight"
-            onClick={() => onSelectTheme('midnight')}
-          >
-            <div className="theme-preview-dots">
-              <span className="theme-dot" style={{ background: '#0f172a' }}></span>
-              <span className="theme-dot" style={{ background: '#475569' }}></span>
-            </div>
-            <span className="theme-name">Midnight Slate</span>
+      {/* 3. Hardware Bottleneck Indicators */}
+      <div className="popout-section">
+        <div className="popout-row-toggle" onClick={() => onUpdateSetting && onUpdateSetting('showBottlenecks', !showBottlenecks)}>
+          <div className="popout-toggle-info">
+            <span className="popout-toggle-label">Bottleneck Badges</span>
+            <span className="popout-toggle-sub">Show GPU/CPU bound tags on game cards</span>
+          </div>
+          <div className={`popout-switch-track ${showBottlenecks ? 'on' : 'off'}`}>
+            <span className="popout-switch-thumb" />
           </div>
         </div>
       </div>
 
-      {/* Connected Accounts */}
+      {/* 4. Ambient Game Blur vs AMOLED Black */}
+      <div className="popout-section">
+        <div className="popout-row-toggle" onClick={() => onUpdateSetting && onUpdateSetting('ambientBlur', !ambientBlur)}>
+          <div className="popout-toggle-info">
+            <span className="popout-toggle-label">Ambient Artwork Blur</span>
+            <span className="popout-toggle-sub">{ambientBlur ? 'Dynamic game backdrop' : 'Deep AMOLED black (Battery saver)'}</span>
+          </div>
+          <div className={`popout-switch-track ${ambientBlur ? 'on' : 'off'}`}>
+            <span className="popout-switch-thumb" />
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Quick Export / Copy Rig */}
+      <div className="popout-section">
+        <button
+          type="button"
+          className="btn-copy-rig-specs"
+          onClick={handleCopySpecs}
+        >
+          {copied ? <Check size={14} color="#34d399" /> : <Copy size={14} />}
+          <span>{copied ? 'Rig Specs Copied to Clipboard!' : 'Share / Copy Active Rig Specs'}</span>
+        </button>
+      </div>
+
+      {/* 6. Profile Setting */}
+      <div className="popout-section">
+        <div className="popout-section-title">Gamer Tag / Profile</div>
+        <label className="profile-name-field" htmlFor="profile-name-input">
+          <input
+            id="profile-name-input"
+            className="profile-name-input"
+            type="text"
+            value={profileName || ''}
+            onChange={(e) => onProfileNameChange(e.target.value)}
+            placeholder="Enter gamer tag"
+            maxLength={32}
+          />
+        </label>
+      </div>
+
+      {/* 7. Connected Accounts */}
       <div className="popout-section">
         <div className="popout-section-title">Accounts</div>
         <div id="settings-accounts-summary" className="popout-accounts-summary">
-          <div>
-            {steamUser ? (
-              <span style={{ color: 'var(--ctp-teal)' }}>
-                Connected as <strong>{steamUser.name}</strong> ({steamUser.games.length} games imported)
-              </span>
-            ) : (
-              <span style={{ color: 'var(--ctp-subtext0)' }}>Steam not connected.</span>
-            )}
-          </div>
-          <div>
-            {googleUser ? (
-              <span style={{ color: 'var(--ctp-blue)' }}>
-                Connected as <strong>{googleUser.email}</strong>
-              </span>
-            ) : (
-              <span style={{ color: 'var(--ctp-subtext0)' }}>Google Account not connected.</span>
-            )}
-          </div>
+          {steamUser ? (
+            <span style={{ color: '#ffffff', fontWeight: 600 }}>
+              Connected as <strong>{steamUser.name}</strong> ({steamUser.games.length} games imported)
+            </span>
+          ) : (
+            <span style={{ color: 'var(--ctp-subtext0)' }}>Steam not connected.</span>
+          )}
         </div>
       </div>
 
-      {/* Data Reset */}
+      {/* 8. Data Reset */}
       <div className="popout-section" style={{ borderBottom: 'none', paddingBottom: 0 }}>
         <button
           id="clear-all-data-btn"
@@ -138,6 +201,7 @@ export function SettingsPopout({
           type="button"
           onClick={onResetData}
         >
+          <RotateCcw size={12} style={{ marginRight: 5 }} />
           Reset All Saved Data
         </button>
       </div>

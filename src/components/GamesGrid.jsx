@@ -14,12 +14,19 @@ export function GamesGrid({
   onHoverGame,
   onLeaveGame,
   onSelectGame,
-  onOpenSearchModal
+  onToggleFavorite,
+  favoriteIds,
+  onOpenSearchModal,
+  userSettings = {},
+  steamUser,
+  steamGameCount = 0
 }) {
   const systemPeriod = React.useMemo(() => getSystemPeriod(), []);
 
   const categories = React.useMemo(() => [
     { id: 'all', label: 'All Titles' },
+    { id: 'favorites', label: 'Favourites' },
+    ...(steamUser ? [{ id: 'steam', label: `Steam Owned (${steamGameCount})` }] : []),
     { id: 'trending', label: `Popular (${systemPeriod.monthShort} ${systemPeriod.year})` },
     { id: 'aaa', label: 'AAA Visuals' },
     { id: 'esports', label: 'Esports' },
@@ -27,7 +34,7 @@ export function GamesGrid({
     { id: 'rpg', label: 'RPG' },
     { id: 'shooter', label: 'Shooters' },
     { id: 'racing', label: 'Sim & Racing' }
-  ], [systemPeriod]);
+  ], [systemPeriod, steamUser, steamGameCount]);
 
   return (
     <>
@@ -67,7 +74,9 @@ export function GamesGrid({
                 onClick={() => onSearchChange('')}
                 aria-label="Clear search"
               >
-                ✕
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
               </button>
             )}
           </div>
@@ -78,7 +87,7 @@ export function GamesGrid({
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
           >
-            <option value="trending">Popular: {systemPeriod.year} / {systemPeriod.monthShort}</option>
+            <option value="trending">Popularity</option>
             <option value="fps-desc">FPS: High to Low</option>
             <option value="fps-asc">FPS: Low to High</option>
             <option value="title-asc">Title: A-Z</option>
@@ -90,9 +99,14 @@ export function GamesGrid({
       <div className="games-grid" id="games-grid">
         {items.length === 0 ? (
           <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '36px 20px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '10px' }}>🔍</div>
-            <div style={{ fontWeight: 700, fontSize: '16px', color: '#ffffff', marginBottom: '6px' }}>
-              {searchQuery ? `No library games matching "${searchQuery}"` : 'No games found'}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <div style={{ fontWeight: 600, fontSize: '15px', color: '#ffffff', marginBottom: '6px' }}>
+              {searchQuery ? `No games matching "${searchQuery}"` : 'No games found'}
             </div>
             <p style={{ color: 'var(--ctp-subtext0)', fontSize: '13px', marginBottom: '18px', maxWidth: '420px', marginInline: 'auto' }}>
               {searchQuery
@@ -135,6 +149,11 @@ export function GamesGrid({
               onHover={onHoverGame}
               onLeave={onLeaveGame}
               onSelect={onSelectGame}
+              onToggleFavorite={onToggleFavorite}
+              isFavorite={favoriteIds.includes(item.game.id)}
+              fpsDetail={userSettings.fpsDetail}
+              showBottlenecks={userSettings.showBottlenecks !== false}
+              targetFps={userSettings.targetFps || 60}
             />
           ))
         )}

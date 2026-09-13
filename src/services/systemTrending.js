@@ -29,35 +29,15 @@ export function getSystemPeriod() {
 export function getGameTrendingScore(game, systemYear, systemMonth) {
   if (!game) return 0;
   const sysYear = systemYear ?? new Date().getFullYear();
-  const sysMonth = systemMonth ?? (new Date().getMonth() + 1);
-
   const gYear = game.releaseYear || 2024;
-  const gMonth = game.releaseMonth || 6;
-  const pop = game.popularity || 85;
+  const pop = typeof game.popularity === 'number' ? game.popularity : 85;
 
-  const yearDelta = sysYear - gYear;
-  let recencyScore = 0;
+  // Games released in the current or adjacent year get a slight freshness bonus,
+  // but true player popularity remains the primary ordering factor.
+  const yearDelta = Math.abs(sysYear - gYear);
+  const freshnessBoost = yearDelta === 0 ? 4 : (yearDelta === 1 ? 2 : 0);
 
-  if (yearDelta === 0) {
-    // Released in current system year: reward games near current month
-    const monthDelta = Math.abs(sysMonth - gMonth);
-    recencyScore = Math.max(75, 100 - (monthDelta * 2.5));
-  } else if (yearDelta === 1) {
-    // Released last year: still extremely relevant
-    recencyScore = 84;
-  } else if (yearDelta === -1) {
-    // Next year anticipated blockbuster
-    recencyScore = 90;
-  } else if (yearDelta > 1) {
-    // Older library titles: decay with year distance
-    recencyScore = Math.max(15, 68 - (yearDelta * 14));
-  } else {
-    // Distant future
-    recencyScore = 40;
-  }
-
-  // 60% recency weight + 40% popularity weight
-  return (recencyScore * 0.6) + (pop * 0.4);
+  return pop + freshnessBoost;
 }
 
 /**

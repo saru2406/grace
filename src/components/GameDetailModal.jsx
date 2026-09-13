@@ -63,23 +63,14 @@ export function GameDetailModal({
     upscaling
   });
 
-  let fpsColor = 'var(--ctp-green)';
+  let fpsColor = '#ffffff';
   if (!isConfigured) fpsColor = 'var(--ctp-subtext0)';
-  else if (fpsData.avgFps >= 100) fpsColor = '#ffffff';
-  else if (fpsData.avgFps >= 60) fpsColor = 'var(--ctp-green)';
-  else if (fpsData.avgFps >= 30) fpsColor = 'var(--ctp-yellow)';
-  else fpsColor = 'var(--ctp-red)';
 
   const activeReqs = reqTab === 'minimum' ? metadata.requirements.minimum : metadata.requirements.recommended;
 
   // Proton badge color & status
   const isBorked = metadata.proton.tier === 'Borked' || metadata.proton.tier === 'Unsupported';
-  let protonColor = '#4ade80'; // verified green
-  if (isBorked) protonColor = '#f87171'; // red warning for kernel anti-cheat / borked
-  else if (metadata.proton.tier === 'Silver') protonColor = '#facc15'; // amber for singleplayer only or tweaks
-  else if (metadata.proton.tier === 'Gold') protonColor = '#e2e8f0'; // silver/gold
-  else if (metadata.proton.tier === 'Platinum') protonColor = '#ffffff'; // pure white
-  else if (metadata.proton.tier === 'Native') protonColor = '#4ade80'; // green native
+  const protonColor = 'rgba(255, 255, 255, 0.4)';
 
   return (
     <div
@@ -97,7 +88,9 @@ export function GameDetailModal({
           onClick={onClose}
           aria-label="Close"
         >
-          ✕
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
         </button>
 
         {/* Hero Banner Header */}
@@ -116,7 +109,7 @@ export function GameDetailModal({
             <div className="modal-hero-text">
               <h2 id="modal-title" className="modal-title">{game.title}</h2>
               <p id="modal-genre" className="modal-genre">
-                {game.genre} • {releaseInfo.isUnreleased ? `Unreleased • ${releaseInfo.fullLabel}` : releaseInfo.fullLabel} • {metadata.developer}
+                {game.genre} • {releaseInfo.isUnreleased ? `Upcoming (${releaseInfo.shortLabel})` : releaseInfo.fullLabel} • {metadata.developer}
               </p>
               
               {/* Quick Info Badges: Metacritic, Steam, Proton */}
@@ -125,17 +118,21 @@ export function GameDetailModal({
                   <span className="score-num">{metadata.metacritic}</span>
                   <span className="score-lbl">METASCORE</span>
                 </div>
-                <div className="steam-rating-badge" title="Steam User Reviews">
-                  <span>★</span>
-                  <span>{metadata.steamRating}</span>
-                </div>
+                {metadata.steamRating && (
+                  <div className="steam-rating-badge" title="Steam User Reviews">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <span>{metadata.steamRating}</span>
+                  </div>
+                )}
                 <div
                   className={`proton-badge ${isBorked ? 'proton-borked' : ''}`}
                   style={{ borderColor: protonColor }}
                   title={`Linux & Steam Deck: ${metadata.proton.status}`}
                 >
                   <span className="proton-dot" style={{ backgroundColor: protonColor }}></span>
-                  <span>Proton: <strong>{isBorked ? 'Unsupported ⛔' : metadata.proton.tier}</strong></span>
+                  <span>Proton: <strong>{isBorked ? 'Unsupported' : metadata.proton.tier}</strong></span>
                 </div>
               </div>
             </div>
@@ -178,13 +175,6 @@ export function GameDetailModal({
                 <span
                   id="modal-bottleneck-pill"
                   className="detail-stat-val"
-                  style={{
-                    color: fpsData.bottleneck.culprit === 'GPU'
-                      ? 'var(--ctp-blue)'
-                      : fpsData.bottleneck.culprit === 'CPU'
-                        ? 'var(--ctp-peach)'
-                        : 'var(--ctp-green)'
-                  }}
                 >
                   {isConfigured ? `${fpsData.bottleneck.culprit} (${fpsData.bottleneck.percentage}%)` : '—'}
                 </span>
@@ -194,7 +184,7 @@ export function GameDetailModal({
 
           {/* HowLongToBeat Time Taken to Complete */}
           <div className="detail-section">
-            <h3 className="detail-section-title">⏱️ Time to Complete (HowLongToBeat)</h3>
+            <h3 className="detail-section-title">Time to Complete</h3>
             <div className="hltb-cards-grid">
               <div className="hltb-card">
                 <span className="hltb-label">Main Story</span>
@@ -217,7 +207,7 @@ export function GameDetailModal({
           {/* System Requirements (Minimum & Recommended) */}
           <div className="detail-section">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-              <h3 className="detail-section-title">💻 Official System Requirements</h3>
+              <h3 className="detail-section-title">System Requirements</h3>
               
               <div className="reqs-tab-group">
                 <button
@@ -269,16 +259,22 @@ export function GameDetailModal({
               <div className="rig-check-banner">
                 {isConfigured ? (
                   <>
-                    <span className="rig-check-icon">✓</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
                     <div>
-                      <strong>Your Rig Check:</strong>{' '}
-                      {reqTab === 'recommended' ? 'Meets recommended hardware tier for optimal framerates.' : 'Exceeds minimum requirements.'}
+                      <strong>Rig Check:</strong>{' '}
+                      {reqTab === 'recommended' ? 'Meets recommended hardware tier.' : 'Exceeds minimum requirements.'}
                     </div>
                   </>
                 ) : (
                   <>
-                    <span className="rig-check-icon">ℹ️</span>
-                    <div>Select a GPU and CPU on the right sidebar to compare your hardware directly against these requirements.</div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <div>Select hardware to compare against requirements.</div>
                   </>
                 )}
               </div>
@@ -288,16 +284,16 @@ export function GameDetailModal({
           {/* Linux, SteamOS & Anti-Cheat Compatibility */}
           <div className="detail-section">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-              <h3 className="detail-section-title">🐧 Linux & Steam Deck Compatibility</h3>
+              <h3 className="detail-section-title">Linux &amp; Steam Deck Compatibility</h3>
               <span
                 className="proton-pill"
                 style={{
                   borderColor: protonColor,
-                  color: protonColor,
-                  background: isBorked ? 'rgba(248, 113, 113, 0.12)' : 'rgba(255, 255, 255, 0.08)'
+                  color: 'var(--ctp-text)',
+                  background: 'rgba(255, 255, 255, 0.08)'
                 }}
               >
-                {isBorked ? '⛔ BORKED / UNSUPPORTED' : metadata.proton.tier.toUpperCase()}
+                {isBorked ? 'UNSUPPORTED' : metadata.proton.tier.toUpperCase()}
               </span>
             </div>
 
@@ -309,16 +305,17 @@ export function GameDetailModal({
                 </div>
                 <div className="proton-item">
                   <span className="req-key">Online Multiplayer</span>
-                  <span
-                    className="req-val"
-                    style={{ color: metadata.proton.worksOnline ? '#4ade80' : '#f87171' }}
-                  >
-                    {metadata.proton.worksOnline ? '✓ Functional under Linux/Proton' : '✕ Blocked by Anti-Cheat on Linux'}
+                  <span className="req-val">
+                    {metadata.proton.worksOnline ? 'Functional under Linux/Proton' : 'Blocked by Anti-Cheat on Linux'}
                   </span>
                 </div>
               </div>
               <div className="proton-verdict-note">
-                <span className="proton-note-icon">{isBorked ? '⛔' : 'ℹ️'}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
                 <span className="proton-note-text">{metadata.proton.status}</span>
               </div>
             </div>
@@ -326,7 +323,7 @@ export function GameDetailModal({
 
           {/* Resolution Scaling Potential */}
           <div className="detail-section">
-            <h3 className="detail-section-title">📊 Resolution Scaling Potential</h3>
+            <h3 className="detail-section-title">Resolution Scaling</h3>
             <div id="modal-res-bars" className="res-bars-grid">
               {Array.isArray(resComparison) && resComparison.map(item => {
                 const maxBarFps = 165;
@@ -368,7 +365,7 @@ export function GameDetailModal({
 
           {/* Performance Diagnostics & Tips */}
           <div className="detail-section">
-            <h3 className="detail-section-title">💡 Performance Diagnostics & Tuning</h3>
+            <h3 className="detail-section-title">Performance Diagnostics</h3>
             <div id="modal-tips-box" className="detail-tips-box">
               {fpsData.tips.map((tip, idx) => (
                 <p key={idx}>{tip}</p>

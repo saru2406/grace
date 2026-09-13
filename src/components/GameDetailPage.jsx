@@ -1,44 +1,54 @@
 import React, { useState, useEffect } from "react";
 import {
   ChevronLeft, Star, Clock, Monitor, Cpu, HardDrive, MemoryStick,
-  Gauge, Zap, Activity, Layers, AlertTriangle, CheckCircle, XCircle, Info, Shield
+  Gauge, Zap, Activity, Layers, AlertTriangle, CheckCircle, XCircle, Info, Shield, ExternalLink
 } from "lucide-react";
 import { calculateFps, calculateResolutionComparison } from "../services/fpsEngine.js";
-import { getGameHero, getGameWideCover } from "../services/steamGrid.js";
+import { getGameHero, getGameWideCover, getGameLogo } from "../services/steamGrid.js";
 import { getGameMetadata, getGameReleaseInfo } from "../data/gameMetadata.js";
+import { DEFAULT_PLACEHOLDER_COVER } from "../services/gameAssets.js";
+import { enrichSingleGame } from "../services/igdb.js";
 
-export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscaling, rayTracing, onBack, onLoadingChange, onWideArtChange }) {
+export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscaling, rayTracing, isFavorite, onToggleFavorite, onBack, onWideArtChange }) {
   const [heroUrl, setHeroUrl] = useState("");
   const [heroLoaded, setHeroLoaded] = useState(false);
   const [thumbLoaded, setThumbLoaded] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(game?.logoUrl || "");
+  const [logoLoaded, setLogoLoaded] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
   const [reqTab, setReqTab] = useState("recommended");
-  const [loadingPct, setLoadingPct] = useState(0);
-  const [loadingDone, setLoadingDone] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [igdbData, setIgdbData] = useState(null);
 
   useEffect(() => {
     if (!game) return;
-    setLoadingPct(0); setLoadingDone(false); setVisible(false);
-    if (onLoadingChange) onLoadingChange(0, false);
-    let pct = 0;
-    const tick = () => {
-      pct = pct < 70 ? pct + Math.random() * 18 + 6 : pct < 90 ? pct + Math.random() * 4 + 1 : pct < 95 ? pct + 0.5 : pct;
-      if (pct > 95) pct = 95;
-      setLoadingPct(pct);
-      if (onLoadingChange) onLoadingChange(pct, false);
-    };
-    const interval = setInterval(tick, 60);
+    setVisible(false);
     const enterTimer = setTimeout(() => setVisible(true), 30);
-    const finishTimer = setTimeout(() => {
-      clearInterval(interval);
-      setLoadingPct(100);
-      if (onLoadingChange) onLoadingChange(100, false);
-      setTimeout(() => {
-        setLoadingDone(true);
-        if (onLoadingChange) onLoadingChange(100, true);
-      }, 380);
-    }, 1200);
-    return () => { clearInterval(interval); clearTimeout(enterTimer); clearTimeout(finishTimer); };
+    return () => clearTimeout(enterTimer);
+  }, [game]);
+
+  useEffect(() => {
+    if (!game) return;
+    let cancelled = false;
+    const initialLogo = game.logoUrl || "";
+    setLogoUrl(initialLogo);
+    setLogoLoaded(Boolean(initialLogo));
+    setLogoFailed(false);
+
+    if (initialLogo) return;
+
+    getGameLogo(game.steamGridId, game.steamAppId, game.title)
+      .then(logo => {
+        if (!cancelled && logo?.url) {
+          setLogoUrl(logo.url);
+          setLogoLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLogoFailed(true);
+      });
+
+    return () => { cancelled = true; };
   }, [game]);
 
   useEffect(() => {
@@ -73,35 +83,63 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
     return () => window.removeEventListener("keydown", fn);
   }, [onBack]);
 
+  // IGDB enrichment - fetch live game details for accuracy
+  useEffect(() => {
+    if (!game) return;
+    let cancelled = false;
+    setIgdbData(null);
+    enrichSingleGame(game)
+      .then(data => {
+        if (!cancelled && data) setIgdbData(data);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [game]);
+
   if (!game) return null;
 
   const metadata = getGameMetadata(game);
   const releaseInfo = getGameReleaseInfo(game);
+  const steamRatingDisplay = igdbData?.igdbRating != null ? `${igdbData.igdbRating}%` : metadata.steamRating;
   const isConfigured = Boolean(gpu && cpu);
   const fpsData = calculateFps(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, upscaling });
   const resComparison = calculateResolutionComparison(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, upscaling });
 
   let fpsColor = "var(--ctp-subtext0)";
   if (isConfigured) {
-    if (fpsData.avgFps >= 100) fpsColor = "#ffffff";
-    else if (fpsData.avgFps >= 60) fpsColor = "#4ade80";
-    else if (fpsData.avgFps >= 30) fpsColor = "#facc15";
-    else fpsColor = "#f87171";
+    fpsColor = "#ffffff";
   }
 
   const activeReqs = reqTab === "minimum" ? metadata.requirements.minimum : metadata.requirements.recommended;
 
   const isBorked = metadata.proton.tier === "Borked" || metadata.proton.tier === "Unsupported";
-  let protonColor = "#4ade80";
-  if (isBorked) protonColor = "#f87171";
-  else if (metadata.proton.tier === "Silver") protonColor = "#facc15";
-  else if (metadata.proton.tier === "Gold") protonColor = "#e2e8f0";
-  else if (metadata.proton.tier === "Platinum") protonColor = "#ffffff";
+  const protonColor = "rgba(255, 255, 255, 0.4)";
 
   const resLabels = { "1080p": "1080p Full HD", "1440p": "1440p Quad HD", "4k": "4K Ultra HD" };
 
+
   return (
-    <div className={`gdp-root ${visible ? "gdp-visible" : ""}`}>
+    <div
+      className={`gdp-root ${visible ? "gdp-visible" : ""}`}
+    >
+      {/* Floating Navigation: Just the back button and right next to it the favourite button (no container, no repeated game name) */}
+      <div className="gdp-nav-actions">
+        <button className="gdp-back-btn" onClick={onBack} type="button" id="gdp-sticky-back-btn">
+          <ChevronLeft size={16} />
+          Back to Library
+        </button>
+        {onToggleFavorite && (
+          <button
+            type="button"
+            className={`gdp-fav-pill-btn ${isFavorite ? "active" : ""}`}
+            onClick={onToggleFavorite}
+            title={isFavorite ? `Remove ${game.title} from favourites` : `Add ${game.title} to favourites`}
+          >
+            <Star size={13} fill={isFavorite ? "currentColor" : "none"} strokeWidth={isFavorite ? 2.5 : 2} />
+            <span>{isFavorite ? "Favourited" : "Favourite"}</span>
+          </button>
+        )}
+      </div>
 
       {/* Hero Banner */}
       <div className={`gdp-hero ${heroLoaded ? "hero-loaded" : "hero-loading"}`}
@@ -128,11 +166,6 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
         />
         <div className="gdp-hero-overlay" />
 
-        <button className="gdp-back-btn" onClick={onBack} type="button">
-          <ChevronLeft size={16} />
-          Back to Library
-        </button>
-
         <div className="gdp-hero-content">
           <div className="gdp-thumb-wrap">
             {!thumbLoaded && <div className="gdp-thumb-skeleton" />}
@@ -148,28 +181,97 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
               onLoad={() => setThumbLoaded(true)}
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&auto=format&fit=crop&q=80";
+                e.target.src = DEFAULT_PLACEHOLDER_COVER;
                 setThumbLoaded(true);
               }}
             />
           </div>
           <div className="gdp-hero-text">
-            <h1 className="gdp-title">{game.title}</h1>
-            <p className="gdp-subtitle">{game.genre} &bull; {releaseInfo.isUnreleased ? `Unreleased • ${releaseInfo.fullLabel}` : releaseInfo.fullLabel} &bull; {metadata.developer}</p>
+            {logoUrl && !logoFailed ? (
+              <div className="gdp-logo-wrap">
+                <img
+                  className={`gdp-logo-img ${logoLoaded ? "loaded" : ""}`}
+                  src={logoUrl}
+                  alt={game.title}
+                  onLoad={() => setLogoLoaded(true)}
+                  onError={() => setLogoFailed(true)}
+                />
+              </div>
+            ) : (
+              <h1 className="gdp-title">{game.title}</h1>
+            )}
+            <p className="gdp-subtitle">
+              <span>{igdbData?.genres?.[0] || game.genre}</span>
+              <span className="gdp-sub-sep">&bull;</span>
+              <span>
+                {(() => {
+                  // IGDB is the authority — use it when loaded
+                  if (igdbData?.releaseDate) {
+                    const d = new Date(igdbData.releaseDate);
+                    return d <= new Date()
+                      ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                      : `Upcoming (${d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })})`;
+                  }
+                  // While IGDB is loading: just show the year, never guess "Upcoming"
+                  if (game.releaseYear) return String(game.releaseYear);
+                  return '';
+                })()}
+              </span>
+            </p>
+
+            {/* Prominently Display Developer and Publisher */}
+            <div className="gdp-studios-strip">
+              <div className="gdp-studio-card">
+                <span className="gdp-studio-label">DEVELOPER</span>
+                <span className="gdp-studio-name">{igdbData?.developer || metadata.developer || 'Game Studio'}</span>
+              </div>
+              <div className="gdp-studio-divider" />
+              <div className="gdp-studio-card">
+                <span className="gdp-studio-label">PUBLISHER</span>
+                <span className="gdp-studio-name">{igdbData?.publisher || metadata.publisher || game.publisher || metadata.developer || 'Publisher'}</span>
+              </div>
+              {igdbData?.genres?.length > 0 && (
+                <>
+                  <div className="gdp-studio-divider" />
+                  <div className="gdp-studio-card">
+                    <span className="gdp-studio-label">GENRE</span>
+                    <span className="gdp-studio-name">{igdbData.genres.slice(0, 2).join(' / ')}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
             <div className="gdp-badges game-detail-tags">
               <div className="meta-score-badge">
-                <span className="score-num">{metadata.metacritic}</span>
-                <span className="score-lbl">METASCORE</span>
+                <span className="score-num">{igdbData?.metacriticRating || igdbData?.igdbRating || metadata.metacritic}</span>
+                <span className="score-lbl">{igdbData?.metacriticRating ? 'METACRITIC' : 'METASCORE'}</span>
               </div>
-              <div className="steam-rating-badge">
-                <Star size={12} />
-                <span>{metadata.steamRating}</span>
-              </div>
+              {steamRatingDisplay && (
+                <div className="steam-rating-badge">
+                  <Star size={12} />
+                  <span>{steamRatingDisplay}</span>
+                </div>
+              )}
               <div className={`proton-badge ${isBorked ? "proton-borked" : ""}`} style={{ borderColor: protonColor }}>
                 <span className="proton-dot" style={{ backgroundColor: protonColor }} />
                 <span>Proton: <strong>{isBorked ? "Unsupported" : metadata.proton.tier}</strong></span>
               </div>
+              {/* Store links from IGDB */}
+              {igdbData?.websites?.filter(w => [13,16,17].includes(w.category)).map((site, i) => {
+                const labels = { 13: 'Steam', 16: 'Epic', 17: 'GOG' };
+                return (
+                  <a key={i} href={site.url} target="_blank" rel="noopener noreferrer" className="igdb-store-badge">
+                    <ExternalLink size={10} />
+                    <span>{labels[site.category] || 'Store'}</span>
+                  </a>
+                );
+              })}
             </div>
+
+            {/* IGDB Live Description — seamlessly injected into hero, no separate section */}
+            {igdbData?.summary && (
+              <p className="gdp-igdb-summary">{igdbData.summary}</p>
+            )}
           </div>
         </div>
       </div>
@@ -184,12 +286,12 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
           <section className="gdp-section gdp-fps-banner">
             <div className="gdp-section-title-row">
               <Gauge size={15} />
-              <span>FPS on Your Rig</span>
+              <span>Estimated FPS</span>
               <span className="rig-preset-badge">{resolution.toUpperCase()} &bull; {preset.toUpperCase()}</span>
             </div>
             <div className="detail-fps-value-group" style={{ marginBottom: 12 }}>
               <span className="detail-fps-num" style={{ color: fpsColor }}>{isConfigured ? fpsData.avgFps : "—"}</span>
-              <span className="detail-fps-unit">FPS AVG</span>
+              <span className="detail-fps-unit">EST. FPS</span>
             </div>
             <div className="detail-stats-grid">
               <div className="detail-stat-card">
@@ -202,10 +304,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
               </div>
               <div className="detail-stat-card">
                 <span className="detail-stat-label">Bottleneck</span>
-                <span className="detail-stat-val" style={{
-                  color: fpsData.bottleneck.culprit === "GPU" ? "var(--ctp-blue)"
-                       : fpsData.bottleneck.culprit === "CPU" ? "var(--ctp-peach)" : "#4ade80"
-                }}>{isConfigured ? `${fpsData.bottleneck.culprit} (${fpsData.bottleneck.percentage}%)` : "—"}</span>
+                <span className="detail-stat-val">{isConfigured ? `${fpsData.bottleneck.culprit} (${fpsData.bottleneck.percentage}%)` : "—"}</span>
               </div>
             </div>
           </section>
@@ -247,8 +346,8 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
             <div className="gdp-section-title-row">
               <Shield size={15} />
               <span>Linux &amp; Steam Deck</span>
-              <span className="proton-pill" style={{ borderColor: protonColor, color: protonColor, background: isBorked ? "rgba(248,113,113,0.12)" : "rgba(255,255,255,0.07)", marginLeft: "auto" }}>
-                {isBorked ? "BORKED" : metadata.proton.tier.toUpperCase()}
+              <span className="proton-pill" style={{ borderColor: protonColor, color: "var(--ctp-text)", background: "rgba(255,255,255,0.07)", marginLeft: "auto" }}>
+                {isBorked ? "UNSUPPORTED" : metadata.proton.tier.toUpperCase()}
               </span>
             </div>
             <div className={`proton-box ${isBorked ? "proton-box-borked" : ""}`}>
@@ -259,13 +358,13 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
                 </div>
                 <div className="proton-item">
                   <span className="req-key">Online Multiplayer</span>
-                  <span className="req-val" style={{ color: metadata.proton.worksOnline ? "#4ade80" : "#f87171" }}>
+                  <span className="req-val">
                     {metadata.proton.worksOnline ? "Functional under Linux/Proton" : "Blocked by Anti-Cheat on Linux"}
                   </span>
                 </div>
               </div>
               <div className="proton-verdict-note">
-                <span className="proton-note-icon">{isBorked ? <XCircle size={14} color="#f87171" /> : <Info size={14} />}</span>
+                <span className="proton-note-icon">{isBorked ? <XCircle size={14} color="var(--ctp-subtext0)" /> : <Info size={14} />}</span>
                 <span className="proton-note-text">{metadata.proton.status}</span>
               </div>
             </div>
@@ -329,7 +428,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
               </div>
               <div className="rig-check-banner">
                 {isConfigured ? (
-                  <><CheckCircle size={14} color="#4ade80" /><div><strong>Rig Check:</strong> {reqTab === "recommended" ? "Meets recommended specs." : "Exceeds minimum."}</div></>
+                  <><CheckCircle size={14} color="var(--ctp-text)" /><div><strong>Rig Check:</strong> {reqTab === "recommended" ? "Meets recommended specs." : "Exceeds minimum."}</div></>
                 ) : (
                   <><Info size={14} /><div>Select GPU &amp; CPU to compare against requirements.</div></>
                 )}

@@ -1,6 +1,6 @@
 export const GPUS = [
   // NVIDIA 50 Series
-  { id: 'rtx-5090', name: 'NVIDIA GeForce RTX 5090', brand: 'NVIDIA', vram: 32, score: 410, rtScore: 470, tier: 'God Tier' },
+  { id: 'rtx-5090', name: 'NVIDIA GeForce RTX 5090', brand: 'NVIDIA', vram: 32, score: 410, rtScore: 470, tier: 'Flagship' },
   { id: 'rtx-5080', name: 'NVIDIA GeForce RTX 5080', brand: 'NVIDIA', vram: 16, score: 285, rtScore: 320, tier: 'Enthusiast' },
   
   // NVIDIA 40 Series
@@ -67,9 +67,9 @@ export const GPUS = [
 
 export const CPUS = [
   // AMD Ryzen 9000 & 7000 Series
-  { id: 'r7-9800x3d', name: 'AMD Ryzen 7 9800X3D (8C/16T)', brand: 'AMD', score: 182, fpsCap: 330, tier: 'God Tier' },
+  { id: 'r7-9800x3d', name: 'AMD Ryzen 7 9800X3D (8C/16T)', brand: 'AMD', score: 182, fpsCap: 330, tier: 'Flagship' },
   { id: 'r9-7950x3d', name: 'AMD Ryzen 9 7950X3D (16C/32T)', brand: 'AMD', score: 168, fpsCap: 300, tier: 'Enthusiast' },
-  { id: 'r7-7800x3d', name: 'AMD Ryzen 7 7800X3D (8C/16T)', brand: 'AMD', score: 172, fpsCap: 310, tier: 'God Tier' },
+  { id: 'r7-7800x3d', name: 'AMD Ryzen 7 7800X3D (8C/16T)', brand: 'AMD', score: 172, fpsCap: 310, tier: 'Flagship' },
   { id: 'r9-7900x', name: 'AMD Ryzen 9 7900X (12C/24T)', brand: 'AMD', score: 145, fpsCap: 260, tier: 'High-End' },
   { id: 'r7-7700x', name: 'AMD Ryzen 7 7700X (8C/16T)', brand: 'AMD', score: 142, fpsCap: 255, tier: 'High-End' },
   { id: 'r5-7600x', name: 'AMD Ryzen 5 7600X (6C/12T)', brand: 'AMD', score: 136, fpsCap: 245, tier: 'Upper Mid-Range' },
@@ -163,8 +163,8 @@ export const SYSTEM_PRESETS = [
   },
   {
     id: 'ultimate',
-    name: 'God Tier RTX 5090',
-    badge: 'Maximum Power',
+    name: 'RTX 5090 Enthusiast',
+    badge: 'Flagship',
     gpuId: 'rtx-5090',
     cpuId: 'r7-9800x3d',
     ram: 64,

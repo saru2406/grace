@@ -19,24 +19,24 @@ export function SystemStatusBar({ isConfigured, summary }) {
       <div id="status-configured" className="status-stats">
         <div className="stat-pill">
           <span className="stat-pill-label">AVG</span>
-          <span id="summary-avg-fps" className="stat-pill-val color-mauve">{avgFps} FPS</span>
+          <span id="summary-avg-fps" className="stat-pill-val">{avgFps} FPS</span>
         </div>
 
         <div className="stat-pill">
           <span className="stat-pill-label">1% LOW</span>
-          <span id="summary-1low-fps" className="stat-pill-val color-blue">{lowFps} FPS</span>
+          <span id="summary-1low-fps" className="stat-pill-val">{lowFps} FPS</span>
         </div>
 
         <div className="stat-pill">
           <span className="stat-pill-label">BOTTLENECK</span>
-          <span id="summary-bottleneck-val" className="stat-pill-val" style={{ color: bottleneckColor }}>
+          <span id="summary-bottleneck-val" className="stat-pill-val">
             {bottleneckText}
           </span>
         </div>
 
         <div className="stat-pill">
           <span className="stat-pill-label">60+ FPS</span>
-          <span id="summary-smooth-count" className="stat-pill-val color-green">
+          <span id="summary-smooth-count" className="stat-pill-val">
             {smoothCount} / {totalCount}
           </span>
         </div>

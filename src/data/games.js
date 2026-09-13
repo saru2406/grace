@@ -1,5 +1,44 @@
 export const DEFAULT_GAMES = [
   {
+    "id": "minecraft",
+    "title": "Minecraft",
+    "genre": "Voxel Sandbox / Survival",
+    "category": "openworld",
+    "releaseYear": 2011,
+    "steamGridId": 38365,
+    "coverUrl": "https://cdn2.steamgriddb.com/grid/a73027901f88055aaa0fd1a9e25d36c7.png",
+    "baseFps": 140,
+    "gpuIntensity": 0.75,
+    "cpuIntensity": 1.3,
+    "vramAt1080p": 3.8,
+    "vramAt1440p": 5.4,
+    "vramAt4k": 8,
+    "ramRecommended": 16,
+    "supportsRayTracing": true,
+    "rtImpact": 0.5,
+    "description": "The world-renowned voxel sandbox of limitless exploration. Extremely CPU-dependent for chunk rendering, and transforms into a graphical showpiece with Bedrock RTX or Java Iris shaderpacks.",
+    "heroUrl": "https://cdn2.steamgriddb.com/hero/ecd812da02543c0269cfc2c56ab3c3c0.png",
+    "wideCoverUrl": "https://cdn2.steamgriddb.com/hero/ecd812da02543c0269cfc2c56ab3c3c0.png",
+    "popularity": 99,
+    "tags": [
+      "mine",
+      "mc",
+      "craft",
+      "voxel",
+      "sandbox",
+      "survival",
+      "mojang",
+      "bedrock",
+      "java",
+      "rtx"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/90915208c601cc8c86ad01250ee90c12.png",
+    "releaseDate": "2011-11-18",
+    "releaseMonth": 11,
+    "releaseDay": 18,
+    "isUpcoming": false
+  },
+  {
     "id": "cyberpunk-2077",
     "title": "Cyberpunk 2077",
     "genre": "Action RPG / Open World",
@@ -19,7 +58,24 @@ export const DEFAULT_GAMES = [
     "description": "Demanding open-world RPG with dense metropolis and advanced ray-traced lighting.",
     "steamAppId": 1091500,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/library_hero.jpg",
+    "popularity": 98,
+    "tags": [
+      "cyber",
+      "cp",
+      "cp2077",
+      "nightcity",
+      "cdpr",
+      "rpg",
+      "scifi",
+      "open world",
+      "ray tracing"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/2b2e7393b05b5b52af65bf2ed7f4ad4f.png",
+    "releaseDate": "2020-12-10",
+    "releaseMonth": 12,
+    "releaseDay": 10,
+    "isUpcoming": false
   },
   {
     "id": "black-myth-wukong",
@@ -41,7 +97,23 @@ export const DEFAULT_GAMES = [
     "description": "Unreal Engine 5 graphical powerhouse with Nanite geometry and Lumen illumination.",
     "steamAppId": 2358720,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/library_hero.jpg",
+    "popularity": 98,
+    "tags": [
+      "wukong",
+      "bmw",
+      "monkey",
+      "souls",
+      "soulslike",
+      "action",
+      "rpg",
+      "ue5"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/2cb20cf1015104c145ddd098f482005e.png",
+    "releaseDate": "2024-08-20",
+    "releaseMonth": 8,
+    "releaseDay": 20,
+    "isUpcoming": false
   },
   {
     "id": "space-marine-2",
@@ -63,7 +135,22 @@ export const DEFAULT_GAMES = [
     "description": "Swarm technology combat rendering thousands of Tyranid enemies simultaneously.",
     "steamAppId": 2183900,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2183900/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2183900/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2183900/library_hero.jpg",
+    "popularity": 94,
+    "tags": [
+      "sm2",
+      "spacemarine",
+      "warhammer",
+      "40k",
+      "shooter",
+      "action",
+      "coop"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/e8a0ec28fc4273aa546f3abb6a3c24d9.png",
+    "releaseDate": "2024-09-09",
+    "releaseMonth": 9,
+    "releaseDay": 9,
+    "isUpcoming": false
   },
   {
     "id": "elden-ring",
@@ -85,7 +172,23 @@ export const DEFAULT_GAMES = [
     "description": "The Lands Between. Vast open world with atmospheric art direction.",
     "steamAppId": 1245620,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1245620/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1245620/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1245620/library_hero.jpg",
+    "popularity": 99,
+    "tags": [
+      "elden",
+      "er",
+      "fromsoft",
+      "souls",
+      "soulslike",
+      "rpg",
+      "goty",
+      "open world"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/69f5d5c1249e17f4ac1d5b716db47105.png",
+    "releaseDate": "2022-02-25",
+    "releaseMonth": 2,
+    "releaseDay": 25,
+    "isUpcoming": false
   },
   {
     "id": "red-dead-redemption-2",
@@ -107,7 +210,23 @@ export const DEFAULT_GAMES = [
     "description": "Rockstar RAGE engine with volumetric clouds, water physics, and realistic terrain.",
     "steamAppId": 1174180,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/library_hero.jpg",
+    "popularity": 99,
+    "tags": [
+      "rdr",
+      "rdr2",
+      "red dead",
+      "arthur",
+      "rockstar",
+      "western",
+      "open world",
+      "cowboy"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/ff38348a5adb1889dd55c7ccba583c43.png",
+    "releaseDate": "2019-11-05",
+    "releaseMonth": 11,
+    "releaseDay": 5,
+    "isUpcoming": false
   },
   {
     "id": "ghost-of-tsushima",
@@ -129,7 +248,23 @@ export const DEFAULT_GAMES = [
     "description": "Flawlessly optimized open world samurai epic ported by Nixxes with ultra-wide support.",
     "steamAppId": 2215430,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2215430/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2215430/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2215430/library_hero.jpg",
+    "popularity": 94,
+    "tags": [
+      "ghost",
+      "tsushima",
+      "jin",
+      "samurai",
+      "sony",
+      "playstation",
+      "open world",
+      "sword"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/e8630344970962450dbedfcd4cc6d718.png",
+    "releaseDate": "2024-05-16",
+    "releaseMonth": 5,
+    "releaseDay": 16,
+    "isUpcoming": false
   },
   {
     "id": "baldurs-gate-3",
@@ -151,7 +286,23 @@ export const DEFAULT_GAMES = [
     "description": "Deep party-based RPG. Act 3 city zones demand high multi-threaded CPU throughput.",
     "steamAppId": 1086940,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1086940/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1086940/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1086940/library_hero.jpg",
+    "popularity": 98,
+    "tags": [
+      "bg3",
+      "baldurs",
+      "baldur",
+      "larian",
+      "dnd",
+      "rpg",
+      "turn based",
+      "goty"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/71d9945703c17fafe19f7dd1c706d448.png",
+    "releaseDate": "2023-08-03",
+    "releaseMonth": 8,
+    "releaseDay": 3,
+    "isUpcoming": false
   },
   {
     "id": "sekiro",
@@ -173,7 +324,22 @@ export const DEFAULT_GAMES = [
     "description": "Tight swordplay mechanics with lightweight hardware requirements.",
     "steamAppId": 814380,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/814380/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/814380/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/814380/library_hero.jpg",
+    "popularity": 92,
+    "tags": [
+      "sekiro",
+      "fromsoft",
+      "souls",
+      "soulslike",
+      "ninja",
+      "stealth",
+      "sword"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/fe45e3227f3805b1314414203c4e5206.png",
+    "releaseDate": "2019-03-22",
+    "releaseMonth": 3,
+    "releaseDay": 22,
+    "isUpcoming": false
   },
   {
     "id": "spiderman-remastered",
@@ -195,7 +361,20 @@ export const DEFAULT_GAMES = [
     "description": "High-speed web swinging across Manhattan creates heavy CPU streaming and ray-tracing load.",
     "steamAppId": 1817070,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1817070/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1817070/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1817070/library_hero.jpg",
+    "popularity": 85,
+    "tags": [
+      "marvel's",
+      "spider",
+      "man",
+      "remastered",
+      "openworld"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/aa6b0fa969e5b4b7e097ef929cddbc0b.png",
+    "releaseDate": "2022-08-12",
+    "releaseMonth": 8,
+    "releaseDay": 12,
+    "isUpcoming": false
   },
   {
     "id": "gta-v",
@@ -217,7 +396,19 @@ export const DEFAULT_GAMES = [
     "description": "Rock-solid optimization running effortlessly across modern configurations.",
     "steamAppId": 271590,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/271590/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/271590/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/271590/library_hero.jpg",
+    "popularity": 85,
+    "tags": [
+      "grand",
+      "theft",
+      "auto",
+      "openworld"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/e5b294b70c9647dcf804d7baa1903918.png",
+    "releaseDate": "2015-04-14",
+    "releaseMonth": 4,
+    "releaseDay": 14,
+    "isUpcoming": false
   },
   {
     "id": "counter-strike-2",
@@ -239,7 +430,24 @@ export const DEFAULT_GAMES = [
     "description": "Source 2 competitive staple sensitive to single-core IPC and low latency.",
     "steamAppId": 730,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/library_hero.jpg",
+    "popularity": 100,
+    "tags": [
+      "cs",
+      "cs2",
+      "csgo",
+      "counter strike",
+      "valve",
+      "fps",
+      "competitive",
+      "tactical",
+      "esports"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/3120e046c5cd9433ceb52aa1433810c8.png",
+    "releaseDate": "2023-09-27",
+    "releaseMonth": 9,
+    "releaseDay": 27,
+    "isUpcoming": false
   },
   {
     "id": "valorant",
@@ -258,7 +466,23 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 8,
     "supportsRayTracing": false,
     "rtImpact": 0,
-    "description": "High-refresh competitive shooter built for responsive input and smooth frames."
+    "description": "High-refresh competitive shooter built for responsive input and smooth frames.",
+    "popularity": 97,
+    "tags": [
+      "val",
+      "valo",
+      "riot",
+      "tactical",
+      "fps",
+      "shooter",
+      "esports",
+      "hero shooter"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/112a8e92dcedcda4237de18e9126b2d2.png",
+    "releaseDate": "2020-06-02",
+    "releaseMonth": 6,
+    "releaseDay": 2,
+    "isUpcoming": false
   },
   {
     "id": "forza-horizon-5",
@@ -280,7 +504,22 @@ export const DEFAULT_GAMES = [
     "description": "Industry benchmark for PC optimization with consistent, stutter-free frametimes.",
     "steamAppId": 1551360,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1551360/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1551360/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1551360/library_hero.jpg",
+    "popularity": 92,
+    "tags": [
+      "forza",
+      "fh5",
+      "racing",
+      "cars",
+      "driving",
+      "open world",
+      "xbox"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/24c83138bad4823ff3e03e8b2f13b8d0.png",
+    "releaseDate": "2021-11-09",
+    "releaseMonth": 11,
+    "releaseDay": 9,
+    "isUpcoming": false
   },
   {
     "id": "helldivers-2",
@@ -302,7 +541,22 @@ export const DEFAULT_GAMES = [
     "description": "Intense swarm physics and particle explosions put heavy demand on multi-core processors.",
     "steamAppId": 553850,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/553850/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/553850/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/553850/library_hero.jpg",
+    "popularity": 95,
+    "tags": [
+      "hd2",
+      "helldiver",
+      "helldivers",
+      "arrowhead",
+      "coop",
+      "shooter",
+      "democracy"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/c469a6d123d89869a33da175b9c9a5e3.png",
+    "releaseDate": "2024-02-08",
+    "releaseMonth": 2,
+    "releaseDay": 8,
+    "isUpcoming": false
   },
   {
     "id": "alan-wake-2",
@@ -321,7 +575,21 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": true,
     "rtImpact": 0.48,
-    "description": "Northlight engine showcase featuring mesh shaders and full path tracing."
+    "description": "Northlight engine showcase featuring mesh shaders and full path tracing.",
+    "popularity": 90,
+    "tags": [
+      "alan",
+      "alanwake",
+      "remedy",
+      "horror",
+      "survival horror",
+      "path tracing"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/d14cdc898fba7e1bfbc325e9b7dea86c.png",
+    "releaseDate": "2023-10-27",
+    "releaseMonth": 10,
+    "releaseDay": 27,
+    "isUpcoming": false
   },
   {
     "id": "horizon-forbidden-west",
@@ -343,7 +611,22 @@ export const DEFAULT_GAMES = [
     "description": "Decima engine delivering lush foliage rendering and robotic creature animations.",
     "steamAppId": 2420110,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2420110/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2420110/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2420110/library_hero.jpg",
+    "popularity": 91,
+    "tags": [
+      "horizon",
+      "hfw",
+      "aloy",
+      "sony",
+      "playstation",
+      "open world",
+      "rpg"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/2f880b3c95763d8c7fafab0528a1db56.png",
+    "releaseDate": "2024-03-21",
+    "releaseMonth": 3,
+    "releaseDay": 21,
+    "isUpcoming": false
   },
   {
     "id": "the-last-of-us-part-1",
@@ -365,7 +648,23 @@ export const DEFAULT_GAMES = [
     "description": "High texture fidelity and complex volumetric lighting demanding ample VRAM.",
     "steamAppId": 1888930,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1888930/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1888930/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1888930/library_hero.jpg",
+    "popularity": 93,
+    "tags": [
+      "tlou",
+      "tlou1",
+      "last of us",
+      "joel",
+      "ellie",
+      "naughty dog",
+      "sony",
+      "zombies"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/1956768b78ac039215c9600c9691c572.png",
+    "releaseDate": "2023-03-28",
+    "releaseMonth": 3,
+    "releaseDay": 28,
+    "isUpcoming": false
   },
   {
     "id": "monster-hunter-wilds",
@@ -387,7 +686,23 @@ export const DEFAULT_GAMES = [
     "description": "Next-generation RE Engine title simulating dynamic weather and massive living herds.",
     "steamAppId": 2246340,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2246340/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2246340/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2246340/library_hero.jpg",
+    "popularity": 96,
+    "tags": [
+      "mh",
+      "mhw",
+      "wilds",
+      "capcom",
+      "monster hunter",
+      "coop",
+      "action",
+      "rpg"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/4d5b32e2e9f40574f65f7c5c29607a9d.png",
+    "releaseDate": "2025-02-28",
+    "releaseMonth": 2,
+    "releaseDay": 28,
+    "isUpcoming": false
   },
   {
     "id": "monster-hunter-world",
@@ -409,7 +724,22 @@ export const DEFAULT_GAMES = [
     "description": "Expansive ecosystems with high creature density running comfortably on modern PCs.",
     "steamAppId": 582010,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/582010/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/582010/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/582010/library_hero.jpg",
+    "popularity": 93,
+    "tags": [
+      "mh",
+      "mhw",
+      "world",
+      "capcom",
+      "monster hunter",
+      "action",
+      "rpg"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/789c5cf0a5d1b4e405320c592b24ee88.png",
+    "releaseDate": "2018-08-09",
+    "releaseMonth": 8,
+    "releaseDay": 9,
+    "isUpcoming": false
   },
   {
     "id": "fortnite",
@@ -428,7 +758,22 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": true,
     "rtImpact": 0.42,
-    "description": "Unreal Engine 5 battle royale offering flexible scalability from competitive to Lumen RT."
+    "description": "Unreal Engine 5 battle royale offering flexible scalability from competitive to Lumen RT.",
+    "popularity": 100,
+    "tags": [
+      "fort",
+      "fn",
+      "epic",
+      "battle royale",
+      "br",
+      "shooter",
+      "unreal"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/c182dc5c90dc87dfee9cd309c33f19b3.png",
+    "releaseDate": "2017-07-21",
+    "releaseMonth": 7,
+    "releaseDay": 21,
+    "isUpcoming": false
   },
   {
     "id": "apex-legends",
@@ -450,14 +795,29 @@ export const DEFAULT_GAMES = [
     "description": "Fast movement shooter engineered for consistent high refresh rates.",
     "steamAppId": 1172470,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1172470/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1172470/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1172470/library_hero.jpg",
+    "popularity": 95,
+    "tags": [
+      "apex",
+      "respawn",
+      "ea",
+      "battle royale",
+      "fps",
+      "movement",
+      "esports"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/21f0db5872591cdad329f08cd5a1f770.png",
+    "releaseDate": "2019-02-04",
+    "releaseMonth": 2,
+    "releaseDay": 4,
+    "isUpcoming": false
   },
   {
     "id": "warzone",
     "title": "Call of Duty: Warzone",
     "genre": "Battle Royale / Shooter",
     "category": "esports",
-    "releaseYear": 2020,
+    "releaseYear": 2022,
     "steamGridId": 5257960,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1938090/library_600x900.jpg",
     "baseFps": 92,
@@ -472,7 +832,20 @@ export const DEFAULT_GAMES = [
     "description": "Expansive multiplayer battle royale demanding high memory bandwidth and CPU throughput.",
     "steamAppId": 1938090,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1938090/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1938090/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1938090/library_hero.jpg",
+    "popularity": 85,
+    "tags": [
+      "call",
+      "of",
+      "duty",
+      "warzone",
+      "esports"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/a82d667c0d647b93386af011ae26b09c.png",
+    "releaseDate": "2022-11-16",
+    "releaseMonth": 11,
+    "releaseDay": 16,
+    "isUpcoming": false
   },
   {
     "id": "hogwarts-legacy",
@@ -494,7 +867,21 @@ export const DEFAULT_GAMES = [
     "description": "Detailed castle interiors and open Scottish Highlands benefiting from 16GB+ RAM.",
     "steamAppId": 990080,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/990080/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/990080/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/990080/library_hero.jpg",
+    "popularity": 94,
+    "tags": [
+      "hogwarts",
+      "harry potter",
+      "magic",
+      "wizard",
+      "rpg",
+      "open world"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/ce458e67218e9a4c1522c53d0a200e11.png",
+    "releaseDate": "2023-02-10",
+    "releaseMonth": 2,
+    "releaseDay": 10,
+    "isUpcoming": false
   },
   {
     "id": "witcher-3",
@@ -516,7 +903,22 @@ export const DEFAULT_GAMES = [
     "description": "Next-gen DX12 update with 4K textures, ray-traced reflections, and global illumination.",
     "steamAppId": 292030,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/292030/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/292030/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/292030/library_hero.jpg",
+    "popularity": 85,
+    "tags": [
+      "the",
+      "witcher",
+      "wild",
+      "hunt",
+      "(next",
+      "gen)",
+      "rt"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/be37636fec7514e291c13c1024c56a9b.png",
+    "releaseDate": "2015-05-19",
+    "releaseMonth": 5,
+    "releaseDay": 19,
+    "isUpcoming": false
   },
   {
     "id": "doom-eternal",
@@ -538,7 +940,22 @@ export const DEFAULT_GAMES = [
     "description": "Vulkan API mastery with id Tech 7 delivering fluid framerates and rock-solid frametimes.",
     "steamAppId": 782330,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/782330/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/782330/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/782330/library_hero.jpg",
+    "popularity": 93,
+    "tags": [
+      "doom",
+      "eternal",
+      "slayer",
+      "id",
+      "bethesda",
+      "fps",
+      "demons"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/88598406a3a4acb55beaa9984390517a.png",
+    "releaseDate": "2020-03-20",
+    "releaseMonth": 3,
+    "releaseDay": 20,
+    "isUpcoming": false
   },
   {
     "id": "god-of-war-ragnarok",
@@ -560,7 +977,22 @@ export const DEFAULT_GAMES = [
     "description": "High-fidelity PC port with balanced CPU and GPU resource distribution.",
     "steamAppId": 2322010,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2322010/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2322010/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2322010/library_hero.jpg",
+    "popularity": 96,
+    "tags": [
+      "gow",
+      "ragnarok",
+      "kratos",
+      "sony",
+      "playstation",
+      "norse",
+      "action"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/99042a495af06f062902ade0eacd4064.png",
+    "releaseDate": "2024-09-19",
+    "releaseMonth": 9,
+    "releaseDay": 19,
+    "isUpcoming": false
   },
   {
     "id": "resident-evil-4",
@@ -582,7 +1014,102 @@ export const DEFAULT_GAMES = [
     "description": "Capcom RE Engine photorealism and multi-threaded rendering efficiency.",
     "steamAppId": 2050650,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2050650/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2050650/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2050650/library_hero.jpg",
+    "popularity": 97,
+    "tags": [
+      "re",
+      "re4",
+      "re4r",
+      "resident evil",
+      "resident evil 4",
+      "biohazard",
+      "capcom",
+      "leon",
+      "horror",
+      "survival horror"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/5b658d2a925565f0755e035597f8d22f.png",
+    "releaseDate": "2023-03-24",
+    "releaseMonth": 3,
+    "releaseDay": 24,
+    "isUpcoming": false
+  },
+  {
+    "id": "resident-evil-9",
+    "title": "Resident Evil: Requiem",
+    "genre": "Survival Horror / Action",
+    "category": "aaa",
+    "releaseYear": 2026,
+    "steamGridId": 5491566,
+    "coverUrl": "https://cdn2.steamgriddb.com/grid/956adefb0eb473d0cd054107659ab6fd.jpg",
+    "heroUrl": "https://cdn2.steamgriddb.com/hero/2908a94a0c74238e4af35e845b0e28b0.png",
+    "wideCoverUrl": "https://cdn2.steamgriddb.com/hero/2908a94a0c74238e4af35e845b0e28b0.png",
+    "baseFps": 70,
+    "gpuIntensity": 1.38,
+    "cpuIntensity": 1.22,
+    "vramAt1080p": 7,
+    "vramAt1440p": 9.2,
+    "vramAt4k": 12.8,
+    "ramRecommended": 16,
+    "supportsRayTracing": true,
+    "rtImpact": 0.4,
+    "popularity": 98,
+    "tags": [
+      "re",
+      "re9",
+      "requiem",
+      "resident evil",
+      "resident evil requiem",
+      "resident evil 9",
+      "biohazard",
+      "capcom",
+      "horror",
+      "survival horror"
+    ],
+    "description": "Capcom's next flagship survival horror entry, codenamed Requiem, powered by next-gen photorealistic RE Engine rendering.",
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/3054b29433e280509a90611514182fcf.png",
+    "releaseDate": null,
+    "isUpcoming": true
+  },
+  {
+    "id": "resident-evil-village",
+    "title": "Resident Evil Village",
+    "genre": "Survival Horror / Action",
+    "category": "aaa",
+    "releaseYear": 2021,
+    "steamGridId": 5262085,
+    "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1196590/library_600x900.jpg",
+    "baseFps": 95,
+    "gpuIntensity": 1.15,
+    "cpuIntensity": 1.05,
+    "vramAt1080p": 5.8,
+    "vramAt1440p": 7.8,
+    "vramAt4k": 11,
+    "ramRecommended": 16,
+    "supportsRayTracing": true,
+    "rtImpact": 0.2,
+    "popularity": 95,
+    "tags": [
+      "re",
+      "re8",
+      "village",
+      "resident evil",
+      "resident evil village",
+      "resident evil 8",
+      "biohazard",
+      "capcom",
+      "horror",
+      "ethan winters"
+    ],
+    "description": "Experience survival horror like never before in the eighth major installment in the Resident Evil franchise.",
+    "steamAppId": 1196590,
+    "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1196590/library_hero.jpg",
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1196590/library_hero.jpg",
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/6c814714356d2058b2b2445291147fea.png",
+    "releaseDate": "2021-05-07",
+    "releaseMonth": 5,
+    "releaseDay": 7,
+    "isUpcoming": false
   },
   {
     "id": "starfield",
@@ -604,7 +1131,21 @@ export const DEFAULT_GAMES = [
     "description": "Creation Engine 2 with dense planetary physics and interior simulation.",
     "steamAppId": 1716740,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1716740/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1716740/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1716740/library_hero.jpg",
+    "popularity": 88,
+    "tags": [
+      "starfield",
+      "sf",
+      "bethesda",
+      "space",
+      "rpg",
+      "nasa"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/5c3f4e8fbf5a96a3fea58f30d976848e.png",
+    "releaseDate": "2023-09-06",
+    "releaseMonth": 9,
+    "releaseDay": 6,
+    "isUpcoming": false
   },
   {
     "id": "diablo-4",
@@ -626,7 +1167,21 @@ export const DEFAULT_GAMES = [
     "description": "Sanctuary hack and slash featuring ray-traced shadows and reflections.",
     "steamAppId": 2344520,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2344520/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2344520/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2344520/library_hero.jpg",
+    "popularity": 92,
+    "tags": [
+      "diablo",
+      "d4",
+      "blizzard",
+      "arpg",
+      "loot",
+      "hack and slash"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/94e19ae9b74d13ad42e20407ffe4d95d.png",
+    "releaseDate": "2023-06-05",
+    "releaseMonth": 6,
+    "releaseDay": 5,
+    "isUpcoming": false
   },
   {
     "id": "palworld",
@@ -648,7 +1203,21 @@ export const DEFAULT_GAMES = [
     "description": "Unreal Engine open world survival with base automation and creature interactions.",
     "steamAppId": 1623730,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1623730/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1623730/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1623730/library_hero.jpg",
+    "popularity": 93,
+    "tags": [
+      "pal",
+      "palworld",
+      "pokemon",
+      "survival",
+      "crafting",
+      "coop"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/adb65ff91470f0f4cab8c6bdfc8e7acc.png",
+    "releaseDate": "2024-01-19",
+    "releaseMonth": 1,
+    "releaseDay": 19,
+    "isUpcoming": false
   },
   {
     "id": "stalker-2",
@@ -670,7 +1239,23 @@ export const DEFAULT_GAMES = [
     "description": "Unreal Engine 5 Chornobyl Exclusion Zone with advanced A-Life 2.0 simulation.",
     "steamAppId": 1643320,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1643320/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1643320/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1643320/library_hero.jpg",
+    "popularity": 94,
+    "tags": [
+      "stalker",
+      "stalker2",
+      "s2",
+      "chornobyl",
+      "post apocalyptic",
+      "fps",
+      "horror",
+      "survival"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/8ef723b96a42952c7a4769a9231b79b3.png",
+    "releaseDate": "2024-11-20",
+    "releaseMonth": 11,
+    "releaseDay": 20,
+    "isUpcoming": false
   },
   {
     "id": "dragons-dogma-2",
@@ -692,7 +1277,21 @@ export const DEFAULT_GAMES = [
     "description": "Heavy NPC simulation in capital cities places extreme demands on CPU thread processing.",
     "steamAppId": 2054970,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2054970/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2054970/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2054970/library_hero.jpg",
+    "popularity": 90,
+    "tags": [
+      "dd2",
+      "dragons dogma",
+      "capcom",
+      "rpg",
+      "open world",
+      "action"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/1dd7f69a2c61e9b07696a87abf79e1d9.png",
+    "releaseDate": "2024-03-22",
+    "releaseMonth": 3,
+    "releaseDay": 22,
+    "isUpcoming": false
   },
   {
     "id": "silent-hill-2",
@@ -714,7 +1313,21 @@ export const DEFAULT_GAMES = [
     "description": "Atmospheric fog simulation and detailed interior shaders built on Unreal Engine 5.",
     "steamAppId": 2124490,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2124490/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2124490/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2124490/library_hero.jpg",
+    "popularity": 92,
+    "tags": [
+      "sh2",
+      "silenthill",
+      "konami",
+      "bloober",
+      "horror",
+      "psychological horror"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/1dc3a89d0d440ba31729b0ba74b93a33.png",
+    "releaseDate": "2024-10-08",
+    "releaseMonth": 10,
+    "releaseDay": 8,
+    "isUpcoming": false
   },
   {
     "id": "lies-of-p",
@@ -736,7 +1349,21 @@ export const DEFAULT_GAMES = [
     "description": "Remarkably smooth Unreal Engine 4 optimization running fluidly across all tiers.",
     "steamAppId": 1627720,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1627720/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1627720/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1627720/library_hero.jpg",
+    "popularity": 91,
+    "tags": [
+      "lies of p",
+      "pinocchio",
+      "souls",
+      "soulslike",
+      "neowiz",
+      "action"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/7eb226024bbc8562bdfe7e4bd19b3706.png",
+    "releaseDate": "2023-09-19",
+    "releaseMonth": 9,
+    "releaseDay": 19,
+    "isUpcoming": false
   },
   {
     "id": "rainbow-six-siege",
@@ -758,7 +1385,22 @@ export const DEFAULT_GAMES = [
     "description": "Destructible environment tactical shooter delivering high competitive frame rates.",
     "steamAppId": 359550,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/359550/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/359550/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/359550/library_hero.jpg",
+    "popularity": 96,
+    "tags": [
+      "r6",
+      "siege",
+      "rainbow",
+      "ubisoft",
+      "tactical",
+      "fps",
+      "esports"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/69961657077e0093ed761aa01916c5ff.png",
+    "releaseDate": "2015-12-01",
+    "releaseMonth": 12,
+    "releaseDay": 1,
+    "isUpcoming": false
   },
   {
     "id": "manor-lords",
@@ -780,7 +1422,21 @@ export const DEFAULT_GAMES = [
     "description": "Detailed historical building and tactical battle simulation scaled across large populations.",
     "steamAppId": 1363080,
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1363080/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1363080/library_hero.jpg"
+    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1363080/library_hero.jpg",
+    "popularity": 91,
+    "tags": [
+      "manor",
+      "manorlords",
+      "strategy",
+      "city builder",
+      "medieval",
+      "sim"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/7ddfdc796b49a4c12da5e0651d2f9b94.png",
+    "releaseDate": "2024-04-26",
+    "releaseMonth": 4,
+    "releaseDay": 26,
+    "isUpcoming": false
   },
   {
     "id": "marvel-rivals",
@@ -788,7 +1444,7 @@ export const DEFAULT_GAMES = [
     "genre": "Hero Shooter / Fast-Paced Action",
     "category": "shooter",
     "releaseYear": 2024,
-    "steamGridId": 5410940,
+    "steamGridId": 5447951,
     "steamAppId": 2767030,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2767030/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2767030/library_hero.jpg",
@@ -802,7 +1458,20 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": false,
     "rtImpact": 0,
-    "description": "Fast-paced 6v6 superhero team shooter with destructible environments powered by Unreal Engine 5."
+    "description": "Fast-paced 6v6 superhero team shooter with destructible environments powered by Unreal Engine 5.",
+    "popularity": 94,
+    "tags": [
+      "rivals",
+      "marvel",
+      "hero shooter",
+      "third person",
+      "pvp"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/2053a19840bca72e34d6fe3781421d94.png",
+    "releaseDate": "2024-12-06",
+    "releaseMonth": 12,
+    "releaseDay": 6,
+    "isUpcoming": false
   },
   {
     "id": "kingdom-come-deliverance-2",
@@ -810,7 +1479,7 @@ export const DEFAULT_GAMES = [
     "genre": "Open World RPG / Historical",
     "category": "openworld",
     "releaseYear": 2025,
-    "steamGridId": 5413155,
+    "steamGridId": 5449615,
     "steamAppId": 1771300,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1771300/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1771300/library_hero.jpg",
@@ -824,7 +1493,21 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 32,
     "supportsRayTracing": true,
     "rtImpact": 0.44,
-    "description": "Rich medieval action RPG in 15th Century Bohemia with realistic physics and dense living towns."
+    "description": "Rich medieval action RPG in 15th Century Bohemia with realistic physics and dense living towns.",
+    "popularity": 92,
+    "tags": [
+      "kcd",
+      "kcd2",
+      "kingdom come",
+      "medieval",
+      "rpg",
+      "warhorse"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/a2398594505e26c891e3eac3da80e7fd.png",
+    "releaseDate": "2025-02-04",
+    "releaseMonth": 2,
+    "releaseDay": 4,
+    "isUpcoming": false
   },
   {
     "id": "metaphor-refantazio",
@@ -832,11 +1515,11 @@ export const DEFAULT_GAMES = [
     "genre": "Fantasy RPG / Turn-Based",
     "category": "rpg",
     "releaseYear": 2024,
-    "steamGridId": 5396558,
-    "steamAppId": 2622400,
-    "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2622400/library_600x900.jpg",
-    "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2622400/library_hero.jpg",
-    "wideCoverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2622400/library_hero.jpg",
+    "steamGridId": 5439691,
+    "steamAppId": 2679460,
+    "coverUrl": "https://cdn2.steamgriddb.com/grid/7febb9395de45df61740c518ea279af7.jpg",
+    "heroUrl": "https://cdn2.steamgriddb.com/hero/49a22bf943448e4fc85bbb125b93acd7.png",
+    "wideCoverUrl": "https://cdn2.steamgriddb.com/hero/49a22bf943448e4fc85bbb125b93acd7.png",
     "baseFps": 95,
     "gpuIntensity": 0.96,
     "cpuIntensity": 1.05,
@@ -846,7 +1529,20 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": false,
     "rtImpact": 0,
-    "description": "Acclaimed high-fantasy RPG from the creators of Persona, combining real-time action with strategic turn-based squad combat."
+    "description": "Acclaimed high-fantasy RPG from the creators of Persona, combining real-time action with strategic turn-based squad combat.",
+    "popularity": 90,
+    "tags": [
+      "metaphor",
+      "atlus",
+      "persona",
+      "jrpg",
+      "turn based"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/899318df0e8c4df2bec997a7d369eafd.png",
+    "releaseDate": "2024-10-11",
+    "releaseMonth": 10,
+    "releaseDay": 11,
+    "isUpcoming": false
   },
   {
     "id": "final-fantasy-xvi",
@@ -854,7 +1550,7 @@ export const DEFAULT_GAMES = [
     "genre": "Action RPG / Dark Fantasy",
     "category": "aaa",
     "releaseYear": 2024,
-    "steamGridId": 5374820,
+    "steamGridId": 5267223,
     "steamAppId": 2515020,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2515020/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2515020/library_hero.jpg",
@@ -868,7 +1564,19 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 32,
     "supportsRayTracing": false,
     "rtImpact": 0,
-    "description": "Grand cinematic action RPG with colossal Eikonic battles pushing modern PC hardware to the limits."
+    "description": "Grand cinematic action RPG with colossal Eikonic battles pushing modern PC hardware to the limits.",
+    "popularity": 85,
+    "tags": [
+      "final",
+      "fantasy",
+      "xvi",
+      "aaa"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/c5c9d4efdc02bcef9379e0ee4bd861eb.png",
+    "releaseDate": "2024-09-17",
+    "releaseMonth": 9,
+    "releaseDay": 17,
+    "isUpcoming": false
   },
   {
     "id": "balatro",
@@ -876,7 +1584,7 @@ export const DEFAULT_GAMES = [
     "genre": "Roguelike Deckbuilder / Strategy",
     "category": "rpg",
     "releaseYear": 2024,
-    "steamGridId": 5388701,
+    "steamGridId": 5403326,
     "steamAppId": 2379780,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2379780/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2379780/library_hero.jpg",
@@ -890,7 +1598,21 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 8,
     "supportsRayTracing": false,
     "rtImpact": 0,
-    "description": "Hypnotically addictive poker roguelike phenomenon. Runs smoothly at maximum frame rate on virtually any hardware."
+    "description": "Hypnotically addictive poker roguelike phenomenon. Runs smoothly at maximum frame rate on virtually any hardware.",
+    "popularity": 92,
+    "tags": [
+      "balatro",
+      "poker",
+      "roguelike",
+      "deckbuilder",
+      "indie",
+      "card"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/fab4029f3293f283d3e94873e7ea7db2.png",
+    "releaseDate": "2024-02-20",
+    "releaseMonth": 2,
+    "releaseDay": 20,
+    "isUpcoming": false
   },
   {
     "id": "avowed",
@@ -898,7 +1620,7 @@ export const DEFAULT_GAMES = [
     "genre": "First-Person Action RPG / Fantasy",
     "category": "rpg",
     "releaseYear": 2025,
-    "steamGridId": 5395211,
+    "steamGridId": 5269485,
     "steamAppId": 2457220,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2457220/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2457220/library_hero.jpg",
@@ -912,7 +1634,21 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": true,
     "rtImpact": 0.4,
-    "description": "Obsidian Entertainment fantasy RPG set in the Living Lands with dynamic elemental magic and swordplay."
+    "description": "Obsidian Entertainment fantasy RPG set in the Living Lands with dynamic elemental magic and swordplay.",
+    "popularity": 89,
+    "tags": [
+      "avowed",
+      "obsidian",
+      "pillars",
+      "rpg",
+      "first person",
+      "fantasy"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/8e94f8d8e0d415f7ab0f35653eacd7f3.png",
+    "releaseDate": "2025-02-18",
+    "releaseMonth": 2,
+    "releaseDay": 18,
+    "isUpcoming": false
   },
   {
     "id": "deadlock",
@@ -920,7 +1656,7 @@ export const DEFAULT_GAMES = [
     "genre": "Third-Person Hero Shooter / MOBA",
     "category": "shooter",
     "releaseYear": 2024,
-    "steamGridId": 5418920,
+    "steamGridId": 5453171,
     "steamAppId": 1422450,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1422450/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1422450/library_hero.jpg",
@@ -934,7 +1670,21 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": false,
     "rtImpact": 0,
-    "description": "Valve's 6v6 third-person lane-based competitive action game running on the Source 2 engine."
+    "description": "Valve's 6v6 third-person lane-based competitive action game running on the Source 2 engine.",
+    "popularity": 95,
+    "tags": [
+      "deadlock",
+      "valve",
+      "moba",
+      "shooter",
+      "third person",
+      "esports"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/e57ec101c0cd7bb3bdab5cd4667baa33.png",
+    "releaseDate": "2024-08-23",
+    "releaseMonth": 8,
+    "releaseDay": 23,
+    "isUpcoming": false
   },
   {
     "id": "indiana-jones-great-circle",
@@ -942,7 +1692,7 @@ export const DEFAULT_GAMES = [
     "genre": "First-Person Action Adventure",
     "category": "aaa",
     "releaseYear": 2024,
-    "steamGridId": 5410111,
+    "steamGridId": 5441885,
     "steamAppId": 2677660,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2677660/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2677660/library_hero.jpg",
@@ -956,7 +1706,22 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 32,
     "supportsRayTracing": true,
     "rtImpact": 0.5,
-    "description": "Full path-tracing showcase on PC from MachineGames with globe-trotting archeological stealth and brawling."
+    "description": "Full path-tracing showcase on PC from MachineGames with globe-trotting archeological stealth and brawling.",
+    "popularity": 85,
+    "tags": [
+      "indiana",
+      "jones",
+      "and",
+      "the",
+      "great",
+      "circle",
+      "aaa"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/db66b5ff4005bc74057c55e384dd83c4.png",
+    "releaseDate": "2024-12-09",
+    "releaseMonth": 12,
+    "releaseDay": 9,
+    "isUpcoming": false
   },
   {
     "id": "tekken-8",
@@ -964,7 +1729,7 @@ export const DEFAULT_GAMES = [
     "genre": "3D Fighting / Competitive",
     "category": "esports",
     "releaseYear": 2024,
-    "steamGridId": 5312345,
+    "steamGridId": 5360955,
     "steamAppId": 1778820,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1778820/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1778820/library_hero.jpg",
@@ -978,7 +1743,22 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": false,
     "rtImpact": 0,
-    "description": "Flagship fighting benchmark built from the ground up in Unreal Engine 5 with intense cinematic impact effects."
+    "description": "Flagship fighting benchmark built from the ground up in Unreal Engine 5 with intense cinematic impact effects.",
+    "popularity": 93,
+    "tags": [
+      "tekken",
+      "t8",
+      "bandai",
+      "namco",
+      "fighting",
+      "fgc",
+      "esports"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/c1b1ca04d0e345d20e9287be1b6d7e01.png",
+    "releaseDate": "2024-01-26",
+    "releaseMonth": 1,
+    "releaseDay": 26,
+    "isUpcoming": false
   },
   {
     "id": "the-first-descendant",
@@ -986,7 +1766,7 @@ export const DEFAULT_GAMES = [
     "genre": "Third-Person Co-op Shooter",
     "category": "shooter",
     "releaseYear": 2024,
-    "steamGridId": 5364120,
+    "steamGridId": 5339670,
     "steamAppId": 2074920,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2074920/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2074920/library_hero.jpg",
@@ -1002,30 +1782,18 @@ export const DEFAULT_GAMES = [
     "rtImpact": 0.38,
     "description": "Free-to-play third-person cooperative action RPG shooter featuring Unreal Engine 5 Lumen and ray tracing.",
     "releaseMonth": 7,
-    "popularity": 88
-  },
-  {
-    "id": "gta-vi",
-    "title": "Grand Theft Auto VI",
-    "genre": "Open World / Cinematic Action",
-    "category": "openworld",
-    "releaseYear": 2026,
-    "releaseMonth": 9,
-    "popularity": 99,
-    "steamGridId": 5309313,
-    "coverUrl": "https://cdn2.steamgriddb.com/grid/a55e72542860596de2ef8c0d847b6f03.png",
-    "heroUrl": "https://cdn2.steamgriddb.com/hero/2d5fb1ecd865bff5dd1b6afd6da8d2a4.png",
-    "wideCoverUrl": "https://cdn2.steamgriddb.com/grid/52c4d0f352c1e37e35e198b29ee0565a.png",
-    "baseFps": 54,
-    "gpuIntensity": 1.58,
-    "cpuIntensity": 1.48,
-    "vramAt1080p": 8.5,
-    "vramAt1440p": 12,
-    "vramAt4k": 16.5,
-    "ramRecommended": 32,
-    "supportsRayTracing": true,
-    "rtImpact": 0.45,
-    "description": "Next-generation evolution of the Grand Theft Auto series set in Vice City and beyond powered by RAGE 9."
+    "popularity": 88,
+    "tags": [
+      "tfd",
+      "first descendant",
+      "nexon",
+      "looter shooter",
+      "ue5"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/0c0ff525197af17c4a2d4e013414c76a.png",
+    "releaseDate": "2024-07-02",
+    "releaseDay": 2,
+    "isUpcoming": false
   },
   {
     "id": "doom-the-dark-ages",
@@ -1035,7 +1803,7 @@ export const DEFAULT_GAMES = [
     "releaseYear": 2025,
     "releaseMonth": 10,
     "popularity": 96,
-    "steamGridId": 5415230,
+    "steamGridId": 5454562,
     "steamAppId": 3017860,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3017860/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3017860/library_hero.jpg",
@@ -1049,7 +1817,21 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": true,
     "rtImpact": 0.35,
-    "description": "The prequel origin story of the Doom Slayer with brutal medieval-futuristic combat on idTech 8."
+    "description": "The prequel origin story of the Doom Slayer with brutal medieval-futuristic combat on idTech 8.",
+    "tags": [
+      "doom",
+      "dark ages",
+      "slayer",
+      "id",
+      "bethesda",
+      "fps",
+      "medieval"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/2eb62041c84abe80cf8ec5834d1c646e.png",
+    "releaseDate": "2025-05-15",
+    "releaseMonth": 5,
+    "releaseDay": 15,
+    "isUpcoming": false
   },
   {
     "id": "death-stranding-2",
@@ -1058,7 +1840,7 @@ export const DEFAULT_GAMES = [
     "category": "openworld",
     "releaseYear": 2026,
     "releaseMonth": 6,
-    "popularity": 95,
+    "popularity": 93,
     "steamGridId": 5442930,
     "steamAppId": 1850570,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1850570/library_600x900.jpg",
@@ -1073,7 +1855,20 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 16,
     "supportsRayTracing": true,
     "rtImpact": 0.38,
-    "description": "Hideo Kojima's expansive open-world vision powered by Guerrilla Games' updated Decima Engine."
+    "description": "Hideo Kojima's expansive open-world vision powered by Guerrilla Games' updated Decima Engine.",
+    "tags": [
+      "ds2",
+      "death stranding",
+      "kojima",
+      "sony",
+      "playstation",
+      "open world"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/b88f3af8702b21d85bb7918ce970bc15.png",
+    "releaseDate": "2026-06-05",
+    "releaseMonth": 6,
+    "releaseDay": 5,
+    "isUpcoming": false
   },
   {
     "id": "civilization-vii",
@@ -1083,7 +1878,7 @@ export const DEFAULT_GAMES = [
     "releaseYear": 2025,
     "releaseMonth": 2,
     "popularity": 94,
-    "steamGridId": 5412450,
+    "steamGridId": 5454366,
     "steamAppId": 1295660,
     "coverUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1295660/library_600x900.jpg",
     "heroUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1295660/library_hero.jpg",
@@ -1097,7 +1892,18 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 32,
     "supportsRayTracing": false,
     "rtImpact": 0,
-    "description": "The revolutionary next chapter of the turn-based 4X strategy franchise with layered historical ages."
+    "description": "The revolutionary next chapter of the turn-based 4X strategy franchise with layered historical ages.",
+    "tags": [
+      "sid",
+      "meier's",
+      "civilization",
+      "vii",
+      "racing"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/7ccd6891951f58c68e3afa4803c6b5a0.png",
+    "releaseDate": "2025-02-11",
+    "releaseDay": 11,
+    "isUpcoming": false
   },
   {
     "id": "crimson-desert",
@@ -1106,7 +1912,7 @@ export const DEFAULT_GAMES = [
     "category": "openworld",
     "releaseYear": 2025,
     "releaseMonth": 11,
-    "popularity": 93,
+    "popularity": 91,
     "steamGridId": 5473454,
     "steamAppId": 1969240,
     "coverUrl": "https://cdn2.steamgriddb.com/grid/a2ea3ea9d01c17b87a65bc8e885015b5.png",
@@ -1121,6 +1927,164 @@ export const DEFAULT_GAMES = [
     "ramRecommended": 32,
     "supportsRayTracing": true,
     "rtImpact": 0.42,
-    "description": "Pearl Abyss next-gen open world action adventure with visceral mercenary combat across Pywel."
+    "description": "Pearl Abyss next-gen open world action adventure with visceral mercenary combat across Pywel.",
+    "tags": [
+      "crimson",
+      "crimson desert",
+      "pearl abyss",
+      "open world",
+      "action",
+      "rpg"
+    ],
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/5de927b4c683a2c8a72d85a988355fd2.png",
+    "releaseDate": "2025-12-04",
+    "releaseMonth": 12,
+    "releaseDay": 4,
+    "isUpcoming": false
+  },
+  {
+    "id": "pragmata",
+    "title": "Pragmata",
+    "genre": "Sci-Fi Action / Adventure",
+    "category": "aaa",
+    "releaseYear": 2026,
+    "steamGridId": 5454532,
+    "coverUrl": "https://cdn2.steamgriddb.com/grid/2c655140a81f8a27d57576e3bf76fb90.png",
+    "heroUrl": "https://cdn2.steamgriddb.com/hero/1593937e2099ea418f9c25f83e5425aa.png",
+    "wideCoverUrl": "https://cdn2.steamgriddb.com/hero/1593937e2099ea418f9c25f83e5425aa.png",
+    "baseFps": 65,
+    "gpuIntensity": 1.42,
+    "cpuIntensity": 1.25,
+    "vramAt1080p": 7.5,
+    "vramAt1440p": 9.8,
+    "vramAt4k": 13.5,
+    "ramRecommended": 16,
+    "supportsRayTracing": true,
+    "rtImpact": 0.42,
+    "popularity": 96,
+    "tags": [
+      "pragmata",
+      "capcom",
+      "sci fi",
+      "rtx",
+      "ray tracing",
+      "benchmark",
+      "futuristic",
+      "action",
+      "adventure"
+    ],
+    "description": "Capcom's next-gen dystopian sci-fi action adventure set on a desolate lunar research facility.",
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/11552053056a3e821ab989380e6c1901.png",
+    "releaseDate": null,
+    "isUpcoming": true
+  },
+  {
+    "id": "borderlands-4",
+    "title": "Borderlands 4",
+    "genre": "Looter Shooter / Co-op Action",
+    "category": "fps",
+    "releaseYear": 2025,
+    "steamGridId": 5462355,
+    "coverUrl": "https://cdn2.steamgriddb.com/grid/d1e1fa0779ea7cf1f4fbe2403b99d226.png",
+    "heroUrl": "https://cdn2.steamgriddb.com/hero/97a78bf6ca6dd8954332b956bba09b17.png",
+    "wideCoverUrl": "https://cdn2.steamgriddb.com/hero/97a78bf6ca6dd8954332b956bba09b17.png",
+    "baseFps": 75,
+    "gpuIntensity": 1.3,
+    "cpuIntensity": 1.2,
+    "vramAt1080p": 6.8,
+    "vramAt1440p": 8.9,
+    "vramAt4k": 12.2,
+    "ramRecommended": 16,
+    "supportsRayTracing": true,
+    "rtImpact": 0.35,
+    "popularity": 95,
+    "tags": [
+      "borderlands",
+      "borderlands 4",
+      "gearbox",
+      "2k",
+      "looter shooter",
+      "fps",
+      "co-op"
+    ],
+    "description": "Gearbox's explosive fourth mainline looter-shooter adventure with billions of weapons and frantic co-op mayhem.",
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/4521aee2fff7f516a26104a504431a76.png",
+    "releaseDate": "2025-09-12",
+    "releaseMonth": 9,
+    "releaseDay": 12,
+    "isUpcoming": false
+  },
+  {
+    "id": "expedition-33",
+    "title": "Clair Obscur: Expedition 33",
+    "genre": "Turn-Based RPG / Fantasy",
+    "category": "rpg",
+    "releaseYear": 2025,
+    "steamGridId": 5454521,
+    "coverUrl": "https://cdn2.steamgriddb.com/grid/e7fff0c2739cf86c8aa5559eefe74220.png",
+    "heroUrl": "https://cdn2.steamgriddb.com/hero/905372ea814051dfb31429fe44e18cab.png",
+    "wideCoverUrl": "https://cdn2.steamgriddb.com/hero/905372ea814051dfb31429fe44e18cab.png",
+    "baseFps": 68,
+    "gpuIntensity": 1.36,
+    "cpuIntensity": 1.18,
+    "vramAt1080p": 7,
+    "vramAt1440p": 9.2,
+    "vramAt4k": 12.8,
+    "ramRecommended": 16,
+    "supportsRayTracing": true,
+    "rtImpact": 0.38,
+    "popularity": 94,
+    "tags": [
+      "expedition 33",
+      "clair obscur",
+      "sandfall",
+      "unreal engine 5",
+      "ue5",
+      "rpg",
+      "turn based"
+    ],
+    "description": "A breathtaking reactive turn-based RPG rendered in Unreal Engine 5 set in a Belle Époque-inspired world.",
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/8336f05746072f34cde26ca89a7d4e2e.png",
+    "releaseDate": "2025-04-24",
+    "releaseMonth": 4,
+    "releaseDay": 24,
+    "isUpcoming": false
+  },
+  {
+    "id": "mafia-the-old-country",
+    "title": "Mafia: The Old Country",
+    "genre": "Action / Narrative Adventure",
+    "category": "aaa",
+    "releaseYear": 2025,
+    "steamGridId": 5462357,
+    "coverUrl": "https://cdn2.steamgriddb.com/grid/802bb5d12a44ebb63c0a48a5bf9ba380.png",
+    "heroUrl": "https://cdn2.steamgriddb.com/hero/495d9bff8d5bbcb4885f62a78849cc3a.png",
+    "wideCoverUrl": "https://cdn2.steamgriddb.com/hero/495d9bff8d5bbcb4885f62a78849cc3a.png",
+    "baseFps": 70,
+    "gpuIntensity": 1.35,
+    "cpuIntensity": 1.15,
+    "vramAt1080p": 7,
+    "vramAt1440p": 9,
+    "vramAt4k": 12.5,
+    "ramRecommended": 16,
+    "supportsRayTracing": true,
+    "rtImpact": 0.38,
+    "popularity": 95,
+    "tags": [
+      "mafia",
+      "mafia the old country",
+      "hangar 13",
+      "2k",
+      "crime",
+      "action",
+      "open world",
+      "sicily"
+    ],
+    "description": "Uncover the origins of organized crime in 1900s Sicily in this gritty cinematic period action drama.",
+    "logoUrl": "https://cdn2.steamgriddb.com/logo/b005a3eafc584c1342d1d4518cbf897d.png",
+    "releaseDate": "2025-08-08",
+    "releaseMonth": 8,
+    "releaseDay": 8,
+    "isUpcoming": false
   }
 ];

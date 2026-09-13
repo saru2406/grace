@@ -1,12 +1,12 @@
 // Cloudflare Pages Function to proxy SteamGridDB API requests on Cloudflare's free tier
 // Handles /api/steamgriddb/* routes automatically at the edge
 
-const API_KEY = '4cfb690f7e0a2aace2617077f4a42aac';
 const STEAMGRID_BASE = 'https://www.steamgriddb.com/api/v2';
 
 export async function onRequest(context) {
-  const { request, params } = context;
+  const { request, params, env } = context;
   const url = new URL(request.url);
+  const API_KEY = env?.STEAMGRID_API_KEY || '';
 
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
@@ -17,6 +17,16 @@ export async function onRequest(context) {
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Max-Age': '86400',
+      }
+    });
+  }
+
+  if (!API_KEY) {
+    return new Response(JSON.stringify({ error: 'STEAMGRID_API_KEY is not configured on this host.' }), {
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
       }
     });
   }

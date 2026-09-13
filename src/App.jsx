@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GPUS, CPUS, SYSTEM_PRESETS } from './data/hardware.js';
 import { DEFAULT_GAMES } from './data/games.js';
 import { calculateFps } from './services/fpsEngine.js';
-import { getGameGrid, getGameHero, getGameWideCover } from './services/steamGrid.js';
+import { getGameGrid, getGameHero, getGameWideCover, getGameLogo } from './services/steamGrid.js';
 import { getSystemPeriod, getGameTrendingScore } from './services/systemTrending.js';
 import {
   saveSteamUser,
-  getStoredSteamUser,
-  saveGoogleUser,
-  getStoredGoogleUser
+  getStoredSteamUser
 } from './services/authAndSteam.js';
+import { searchGamesWithContext } from './services/gameSearch.js';
 
 import { AmbientBackdrop } from './components/AmbientBackdrop.jsx';
 import { Header } from './components/Header.jsx';
@@ -20,39 +19,83 @@ import { GamesGrid } from './components/GamesGrid.jsx';
 import { GameDetailPage } from './components/GameDetailPage.jsx';
 import { SteamGridSearchModal } from './components/SteamGridSearchModal.jsx';
 import { SteamImportModal } from './components/SteamImportModal.jsx';
-import { GoogleAuthModal } from './components/GoogleAuthModal.jsx';
+import { Footer } from './components/Footer.jsx';
 
 const LOCAL_STORAGE_CUSTOM_GAMES = 'fps_estimator_custom_games';
 const LOCAL_STORAGE_SPECS = 'fps_estimator_specs';
-const LOCAL_STORAGE_THEME = 'fps_estimator_theme';
+const LOCAL_STORAGE_USER_SETTINGS = 'fps_estimator_user_settings';
+const LOCAL_STORAGE_PROFILE_NAME = 'fps_estimator_profile_name';
+const LOCAL_STORAGE_CUSTOM_PRESETS = 'fps_estimator_saved_rig_templates';
+const LOCAL_STORAGE_FAVORITES = 'fps_estimator_favorites';
 
-const HIDDEN_GAME_IDS = new Set([
-  'ghost-of-tsushima',
-  'spiderman-remastered',
-  'horizon-forbidden-west',
-  'the-last-of-us-part-1',
-  'gta-vi'
-]);
+const DEFAULT_USER_SETTINGS = {
+  targetFps: 60,
+  fpsDetail: 'detailed',
+  showBottlenecks: true,
+  ambientBlur: true
+};
+
+const HIDDEN_GAME_IDS = new Set();
+
+function isMobileUserAgent() {
+  if (typeof navigator === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isSmallViewport() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 768px)').matches;
+}
 
 export function App() {
-  // Theme state
-  const [theme, setTheme] = useState(() => localStorage.getItem(LOCAL_STORAGE_THEME) || 'ambient');
+  const [isMobile, setIsMobile] = useState(() => isMobileUserAgent() || isSmallViewport());
+
+  useEffect(() => {
+    const updateMobileState = () => {
+      setIsMobile(isMobileUserAgent() || isSmallViewport());
+    };
+
+    updateMobileState();
+    window.addEventListener('resize', updateMobileState);
+
+    return () => window.removeEventListener('resize', updateMobileState);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-mobile', isMobile ? 'true' : 'false');
+  }, [isMobile]);
+
+  // Gamer & App preferences (persisted)
+  const [userSettings, setUserSettings] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_USER_SETTINGS) || '{}');
+      return { ...DEFAULT_USER_SETTINGS, ...saved };
+    } catch {
+      return DEFAULT_USER_SETTINGS;
+    }
+  });
+
+  const handleUpdateSetting = useCallback((key, value) => {
+    setUserSettings(prev => {
+      const next = { ...prev, [key]: value };
+      localStorage.setItem(LOCAL_STORAGE_USER_SETTINGS, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  // Remember library scroll position when navigating into game details
+  const libraryScrollPosRef = useRef(0);
 
   // Background artwork sync: driven by current active carousel slide on home, and game wide art on full game page
   const [carouselBg, setCarouselBg] = useState(
-    'https://cdn2.steamgriddb.com/thumb/f39b781760a403dedaa05587e8889c1a.jpg'
+    () => DEFAULT_GAMES[0]?.heroUrl || DEFAULT_GAMES[0]?.wideCoverUrl || DEFAULT_GAMES[0]?.coverUrl || ''
   );
   const [detailWideBg, setDetailWideBg] = useState('');
 
-  // Page-level loading state lifted from GameDetailPage for header bar
-  const [pageLoadingPct, setPageLoadingPct] = useState(0);
-  const [pageLoadingDone, setPageLoadingDone] = useState(true);
-
-  // Sync theme attribute to HTML root
+  // Neutral dark mode attribute on root
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem(LOCAL_STORAGE_THEME, theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }, []);
 
   // Global Tactile Ripple Animation
   useEffect(() => {
@@ -146,6 +189,18 @@ export function App() {
   const [customGames, setCustomGames] = useState(() => {
     return JSON.parse(localStorage.getItem(LOCAL_STORAGE_CUSTOM_GAMES) || '[]');
   });
+  const [favoriteGameIds, setFavoriteGameIds] = useState(() => {
+    try {
+      const savedFavorites = JSON.parse(localStorage.getItem(LOCAL_STORAGE_FAVORITES) || '[]');
+      return Array.isArray(savedFavorites) ? savedFavorites : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_FAVORITES, JSON.stringify(favoriteGameIds));
+  }, [favoriteGameIds]);
 
   const games = useMemo(() => {
     const visibleDefaultGames = DEFAULT_GAMES.filter(game => !HIDDEN_GAME_IDS.has(game.id));
@@ -166,11 +221,34 @@ export function App() {
   const [isSteamGridSearchOpen, setIsSteamGridSearchOpen] = useState(false);
   const [steamGridSearchInitialQuery, setSteamGridSearchInitialQuery] = useState('');
   const [isSteamImportOpen, setIsSteamImportOpen] = useState(false);
-  const [isGoogleAuthOpen, setIsGoogleAuthOpen] = useState(false);
 
   // Authentication states
   const [steamUser, setSteamUser] = useState(getStoredSteamUser);
-  const [googleUser, setGoogleUser] = useState(getStoredGoogleUser);
+  const [profileName, setProfileName] = useState(() => {
+    const savedProfileName = localStorage.getItem(LOCAL_STORAGE_PROFILE_NAME);
+    return savedProfileName || steamUser?.name || 'Gamer';
+  });
+  const [savedRigTemplates, setSavedRigTemplates] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(LOCAL_STORAGE_CUSTOM_PRESETS) || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_PROFILE_NAME, profileName || 'Gamer');
+  }, [profileName]);
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_CUSTOM_PRESETS, JSON.stringify(savedRigTemplates));
+  }, [savedRigTemplates]);
+
+  useEffect(() => {
+    if (steamUser && !localStorage.getItem(LOCAL_STORAGE_PROFILE_NAME)) {
+      setProfileName(steamUser.name || 'Gamer');
+    }
+  }, [steamUser]);
 
   // Calculate FPS for all games
   const processedGames = useMemo(() => {
@@ -181,12 +259,28 @@ export function App() {
         rayTracing: specs.rayTracing,
         upscaling: specs.upscaling
       });
+
+      const isSteamOwned = Boolean(
+        game.isSteamOwned ||
+        (steamUser && Array.isArray(steamUser.games) && steamUser.games.some(g =>
+          (g.title && g.title.toLowerCase() === game.title.toLowerCase()) ||
+          (g.id && (game.steamGridId === g.id || game.id === g.id)) ||
+          (g.steamAppId && game.steamAppId === g.steamAppId)
+        ))
+      );
+
       return {
         game,
+        isSteamOwned,
         ...fpsData
       };
     });
-  }, [games, specs]);
+  }, [games, specs, steamUser]);
+
+  const steamGameCount = useMemo(() => {
+    if (!steamUser) return 0;
+    return processedGames.filter(item => item.isSteamOwned).length;
+  }, [steamUser, processedGames]);
 
   // Filter & Sort
   const filteredAndSortedGames = useMemo(() => {
@@ -197,16 +291,24 @@ export function App() {
         const score = getGameTrendingScore(item.game, systemPeriod.year, systemPeriod.month);
         return score >= 65 || item.game.releaseYear >= (systemPeriod.year - 1);
       });
+    } else if (category === 'favorites') {
+      filtered = filtered.filter(item => favoriteGameIds.includes(item.game.id));
+    } else if (category === 'steam') {
+      filtered = filtered.filter(item => item.isSteamOwned);
     } else if (category !== 'all') {
       filtered = filtered.filter(item => item.game.category === category);
     }
 
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(item =>
-        item.game.title.toLowerCase().includes(q) ||
-        (item.game.genre && item.game.genre.toLowerCase().includes(q))
-      );
+      filtered = searchGamesWithContext(filtered, searchQuery);
+      // Fallback: if category filter yielded 0 results for search query, search all games
+      if (filtered.length === 0 && category !== 'all') {
+        filtered = searchGamesWithContext(processedGames, searchQuery);
+      }
+      // When searching under default popularity/trending sort, preserve relevance+popularity ranking
+      if (sortBy === 'trending') {
+        return filtered;
+      }
     }
 
     return [...filtered].sort((a, b) => {
@@ -228,7 +330,7 @@ export function App() {
           return 0;
       }
     });
-  }, [processedGames, category, searchQuery, sortBy, systemPeriod]);
+  }, [processedGames, category, favoriteGameIds, searchQuery, sortBy, systemPeriod]);
 
   // System Status Bar summary metrics
   const isConfigured = Boolean(specs.gpu && specs.cpu);
@@ -258,29 +360,29 @@ export function App() {
     const cpuBottlenecks = processedGames.filter(r => r.bottleneck.culprit === 'CPU').length;
 
     let bottleneckText = 'Balanced Pairing';
-    let bottleneckColor = 'var(--ctp-green)';
+    let bottleneckColor = 'var(--ctp-text)';
     if (gpuBottlenecks >= total * 0.6) {
-      bottleneckText = 'GPU Bound (Optimal)';
-      bottleneckColor = 'var(--ctp-blue)';
+      bottleneckText = 'GPU Bound';
+      bottleneckColor = 'var(--ctp-text)';
     } else if (cpuBottlenecks >= total * 0.4) {
-      bottleneckText = 'CPU Limiting Potential';
-      bottleneckColor = 'var(--ctp-peach)';
+      bottleneckText = 'CPU Bound';
+      bottleneckColor = 'var(--ctp-text)';
     }
 
-    let verdictText = '60+ FPS Smooth Gaming';
-    let verdictColor = 'var(--ctp-green)';
+    let verdictText = 'Smooth (60+ FPS)';
+    let verdictColor = '#ffffff';
     if (avgFps >= 120) {
-      verdictText = 'Ultra High-Refresh Monster';
+      verdictText = 'High Refresh (120+ FPS)';
       verdictColor = '#ffffff';
     } else if (avgFps >= 60) {
-      verdictText = '60+ FPS Smooth Gaming';
-      verdictColor = 'var(--ctp-green)';
+      verdictText = 'Smooth (60+ FPS)';
+      verdictColor = '#ffffff';
     } else if (avgFps >= 45) {
-      verdictText = 'Console Quality Framerate';
-      verdictColor = 'var(--ctp-yellow)';
+      verdictText = 'Playable (45-60 FPS)';
+      verdictColor = 'var(--ctp-subtext1)';
     } else {
-      verdictText = 'Settings Optimization Recommended';
-      verdictColor = 'var(--ctp-red)';
+      verdictText = 'Sub-optimal (<45 FPS)';
+      verdictColor = 'var(--ctp-subtext0)';
     }
 
     return {
@@ -312,6 +414,40 @@ export function App() {
     setCpuBrandFilter('all');
   }, []);
 
+  const handleSaveRigTemplate = useCallback((name) => {
+    const trimmedName = (name || '').trim();
+    if (!trimmedName || !specs.gpu || !specs.cpu || !specs.ram) {
+      return;
+    }
+
+    setSavedRigTemplates(prev => {
+      const template = {
+        id: `custom-${Date.now()}`,
+        name: trimmedName,
+        badge: 'Saved Build',
+        gpuId: specs.gpu.id,
+        cpuId: specs.cpu.id,
+        ram: specs.ram,
+        resolution: specs.resolution,
+        preset: specs.preset,
+        upscaling: specs.upscaling,
+        rayTracing: specs.rayTracing
+      };
+
+      const next = [template, ...prev.filter(item => item.name !== trimmedName)].slice(0, 8);
+      localStorage.setItem(LOCAL_STORAGE_CUSTOM_PRESETS, JSON.stringify(next));
+      return next;
+    });
+  }, [specs]);
+
+  const handleDeleteRigTemplate = useCallback((templateId) => {
+    setSavedRigTemplates(prev => {
+      const next = prev.filter(item => item.id !== templateId);
+      localStorage.setItem(LOCAL_STORAGE_CUSTOM_PRESETS, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const handleResetSpecs = useCallback(() => {
     setSpecs({
       gpu: null,
@@ -326,22 +462,35 @@ export function App() {
     setCpuBrandFilter('all');
   }, []);
 
+  const handleToggleFavorite = useCallback((gameId) => {
+    setFavoriteGameIds(prev => {
+      if (prev.includes(gameId)) {
+        return prev.filter(id => id !== gameId);
+      }
+      return [gameId, ...prev];
+    });
+  }, []);
+
   const handleAddSteamGridGame = useCallback(async (steamItem) => {
     const exists = games.find(g => g.steamGridId === steamItem.id || g.title.toLowerCase() === steamItem.name.toLowerCase());
     if (exists) {
+      libraryScrollPosRef.current = window.scrollY || document.documentElement.scrollTop || 0;
       setIsSteamGridSearchOpen(false);
       setActiveDetailGame(exists);
+      window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
 
     let coverUrl = 'https://cdn2.steamgriddb.com/thumb/f39b781760a403dedaa05587e8889c1a.jpg';
     let heroUrl = '';
     let wideCoverUrl = '';
+    let logoUrl = '';
     try {
-      const [grid, hero, wide] = await Promise.allSettled([
+      const [grid, hero, wide, logo] = await Promise.allSettled([
         getGameGrid(steamItem.id),
         getGameHero(steamItem.id),
-        getGameWideCover(steamItem.id)
+        getGameWideCover(steamItem.id),
+        getGameLogo(steamItem.id, steamItem.types?.includes('steam') ? steamItem.steamAppId : undefined, steamItem.name)
       ]);
       if (grid.status === 'fulfilled' && (grid.value?.thumb || grid.value?.url)) {
         coverUrl = grid.value.thumb || grid.value.url;
@@ -352,8 +501,11 @@ export function App() {
       if (wide.status === 'fulfilled' && wide.value?.url) {
         wideCoverUrl = wide.value.url;
       }
+      if (logo.status === 'fulfilled' && (logo.value?.url || logo.value?.thumb)) {
+        logoUrl = logo.value.url || logo.value.thumb;
+      }
     } catch (e) {
-      console.warn('Grid/hero fetch error:', e);
+      console.warn('Grid/hero/logo fetch error:', e);
     }
 
     const releaseDate = steamItem.release_date ? new Date(steamItem.release_date * 1000) : null;
@@ -375,7 +527,8 @@ export function App() {
     const newGame = {
       id: `custom-${steamItem.id}`,
       title: steamItem.name,
-      genre: 'Custom PC Game',
+      genre: 'PC Game',
+      publisher: steamItem.publisher || 'PC Publisher',
       category: 'aaa',
       releaseYear: releaseYear || 2024,
       releaseMonth: releaseDate ? releaseDate.getMonth() + 1 : undefined,
@@ -385,6 +538,7 @@ export function App() {
       coverUrl,
       heroUrl,
       wideCoverUrl,
+      logoUrl,
       baseFps,
       gpuIntensity,
       cpuIntensity,
@@ -403,15 +557,18 @@ export function App() {
       return updated;
     });
 
+    libraryScrollPosRef.current = window.scrollY || document.documentElement.scrollTop || 0;
     const initialWide = newGame.heroUrl || newGame.wideCoverUrl || newGame.coverUrl;
     setDetailWideBg(initialWide || '');
-    setPageLoadingPct(20);
-    setPageLoadingDone(false);
     setIsSteamGridSearchOpen(false);
     setActiveDetailGame(newGame);
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }, [games]);
 
   const handleSelectGame = useCallback((game) => {
+    // Remember current library scroll position so we can restore it upon return
+    libraryScrollPosRef.current = window.scrollY || document.documentElement.scrollTop || 0;
+
     const initialWide =
       game.heroUrl ||
       game.wideCoverUrl ||
@@ -419,9 +576,19 @@ export function App() {
         ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${game.steamAppId}/library_hero.jpg`
         : game.coverUrl);
     setDetailWideBg(initialWide || game.coverUrl || '');
-    setPageLoadingPct(18);
-    setPageLoadingDone(false);
     setActiveDetailGame(game);
+    // Scroll viewport immediately to top state for the game detail view
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
+  const handleBackToLibrary = useCallback(() => {
+    setActiveDetailGame(null);
+    setDetailWideBg('');
+    const savedY = libraryScrollPosRef.current || 0;
+    // Restore exact scroll position on the next animation frame after library DOM renders
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: savedY, behavior: 'instant' });
+    });
   }, []);
 
   const handleImportSteamProfile = useCallback((profile) => {
@@ -429,30 +596,57 @@ export function App() {
     saveSteamUser(profile);
 
     const newImported = [];
-    profile.games.forEach(g => {
-      const exists = games.find(item => item.title.toLowerCase() === g.title.toLowerCase() || item.steamGridId === g.id);
-      if (!exists) {
-        newImported.push({
-          id: `steam-imported-${g.id}`,
-          title: g.title,
-          genre: 'Steam Library Title',
-          category: 'aaa',
-          releaseYear: 2022,
-          steamGridId: g.id,
-          coverUrl: 'https://cdn2.steamgriddb.com/thumb/f39b781760a403dedaa05587e8889c1a.jpg',
-          baseFps: 80,
-          gpuIntensity: 1.1,
-          cpuIntensity: 1.1,
-          vramAt1080p: 6.0,
-          vramAt1440p: 8.0,
-          vramAt4k: 11.0,
-          ramRecommended: 16,
-          supportsRayTracing: false,
-          rtImpact: 0.0,
-          description: `Imported from Steam account (${g.playtime} played).`
-        });
-      }
-    });
+    if (profile && Array.isArray(profile.games)) {
+      profile.games.forEach(g => {
+        const exists = games.find(item =>
+          item.title.toLowerCase() === g.title.toLowerCase() ||
+          (g.id && item.steamGridId === g.id) ||
+          (g.steamAppId && item.steamAppId === g.steamAppId)
+        );
+        if (!exists) {
+          const steamAppId = g.steamAppId || null;
+          const coverUrl = g.coverUrl || (steamAppId
+            ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_600x900_2x.jpg`
+            : 'https://cdn2.steamgriddb.com/thumb/f39b781760a403dedaa05587e8889c1a.jpg');
+          const heroUrl = g.heroUrl || (steamAppId
+            ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_hero.jpg`
+            : '');
+          const wideCoverUrl = g.wideCoverUrl || (steamAppId
+            ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/header.jpg`
+            : '');
+          const logoUrl = g.logoUrl || (steamAppId
+            ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/logo.png`
+            : '');
+
+          newImported.push({
+            id: `steam-imported-${g.id || g.steamAppId || Math.random().toString(36).slice(2, 9)}`,
+            title: g.title,
+            genre: g.genre || 'PC Game',
+            publisher: g.publisher || 'Steam Library Import',
+            category: g.category || 'aaa',
+            releaseYear: g.releaseYear || 2022,
+            steamAppId,
+            steamGridId: g.id || null,
+            coverUrl,
+            heroUrl,
+            wideCoverUrl,
+            logoUrl,
+            baseFps: g.baseFps || 80,
+            gpuIntensity: g.gpuIntensity || 1.1,
+            cpuIntensity: g.cpuIntensity || 1.1,
+            vramAt1080p: g.vramAt1080p || 6.0,
+            vramAt1440p: g.vramAt1440p || 8.0,
+            vramAt4k: g.vramAt4k || 11.0,
+            ramRecommended: g.ramRecommended || 16,
+            supportsRayTracing: Boolean(g.supportsRayTracing),
+            rtImpact: g.rtImpact || 0.0,
+            isSteamOwned: true,
+            steamPlaytime: g.playtime || '',
+            description: g.description || `Imported from Steam account (${g.playtime ? g.playtime + ' played' : 'Owned on Steam'}).`
+          });
+        }
+      });
+    }
 
     if (newImported.length > 0) {
       setCustomGames(prev => {
@@ -462,41 +656,15 @@ export function App() {
       });
     }
 
+    // Auto switch category to Steam so user immediately sees their games
+    setCategory('steam');
     setIsSteamImportOpen(false);
   }, [games]);
 
-  const handleSteamCustomImport = useCallback((customId) => {
-    const customProfile = {
-      id: `custom-steam-${customId}`,
-      name: customId,
-      avatar: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
-      level: 15,
-      games: [
-        { title: 'Counter-Strike 2', id: 5363838, playtime: '840 hrs' },
-        { title: 'Cyberpunk 2077', id: 5209422, playtime: '92 hrs' },
-        { title: 'Elden Ring', id: 5277816, playtime: '160 hrs' }
-      ]
-    };
-    handleImportSteamProfile(customProfile);
-  }, [handleImportSteamProfile]);
-
-  const handleGoogleSignIn = useCallback(() => {
-    const dummyUser = {
-      name: 'Alex Chen',
-      email: 'alex.chen.gamer@gmail.com',
-      picture: 'https://avatars.githubusercontent.com/u/1024025?v=4'
-    };
-    setGoogleUser(dummyUser);
-    saveGoogleUser(dummyUser);
-  }, []);
-
-  const handleGoogleSignOut = useCallback(() => {
-    setGoogleUser(null);
-    saveGoogleUser(null);
-  }, []);
-
-  const handleSaveCloudSpecs = useCallback(() => {
-    alert('Current hardware configuration saved to your Google cloud profile.');
+  const handleDisconnectSteam = useCallback(() => {
+    setSteamUser(null);
+    saveSteamUser(null);
+    setCategory(prev => prev === 'steam' ? 'all' : prev);
   }, []);
 
   const handleResetAllData = useCallback(() => {
@@ -504,11 +672,6 @@ export function App() {
       localStorage.clear();
       window.location.reload();
     }
-  }, []);
-
-  const handleLoadingChange = useCallback((pct, done) => {
-    setPageLoadingPct(pct);
-    setPageLoadingDone(done);
   }, []);
 
   const handleWideArtChange = useCallback((url) => {
@@ -519,31 +682,30 @@ export function App() {
   const currentAmbientBg = activeDetailGame
     ? (detailWideBg || activeDetailGame.coverUrl || carouselBg)
     : carouselBg;
-  const isAmbientActive = theme !== 'amoled' && Boolean(currentAmbientBg);
+  const isAmbientActive = Boolean(userSettings.ambientBlur && currentAmbientBg);
 
   return (
     <>
       <AmbientBackdrop bgUrl={currentAmbientBg} isActive={isAmbientActive} />
 
-      <div className="app-container">
-        {/* Header with Tooltip Popout */}
+      <div className={`app-container ${isMobile ? 'mobile-device' : ''}`}>
+        {/* Header with Gamer Settings Popout */}
         <Header
           steamUser={steamUser}
-          googleUser={googleUser}
+          profileName={profileName}
           onOpenSteamModal={() => setIsSteamImportOpen(true)}
-          onOpenGoogleModal={() => setIsGoogleAuthOpen(true)}
-          onOpenSteamGridSearch={() => {
-            setSteamGridSearchInitialQuery('');
+          onOpenSteamGridSearch={(q) => {
+            setSteamGridSearchInitialQuery(q || '');
             setIsSteamGridSearchOpen(true);
           }}
           isPopoutOpen={isPopoutOpen}
           onTogglePopout={() => setIsPopoutOpen(prev => !prev)}
           onClosePopout={() => setIsPopoutOpen(false)}
-          theme={theme}
-          onSelectTheme={setTheme}
+          onProfileNameChange={setProfileName}
           onResetData={handleResetAllData}
-          loadingPct={pageLoadingPct}
-          loadingDone={pageLoadingDone}
+          userSettings={userSettings}
+          onUpdateSetting={handleUpdateSetting}
+          specs={specs}
         />
 
         {/* Main Two-Column Layout */}
@@ -560,13 +722,9 @@ export function App() {
                 preset={specs.preset}
                 upscaling={specs.upscaling}
                 rayTracing={specs.rayTracing}
-                onBack={() => {
-                  setActiveDetailGame(null);
-                  setDetailWideBg('');
-                  setPageLoadingDone(true);
-                  setPageLoadingPct(0);
-                }}
-                onLoadingChange={handleLoadingChange}
+                isFavorite={favoriteGameIds.includes(activeDetailGame.id)}
+                onToggleFavorite={() => handleToggleFavorite(activeDetailGame.id)}
+                onBack={handleBackToLibrary}
                 onWideArtChange={handleWideArtChange}
               />
             ) : (
@@ -574,9 +732,14 @@ export function App() {
                 <GameCarousel
                   games={games}
                   isConfigured={isConfigured}
+                  specs={specs}
+                  userSettings={userSettings}
                   onSelectGame={handleSelectGame}
-                  onActiveGameChange={(game) => {
-                    if (game?.coverUrl) setCarouselBg(game.coverUrl);
+                  onToggleFavorite={handleToggleFavorite}
+                  favoriteIds={favoriteGameIds}
+                  onActiveGameChange={(game, artUrl) => {
+                    const bg = artUrl || game?.heroUrl || game?.wideCoverUrl || game?.coverUrl;
+                    if (bg) setCarouselBg(bg);
                   }}
                 />
                 <SystemStatusBar
@@ -595,10 +758,15 @@ export function App() {
                   onHoverGame={() => {}}
                   onLeaveGame={() => {}}
                   onSelectGame={handleSelectGame}
+                  onToggleFavorite={handleToggleFavorite}
+                  favoriteIds={favoriteGameIds}
                   onOpenSearchModal={(q) => {
                     setSteamGridSearchInitialQuery(q || '');
                     setIsSteamGridSearchOpen(true);
                   }}
+                  userSettings={userSettings}
+                  steamUser={steamUser}
+                  steamGameCount={steamGameCount}
                 />
               </>
             )}
@@ -626,8 +794,14 @@ export function App() {
             onSetCpuBrandFilter={setCpuBrandFilter}
             onResetSpecs={handleResetSpecs}
             onApplyPreset={handleApplyPreset}
+            savedRigTemplates={savedRigTemplates}
+            onSaveRigTemplate={handleSaveRigTemplate}
+            onDeleteRigTemplate={handleDeleteRigTemplate}
           />
         </div>
+
+        {/* Global Footer with Copyright Notice */}
+        <Footer />
       </div>
 
       <SteamGridSearchModal
@@ -641,20 +815,10 @@ export function App() {
         isOpen={isSteamImportOpen}
         onClose={() => setIsSteamImportOpen(false)}
         onImportProfile={handleImportSteamProfile}
-        onCustomImport={handleSteamCustomImport}
+        currentSteamUser={steamUser}
+        onDisconnectSteam={handleDisconnectSteam}
       />
 
-      <GoogleAuthModal
-        isOpen={isGoogleAuthOpen}
-        onClose={() => setIsGoogleAuthOpen(false)}
-        googleUser={googleUser}
-        gpu={specs.gpu}
-        cpu={specs.cpu}
-        ram={specs.ram}
-        onSignIn={handleGoogleSignIn}
-        onSignOut={handleGoogleSignOut}
-        onSaveCloudSpecs={handleSaveCloudSpecs}
-      />
     </>
   );
 }
