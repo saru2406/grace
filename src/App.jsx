@@ -164,6 +164,7 @@ export function App() {
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   const [activeDetailGame, setActiveDetailGame] = useState(null);
   const [isSteamGridSearchOpen, setIsSteamGridSearchOpen] = useState(false);
+  const [steamGridSearchInitialQuery, setSteamGridSearchInitialQuery] = useState('');
   const [isSteamImportOpen, setIsSteamImportOpen] = useState(false);
   const [isGoogleAuthOpen, setIsGoogleAuthOpen] = useState(false);
 
@@ -531,7 +532,10 @@ export function App() {
           googleUser={googleUser}
           onOpenSteamModal={() => setIsSteamImportOpen(true)}
           onOpenGoogleModal={() => setIsGoogleAuthOpen(true)}
-          onOpenSteamGridSearch={() => setIsSteamGridSearchOpen(true)}
+          onOpenSteamGridSearch={() => {
+            setSteamGridSearchInitialQuery('');
+            setIsSteamGridSearchOpen(true);
+          }}
           isPopoutOpen={isPopoutOpen}
           onTogglePopout={() => setIsPopoutOpen(prev => !prev)}
           onClosePopout={() => setIsPopoutOpen(false)}
@@ -591,6 +595,10 @@ export function App() {
                   onHoverGame={() => {}}
                   onLeaveGame={() => {}}
                   onSelectGame={handleSelectGame}
+                  onOpenSearchModal={(q) => {
+                    setSteamGridSearchInitialQuery(q || '');
+                    setIsSteamGridSearchOpen(true);
+                  }}
                 />
               </>
             )}
@@ -626,6 +634,7 @@ export function App() {
         isOpen={isSteamGridSearchOpen}
         onClose={() => setIsSteamGridSearchOpen(false)}
         onAddGame={handleAddSteamGridGame}
+        initialQuery={steamGridSearchInitialQuery}
       />
 
       <SteamImportModal

@@ -13,7 +13,8 @@ export function GamesGrid({
   onSortChange,
   onHoverGame,
   onLeaveGame,
-  onSelectGame
+  onSelectGame,
+  onOpenSearchModal
 }) {
   const systemPeriod = React.useMemo(() => getSystemPeriod(), []);
 
@@ -88,22 +89,41 @@ export function GamesGrid({
 
       <div className="games-grid" id="games-grid">
         {items.length === 0 ? (
-          <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-            <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔍</div>
-            <div style={{ fontWeight: 600, color: 'var(--ctp-text)', marginBottom: '4px' }}>No games found</div>
-            <p style={{ color: 'var(--ctp-subtext0)', fontSize: '12px', marginBottom: '14px' }}>
-              No titles match your active filters or search query.
+          <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '36px 20px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>🔍</div>
+            <div style={{ fontWeight: 700, fontSize: '16px', color: '#ffffff', marginBottom: '6px' }}>
+              {searchQuery ? `No library games matching "${searchQuery}"` : 'No games found'}
+            </div>
+            <p style={{ color: 'var(--ctp-subtext0)', fontSize: '13px', marginBottom: '18px', maxWidth: '420px', marginInline: 'auto' }}>
+              {searchQuery
+                ? `You can search and add "${searchQuery}" directly from the full Steam & SteamGridDB catalog.`
+                : 'No titles match your active filters or category selection.'}
             </p>
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={() => {
-                onSearchChange('');
-                onSelectCategory('all');
-              }}
-            >
-              Reset Filters
-            </button>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {searchQuery && onOpenSearchModal && (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => onOpenSearchModal(searchQuery)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  Search &amp; Add "{searchQuery}"
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn-reset-specs"
+                onClick={() => {
+                  onSearchChange('');
+                  onSelectCategory('all');
+                }}
+              >
+                Reset Filters
+              </button>
+            </div>
           </div>
         ) : (
           items.map((item, index) => (
