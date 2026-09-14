@@ -3,11 +3,11 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
-  Download,
   Settings,
   Cpu,
   X,
-  Save
+  Save,
+  Info
 } from 'lucide-react';
 import { GPUS, CPUS, RAM_OPTIONS, SYSTEM_PRESETS } from '../data/hardware.js';
 import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual.jsx';
@@ -15,9 +15,7 @@ import { SettingsPopout } from './SettingsPopout.jsx';
 
 export function ArcSidebar({
   // Navigation & Header props
-  steamUser,
   profileName,
-  onOpenSteamModal,
   onOpenSteamGridSearch,
   isPopoutOpen,
   onTogglePopout,
@@ -67,6 +65,7 @@ export function ArcSidebar({
   const saveInputRef = useRef(null);
 
   const canSave = Boolean(gpu && cpu && ram);
+  const supportsRt = Boolean(gpu && gpu.rtScore > 0);
 
   // Resizable sidebar logic
   const DEFAULT_SIDEBAR_WIDTH = 300;
@@ -137,10 +136,12 @@ export function ArcSidebar({
     } catch {}
   }, []);
 
-  // Global hotkey 'Ctrl+K' or '/' to open Add Game
+  // Global hotkey 'Alt+Space' (or Ctrl+K or '/') to open Add Game
   useEffect(() => {
     function handleGlobalKeyDown(e) {
+      const isAltSpace = e.altKey && (e.code === 'Space' || e.key === ' ' || e.key === 'Space');
       if (
+        isAltSpace ||
         (e.key === 'k' && (e.metaKey || e.ctrlKey)) ||
         (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName))
       ) {
@@ -218,7 +219,7 @@ export function ArcSidebar({
             ============================================================ */}
         <div className="arc-topbar">
           <div className="arc-brand">
-            <span className="arc-brand-title">FPS Estimator</span>
+            <span className="arc-brand-title" style={{ fontFamily: "'Chelsea Market', cursive" }}>Grace</span>
           </div>
 
           <button
@@ -233,7 +234,7 @@ export function ArcSidebar({
         </div>
 
         {/* ============================================================
-            2. ARC COMMAND BAR (Add Game... Ctrl+K)
+            2. ARC COMMAND BAR (Add Game... Alt+Space)
             ============================================================ */}
         <div className="arc-command-section">
           <button
@@ -241,13 +242,13 @@ export function ArcSidebar({
             className="arc-command-bar"
             type="button"
             onClick={() => onOpenSteamGridSearch && onOpenSteamGridSearch('')}
-            title={isCollapsed ? "Search & Add Game (Ctrl+K)" : "Search and add games (Ctrl+K or /)"}
+            title={isCollapsed ? "Search & Add Game (Alt+Space)" : "Search and add games (Alt+Space)"}
           >
             <div className="arc-command-left">
               <Plus size={14} strokeWidth={2.2} />
               <span className="arc-command-text">Add game...</span>
             </div>
-            <kbd className="arc-command-kbd">Ctrl+K</kbd>
+            <kbd className="arc-command-kbd">Alt+Space</kbd>
           </button>
         </div>
 
@@ -255,7 +256,7 @@ export function ArcSidebar({
             3. ARC ACTIONS (Preferences Popout)
             ============================================================ */}
         <div className="arc-actions-row">
-          <div className="profile-popout-wrapper" style={{ width: '100%' }}>
+          <div className="profile-popout-wrapper">
             <button
               id="open-settings-btn"
               className={`arc-settings-btn ${isPopoutOpen ? 'active' : ''}`}
@@ -268,6 +269,11 @@ export function ArcSidebar({
               aria-label="Preferences"
             >
               <Settings size={15} strokeWidth={2} />
+              {!isCollapsed && (
+                <span className="arc-settings-btn-text">
+                  Preferences &amp; Rig Options
+                </span>
+              )}
             </button>
 
             <SettingsPopout
@@ -276,7 +282,6 @@ export function ArcSidebar({
               userSettings={userSettings}
               onUpdateSetting={onUpdateSetting}
               specs={{ gpu, cpu, ram, resolution, preset, upscaling, rayTracing }}
-              steamUser={steamUser}
               profileName={profileName}
               onProfileNameChange={onProfileNameChange}
               onResetData={onResetData}
@@ -564,29 +569,68 @@ export function ArcSidebar({
 
           {/* Ray Tracing */}
           <div className="spec-group">
-            <label className="switch-label" htmlFor="ray-tracing-toggle">
-              <div className="switch-title-wrap">
-                <span className="switch-title">Ray Tracing</span>
-                {gpu && (
-                  <span className={`rt-capability-badge ${gpu.rtScore > 0 ? 'rt-ready' : 'rt-unsupported'}`}>
-                    {gpu.rtScore > 0 ? 'RT Capable' : 'No Hardware RT'}
+            <div className={`rt-toggle-wrapper ${!supportsRt ? 'rt-disabled-wrapper' : ''}`}>
+              <label
+                className={`switch-label ${!supportsRt ? 'disabled' : ''}`}
+                htmlFor={supportsRt ? "ray-tracing-toggle" : undefined}
+              >
+                <div className="switch-title-wrap">
+                  <span className="switch-title">Ray Tracing</span>
+                  {!supportsRt && (
+                    <div className="rt-info-container">
+                      <a
+                        href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rt-info-btn"
+                        title="This card does not support hardware ray tracing. Click to learn more on Wikipedia."
+                        aria-label="Ray tracing unsupported. Learn more on Wikipedia."
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Info size={13} className="rt-info-icon" />
+                      </a>
+                      <div className="rt-info-tooltip" onClick={(e) => e.stopPropagation()}>
+                        <div className="rt-info-tooltip-header">
+                          <Info size={12} className="rt-info-tooltip-icon" />
+                          <span>No Hardware Ray Tracing</span>
+                        </div>
+                        <p className="rt-info-tooltip-msg">
+                          {gpu
+                            ? `${gpu.name} does not support hardware ray tracing.`
+                            : 'Select a graphics card with ray tracing support to enable this toggle.'}
+                        </p>
+                        <a
+                          href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rt-info-tooltip-link"
+                        >
+                          Learn what ray tracing is on Wikipedia ↗
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className={`switch-container ${!supportsRt ? 'disabled' : ''}`}>
+                  <span className={`switch-state-label ${supportsRt && rayTracing ? 'active' : ''} ${!supportsRt ? 'disabled' : ''}`}>
+                    {supportsRt && rayTracing ? 'ON' : 'OFF'}
                   </span>
-                )}
-              </div>
-              <div className="switch-container">
-                <span className={`switch-state-label ${rayTracing ? 'active' : ''}`}>
-                  {rayTracing ? 'ON' : 'OFF'}
-                </span>
-                <input
-                  type="checkbox"
-                  id="ray-tracing-toggle"
-                  className="switch-input"
-                  checked={rayTracing}
-                  onChange={(e) => onToggleRayTracing(e.target.checked)}
-                />
-                <span className="switch-slider"></span>
-              </div>
-            </label>
+                  <input
+                    type="checkbox"
+                    id="ray-tracing-toggle"
+                    className="switch-input"
+                    checked={supportsRt && Boolean(rayTracing)}
+                    disabled={!supportsRt}
+                    onChange={(e) => {
+                      if (supportsRt) {
+                        onToggleRayTracing(e.target.checked);
+                      }
+                    }}
+                  />
+                  <span className="switch-slider"></span>
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* Saved Rigs Section with Delete & Inline Save */}

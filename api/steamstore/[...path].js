@@ -8,8 +8,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   const pathParts = req.query.path || [];
@@ -37,10 +36,6 @@ export default async function handler(req, res) {
       }
     });
 
-        'Accept': 'application/json'
-      }
-    });
-
     const contentType = steamRes.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
       const data = await steamRes.json();
@@ -52,7 +47,5 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('Steam store API proxy error:', err);
     return res.status(502).json({ error: err.message });
-  }
-}
   }
 }

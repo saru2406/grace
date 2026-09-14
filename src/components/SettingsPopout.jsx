@@ -8,7 +8,6 @@ export function SettingsPopout({
   userSettings = {},
   onUpdateSetting,
   specs = {},
-  steamUser,
   profileName,
   onProfileNameChange,
   onResetData
@@ -167,7 +166,36 @@ export function SettingsPopout({
           </div>
         </div>
 
-        {/* 5. Quick Export / Copy Rig */}
+        {/* 5. Visual Theme Selector */}
+        <div className="popout-section">
+          <div className="popout-section-title-row">
+            <span className="popout-section-title">Homepage Theme</span>
+            <span className="popout-active-val" style={{ fontSize: '10px' }}>
+              {userSettings.theme === 'catppuccin-mocha' ? 'Catppuccin Mocha' : 'Default'}
+            </span>
+          </div>
+          <div className="popout-segmented-grid">
+            <button
+              type="button"
+              className={`popout-seg-btn ${userSettings.theme !== 'catppuccin-mocha' ? 'active' : ''}`}
+              onClick={() => onUpdateSetting && onUpdateSetting('theme', 'default')}
+            >
+              Default (Dark)
+            </button>
+            <button
+              type="button"
+              className={`popout-seg-btn ${userSettings.theme === 'catppuccin-mocha' ? 'active' : ''}`}
+              onClick={() => onUpdateSetting && onUpdateSetting('theme', 'catppuccin-mocha')}
+            >
+              Catppuccin Mocha
+            </button>
+          </div>
+          <span className="popout-toggle-sub" style={{ marginTop: '6px', display: 'block', fontSize: '10.5px' }}>
+            {userSettings.theme === 'catppuccin-mocha' ? 'Catppuccin Mocha palette active on homepage.' : 'Default theme active everywhere.'}
+          </span>
+        </div>
+
+        {/* 6. Quick Export / Copy Rig */}
         <div className="popout-section">
           <button
             type="button"
@@ -179,7 +207,7 @@ export function SettingsPopout({
           </button>
         </div>
 
-        {/* 6. Profile Setting */}
+        {/* 7. Profile Setting */}
         <div className="popout-section">
           <div className="popout-section-title">Gamer Tag / Profile</div>
           <label className="profile-name-field" htmlFor="profile-name-input">
@@ -195,7 +223,7 @@ export function SettingsPopout({
           </label>
         </div>
 
-        {/* 7. API Connection Verification */}
+        {/* 8. API Connection Verification */}
         <div className="popout-section">
           <div className="popout-section-title-row">
             <span className="popout-section-title">API Connection Status</span>
@@ -216,9 +244,16 @@ export function SettingsPopout({
             onClick={handleRunApiTests}
             disabled={apiTesting}
           >
-            <RefreshCw size={13} className={apiTesting ? 'spin-animation' : ''} />
             <span>{apiTesting ? 'Verifying Endpoints...' : (apiResults ? 'Re-verify API Connections' : 'Test API Connections')}</span>
           </button>
+
+          {apiTesting && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+              <div className="skeleton-loading" style={{ height: '44px', borderRadius: '8px' }} />
+              <div className="skeleton-loading" style={{ height: '44px', borderRadius: '8px' }} />
+              <div className="skeleton-loading" style={{ height: '44px', borderRadius: '8px' }} />
+            </div>
+          )}
 
           {apiResults && (
             <div className="api-diag-results">
@@ -252,21 +287,7 @@ export function SettingsPopout({
           )}
         </div>
 
-        {/* 8. Connected Accounts */}
-        <div className="popout-section">
-          <div className="popout-section-title">Accounts</div>
-          <div id="settings-accounts-summary" className="popout-accounts-summary">
-            {steamUser ? (
-              <span style={{ color: '#ffffff', fontWeight: 600 }}>
-                Connected as <strong>{steamUser.name}</strong> ({steamUser.games.length} games imported)
-              </span>
-            ) : (
-              <span style={{ color: 'var(--ctp-subtext0)' }}>Steam not connected.</span>
-            )}
-          </div>
-        </div>
-
-        {/* 8. Data Reset */}
+        {/* Data Reset */}
         <div className="popout-section" style={{ borderBottom: 'none', paddingBottom: 0 }}>
           <button
             id="clear-all-data-btn"

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Info } from 'lucide-react';
 import { GPUS, CPUS, RAM_OPTIONS, SYSTEM_PRESETS } from '../data/hardware.js';
 import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual.jsx';
 
@@ -36,6 +37,7 @@ export function SpecsSidebar({
   const saveInputRef = React.useRef(null);
 
   const canSave = Boolean(gpu && cpu && ram);
+  const supportsRt = Boolean(gpu && gpu.rtScore > 0);
 
   const defaultSuggestedName = React.useMemo(() => {
     if (!gpu && !cpu) return 'My Custom Rig';
@@ -384,29 +386,68 @@ export function SpecsSidebar({
 
       {/* Ray Tracing */}
       <div className="spec-group">
-        <label className="switch-label" htmlFor="ray-tracing-toggle">
-          <div className="switch-title-wrap">
-            <span className="switch-title">Ray Tracing</span>
-            {gpu && (
-              <span className={`rt-capability-badge ${gpu.rtScore > 0 ? 'rt-ready' : 'rt-unsupported'}`}>
-                {gpu.rtScore > 0 ? 'RT Capable' : 'No Hardware RT'}
+        <div className={`rt-toggle-wrapper ${!supportsRt ? 'rt-disabled-wrapper' : ''}`}>
+          <label
+            className={`switch-label ${!supportsRt ? 'disabled' : ''}`}
+            htmlFor={supportsRt ? "specs-ray-tracing-toggle" : undefined}
+          >
+            <div className="switch-title-wrap">
+              <span className="switch-title">Ray Tracing</span>
+              {!supportsRt && (
+                <div className="rt-info-container">
+                  <a
+                    href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rt-info-btn"
+                    title="This card does not support hardware ray tracing. Click to learn more on Wikipedia."
+                    aria-label="Ray tracing unsupported. Learn more on Wikipedia."
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Info size={13} className="rt-info-icon" />
+                  </a>
+                  <div className="rt-info-tooltip" onClick={(e) => e.stopPropagation()}>
+                    <div className="rt-info-tooltip-header">
+                      <Info size={12} className="rt-info-tooltip-icon" />
+                      <span>No Hardware Ray Tracing</span>
+                    </div>
+                    <p className="rt-info-tooltip-msg">
+                      {gpu
+                        ? `${gpu.name} does not support hardware ray tracing.`
+                        : 'Select a graphics card with ray tracing support to enable this toggle.'}
+                    </p>
+                    <a
+                      href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rt-info-tooltip-link"
+                    >
+                      Learn what ray tracing is on Wikipedia ↗
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className={`switch-container ${!supportsRt ? 'disabled' : ''}`}>
+              <span className={`switch-state-label ${supportsRt && rayTracing ? 'active' : ''} ${!supportsRt ? 'disabled' : ''}`}>
+                {supportsRt && rayTracing ? 'ON' : 'OFF'}
               </span>
-            )}
-          </div>
-          <div className="switch-container">
-            <span className={`switch-state-label ${rayTracing ? 'active' : ''}`}>
-              {rayTracing ? 'ON' : 'OFF'}
-            </span>
-            <input
-              type="checkbox"
-              id="ray-tracing-toggle"
-              className="switch-input"
-              checked={rayTracing}
-              onChange={(e) => onToggleRayTracing(e.target.checked)}
-            />
-            <span className="switch-slider"></span>
-          </div>
-        </label>
+              <input
+                type="checkbox"
+                id="specs-ray-tracing-toggle"
+                className="switch-input"
+                checked={supportsRt && Boolean(rayTracing)}
+                disabled={!supportsRt}
+                onChange={(e) => {
+                  if (supportsRt) {
+                    onToggleRayTracing(e.target.checked);
+                  }
+                }}
+              />
+              <span className="switch-slider"></span>
+            </div>
+          </label>
+        </div>
       </div>
 
       {/* Save Rig — pinned at bottom of sidebar */}

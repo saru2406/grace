@@ -7,6 +7,7 @@ import {
   getStoredSteamApiKey,
   saveSteamApiKey
 } from '../services/authAndSteam.js';
+import { SteamProfileSkeleton } from './SkeletonLoader.jsx';
 
 export function SteamImportModal({
   isOpen,
@@ -299,20 +300,9 @@ export function SteamImportModal({
               </div>
             </form>
 
-            {/* Live Loading state */}
+            {/* Live Skeleton Loading state */}
             {isLoading && (
-              <div style={{
-                textAlign: 'center',
-                padding: '24px 16px',
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.06)',
-                marginBottom: '16px'
-              }}>
-                <div className="btn-loading-spinner" style={{ margin: '0 auto 10px', width: '22px', height: '22px' }} />
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#ffffff' }}>{statusMessage || 'Resolving profile...'}</div>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Connecting to Steam Web network</div>
-              </div>
+              <SteamProfileSkeleton statusText={statusMessage || 'Connecting to Steam Web network...'} />
             )}
 
             {/* Error Message */}

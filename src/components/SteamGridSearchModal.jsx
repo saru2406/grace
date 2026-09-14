@@ -121,16 +121,7 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
                   <button
                     key={s}
                     type="button"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.07)',
-                      border: '1px solid rgba(255, 255, 255, 0.14)',
-                      color: 'var(--ctp-text, #e2e8f0)',
-                      borderRadius: '16px',
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
+                    className="search-suggestion-pill"
                     onClick={() => setQuery(s)}
                   >
                     + {s}

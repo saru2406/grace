@@ -13,11 +13,11 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 
-
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  // Support both standard and VITE_ prefixed environment variables in Vercel
   const apiKey = (process.env.STEAMGRID_API_KEY || process.env.VITE_STEAMGRID_API_KEY || '').trim();
 
   const pathParts = req.query.path || [];
@@ -75,7 +75,5 @@ export default async function handler(req, res) {
       data: [],
       error: err.message || 'Failed to contact SteamGridDB'
     });
-  }
-}
   }
 }

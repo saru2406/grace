@@ -1,11 +1,9 @@
 import React, { useEffect } from 'react';
-import { Plus, Download, User } from 'lucide-react';
+import { Plus, User } from 'lucide-react';
 import { SettingsPopout } from './SettingsPopout';
 
 export function Header({
-  steamUser,
   profileName,
-  onOpenSteamModal,
   onOpenSteamGridSearch,
   isPopoutOpen,
   onTogglePopout,
@@ -16,10 +14,12 @@ export function Header({
   onProfileNameChange,
   onResetData
 }) {
-  // Global hotkey 'Ctrl+K' or '/' to quickly open the Add Game modal
+  // Global hotkey 'Alt+Space' (or Ctrl+K or '/') to quickly open the Add Game modal
   useEffect(() => {
     function handleGlobalKeyDown(e) {
+      const isAltSpace = e.altKey && (e.code === 'Space' || e.key === ' ' || e.key === 'Space');
       if (
+        isAltSpace ||
         (e.key === 'k' && (e.metaKey || e.ctrlKey)) ||
         (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName))
       ) {
@@ -35,7 +35,7 @@ export function Header({
     <header className="app-header">
       {/* 1. Left: Brand Section */}
       <div className="brand-section">
-        <h1 className="brand-title">FPS Estimator</h1>
+        <h1 className="brand-title">Grace</h1>
       </div>
 
       {/* 2. Center: Prominent Add Game / Search Catalog Button */}
@@ -45,41 +45,18 @@ export function Header({
           className="header-add-pill-btn"
           type="button"
           onClick={() => onOpenSteamGridSearch && onOpenSteamGridSearch('')}
-          title="Search and add games (Ctrl+K or /)"
+          title="Search and add games (Alt+Space)"
         >
           <div className="add-pill-left">
             <Plus size={14} strokeWidth={2} />
             <span className="add-pill-text">Add game...</span>
           </div>
-          <kbd className="add-pill-kbd">Ctrl+K</kbd>
+          <kbd className="add-pill-kbd">Alt+Space</kbd>
         </button>
       </div>
 
       {/* 3. Right: Action Buttons with Good Design */}
       <div className="header-actions">
-        {/* Steam Account & Library Sync */}
-        <button
-          id="steam-login-btn"
-          className={`btn-steam ${steamUser ? 'connected' : ''}`}
-          type="button"
-          onClick={onOpenSteamModal}
-          title={steamUser ? `Synced with ${steamUser.name}` : 'Import Steam profile'}
-        >
-          {steamUser?.avatar ? (
-            <img
-              src={steamUser.avatar}
-              alt={steamUser.name}
-              style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }}
-            />
-          ) : (
-            <Download size={14} strokeWidth={2} />
-          )}
-          <span id="steam-btn-text">
-            {steamUser ? steamUser.name : 'Steam Import'}
-          </span>
-          {steamUser && <span className="steam-online-dot" />}
-        </button>
-
         {/* Profile & Settings Icon Button with Popout */}
         <div className="profile-popout-wrapper">
           <button
@@ -102,7 +79,6 @@ export function Header({
             userSettings={userSettings}
             onUpdateSetting={onUpdateSetting}
             specs={specs}
-            steamUser={steamUser}
             profileName={profileName}
             onProfileNameChange={onProfileNameChange}
             onResetData={onResetData}

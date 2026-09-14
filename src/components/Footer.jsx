@@ -8,7 +8,7 @@ export function Footer() {
       <div className="footer-inner">
         <div className="footer-top-row">
           <div className="footer-brand">
-            <span className="footer-brand-title">FPS Estimator by saru</span>
+            <span className="footer-brand-title">Grace by saru</span>
           </div>
 
         </div>

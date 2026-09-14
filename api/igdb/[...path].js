@@ -1,7 +1,6 @@
 /**
  * Vercel Serverless Function: IGDB API v4 Proxy with Twitch OAuth2 Authentication
- * Implements the official IGDB Getting Started specification:
- * https://api-docs.igdb.com/#getting-started
+ * Implements official IGDB specification: https://api-docs.igdb.com/#getting-started
  */
 
 const IGDB_BASE = 'https://api.igdb.com/v4';
@@ -12,12 +11,10 @@ let tokenExpiresAt = 0;
 
 /**
  * Obtain or refresh a Twitch OAuth2 App Access Token via Client Credentials Grant
- * POST https://id.twitch.tv/oauth2/token?client_id=...&client_secret=...&grant_type=client_credentials
  */
 async function getTwitchAppAccessToken(clientId, clientSecret) {
   if (!clientId || !clientSecret) return null;
 
-  // Use cached token if still valid (with a 2-minute safety buffer)
   if (cachedToken && Date.now() < tokenExpiresAt) {
     return cachedToken;
   }
@@ -31,9 +28,7 @@ async function getTwitchAppAccessToken(clientId, clientSecret) {
 
     const tokenRes = await fetch(`https://id.twitch.tv/oauth2/token?${params.toString()}`, {
       method: 'POST',
-      headers: {
-        Accept: 'application/json'
-      }
+      headers: { Accept: 'application/json' }
     });
 
     if (tokenRes.ok) {
@@ -41,7 +36,6 @@ async function getTwitchAppAccessToken(clientId, clientSecret) {
       if (data && data.access_token) {
         cachedToken = data.access_token;
         const expiresIn = data.expires_in || 3600;
-        // Expire 120 seconds early to avoid race conditions
         tokenExpiresAt = Date.now() + Math.max(expiresIn - 120, 60) * 1000;
         return cachedToken;
       }
@@ -62,14 +56,14 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Client-ID, Authorization');
 
-
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  const clientId = process.env.IGDB_CLIENT_ID || process.env.VITE_IGDB_CLIENT_ID || '';
-  const clientSecret = process.env.IGDB_CLIENT_SECRET || '';
-  const directToken = process.env.IGDB_ACCESS_TOKEN || process.env.VITE_IGDB_ACCESS_TOKEN || '';
+  // Support both standard names and VITE_ prefixed names in Vercel environment variables
+  const clientId = (process.env.IGDB_CLIENT_ID || process.env.VITE_IGDB_CLIENT_ID || '').trim();
+  const clientSecret = (process.env.IGDB_CLIENT_SECRET || process.env.VITE_IGDB_CLIENT_SECRET || '').trim();
+  const directToken = (process.env.IGDB_ACCESS_TOKEN || process.env.VITE_IGDB_ACCESS_TOKEN || '').trim();
 
   if (!clientId) {
     return res.status(200).json({
@@ -84,12 +78,12 @@ export default async function handler(req, res) {
   }
 
   if (!accessToken && directToken) {
-    accessToken = directToken.trim();
+    accessToken = directToken;
   }
 
   if (!accessToken) {
     return res.status(200).json({
-      error: 'IGDB credentials not configured. Please set IGDB_CLIENT_ID and IGDB_CLIENT_SECRET in Vercel environment variables.'
+      error: 'IGDB credentials not configured. Please set IGDB_CLIENT_ID and IGDB_CLIENT_SECRET (or IGDB_ACCESS_TOKEN) in Vercel environment variables.'
     });
   }
 
@@ -116,14 +110,10 @@ export default async function handler(req, res) {
   }
 
   const forwardHeaders = {
-    'Client-ID': clientId.trim(),
+    'Client-ID': clientId,
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'text/plain',
     Accept: 'application/json'
-  };
-
-    'Content-Type': 'text/plain',
-    'Accept': 'application/json'
   };
 
   try {
@@ -158,7 +148,5 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('IGDB proxy request failed:', err);
     return res.status(502).json({ error: err.message || 'Failed to contact IGDB' });
-  }
-}
   }
 }

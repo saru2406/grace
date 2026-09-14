@@ -1,4 +1,5 @@
 // Real product photography component visualizer matching AMOLED aesthetics
+import { getHardwareWikiDefault } from '../services/wikipediaHardware.js';
 
 export function getGpuImage(gpu) {
   if (!gpu) {
@@ -14,18 +15,20 @@ export function getGpuImage(gpu) {
   }
 
   const brand = gpu.brand || 'NVIDIA';
-  let imgPath = '/components/gpu-nvidia.jpg';
+  let fallbackImg = '/components/gpu-nvidia.jpg';
   let brandClass = 'brand-nvidia';
   if (brand === 'AMD') {
-    imgPath = '/components/gpu-amd.jpg';
+    fallbackImg = '/components/gpu-amd.jpg';
     brandClass = 'brand-amd';
   } else if (brand === 'Intel') {
-    imgPath = '/components/gpu-intel.jpg';
+    fallbackImg = '/components/gpu-intel.jpg';
     brandClass = 'brand-intel';
   }
 
+  const imgPath = getHardwareWikiDefault(gpu, 'gpu') || fallbackImg;
+
   return `
-    <div class="component-img-wrap skeleton-loading">
+    <div class="component-img-wrap skeleton-loading" title="Photo from Wikipedia: ${gpu.name}">
       <img 
         src="${imgPath}" 
         alt="${gpu.name}" 
@@ -35,6 +38,7 @@ export function getGpuImage(gpu) {
         onerror="this.parentElement.classList.remove('skeleton-loading')"
       />
       <span class="component-brand-tag ${brandClass}">${brand}</span>
+      <span class="component-wiki-badge" title="Source: Wikipedia / Wikimedia">W</span>
     </div>
   `;
 }
@@ -62,11 +66,12 @@ export function getCpuImage(cpu) {
 
   const brand = cpu.brand || 'AMD';
   const isAmd = brand === 'AMD';
-  const imgPath = isAmd ? '/components/cpu-amd.jpg' : '/components/cpu-intel.jpg';
+  const fallbackImg = isAmd ? '/components/cpu-amd.jpg' : '/components/cpu-intel.jpg';
   const brandClass = isAmd ? 'brand-amd' : 'brand-intel';
+  const imgPath = getHardwareWikiDefault(cpu, 'cpu') || fallbackImg;
 
   return `
-    <div class="component-img-wrap skeleton-loading">
+    <div class="component-img-wrap skeleton-loading" title="Photo from Wikipedia: ${cpu.name}">
       <img 
         src="${imgPath}" 
         alt="${cpu.name}" 
@@ -76,6 +81,7 @@ export function getCpuImage(cpu) {
         onerror="this.parentElement.classList.remove('skeleton-loading')"
       />
       <span class="component-brand-tag ${brandClass}">${brand}</span>
+      <span class="component-wiki-badge" title="Source: Wikipedia / Wikimedia">W</span>
     </div>
   `;
 }
@@ -99,9 +105,9 @@ export function getRamImage(ram) {
   return `
     <div class="component-img-wrap skeleton-loading">
       <img 
-        src="/components/ram.png" 
+        src="/components/ram.png?v=2" 
         alt="${ram}GB RAM" 
-        class="component-real-img" 
+        class="component-real-img ram-real-img" 
         loading="lazy" 
         onload="this.parentElement.classList.remove('skeleton-loading')" 
         onerror="this.parentElement.classList.remove('skeleton-loading')"

@@ -23,10 +23,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
@@ -45,7 +42,7 @@ export default async function handler(req, res) {
     : body;
 
   const { query, apiKey: userProvidedApiKey } = payload || {};
-  const envApiKey = process.env.STEAM_API_KEY || process.env.VITE_STEAM_API_KEY || '';
+  const envApiKey = (process.env.STEAM_API_KEY || process.env.VITE_STEAM_API_KEY || '').trim();
   const apiKey = (userProvidedApiKey && userProvidedApiKey.trim()) || envApiKey;
 
   const parsed = parseSteamInput(query);
@@ -58,10 +55,6 @@ export default async function handler(req, res) {
     const xmlResponse = await fetch(profileUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept': 'text/xml, application/xml, */*'
-      }
-    });
-
         'Accept': 'text/xml, application/xml, */*'
       }
     });
@@ -140,6 +133,5 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('Steam resolve error on Vercel:', err);
     return res.status(200).json({ success: false, error: err.message || 'Internal server error' });
-
   }
 }

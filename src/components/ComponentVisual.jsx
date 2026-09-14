@@ -1,8 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CircuitBoard, Cpu, MemoryStick } from 'lucide-react';
+import { getHardwareWikiDefault, fetchWikipediaHardwareImage } from '../services/wikipediaHardware.js';
 
 export function GpuVisual({ gpu }) {
   const [loaded, setLoaded] = useState(false);
+  const defaultWiki = gpu ? getHardwareWikiDefault(gpu, 'gpu') : null;
+  const [wikiImg, setWikiImg] = useState(defaultWiki);
+
+  useEffect(() => {
+    if (!gpu) {
+      setWikiImg(null);
+      return;
+    }
+    const initial = getHardwareWikiDefault(gpu, 'gpu');
+    setWikiImg(initial);
+    setLoaded(false);
+
+    let cancelled = false;
+    fetchWikipediaHardwareImage(gpu, 'gpu').then(res => {
+      if (!cancelled && res?.url) {
+        setWikiImg(res.url);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [gpu?.id]);
 
   if (!gpu) {
     return (
@@ -14,34 +36,64 @@ export function GpuVisual({ gpu }) {
   }
 
   const brand = gpu.brand || 'NVIDIA';
-  let imgPath = '/components/gpu-nvidia.jpg';
+  let fallbackImg = '/components/gpu-nvidia.jpg';
   let brandClass = 'brand-nvidia';
   if (brand === 'AMD') {
-    imgPath = '/components/gpu-amd.jpg';
+    fallbackImg = '/components/gpu-amd.jpg';
     brandClass = 'brand-amd';
   } else if (brand === 'Intel') {
-    imgPath = '/components/gpu-intel.jpg';
+    fallbackImg = '/components/gpu-intel.jpg';
     brandClass = 'brand-intel';
   }
 
+  const imgSrc = wikiImg || fallbackImg;
+
   return (
-    <div className={`component-img-wrap ${!loaded ? 'skeleton-loading' : ''}`}>
+    <div className={`component-img-wrap ${!loaded ? 'skeleton-loading' : ''}`} title={`Photo from Wikipedia: ${gpu.name}`}>
       <img
-        src={imgPath}
+        key={imgSrc}
+        src={imgSrc}
         alt={gpu.name}
         className="component-real-img"
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
+        onError={(e) => {
+          setLoaded(true);
+          if (e.target.src !== fallbackImg) {
+            e.target.src = fallbackImg;
+          }
+        }}
       />
       <span className={`component-brand-tag ${brandClass}`}>{brand}</span>
+      <span className="component-wiki-badge" title="Source: Wikipedia / Wikimedia">W</span>
     </div>
   );
 }
 
 export function CpuVisual({ cpu }) {
   const [loaded, setLoaded] = useState(false);
+  const defaultWiki = cpu ? getHardwareWikiDefault(cpu, 'cpu') : null;
+  const [wikiImg, setWikiImg] = useState(defaultWiki);
+
+  useEffect(() => {
+    if (!cpu) {
+      setWikiImg(null);
+      return;
+    }
+    const initial = getHardwareWikiDefault(cpu, 'cpu');
+    setWikiImg(initial);
+    setLoaded(false);
+
+    let cancelled = false;
+    fetchWikipediaHardwareImage(cpu, 'cpu').then(res => {
+      if (!cancelled && res?.url) {
+        setWikiImg(res.url);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [cpu?.id]);
 
   if (!cpu) {
     return (
@@ -54,21 +106,29 @@ export function CpuVisual({ cpu }) {
 
   const brand = cpu.brand || 'AMD';
   const isAmd = brand === 'AMD';
-  const imgPath = isAmd ? '/components/cpu-amd.jpg' : '/components/cpu-intel.jpg';
+  const fallbackImg = isAmd ? '/components/cpu-amd.jpg' : '/components/cpu-intel.jpg';
   const brandClass = isAmd ? 'brand-amd' : 'brand-intel';
+  const imgSrc = wikiImg || fallbackImg;
 
   return (
-    <div className={`component-img-wrap ${!loaded ? 'skeleton-loading' : ''}`}>
+    <div className={`component-img-wrap ${!loaded ? 'skeleton-loading' : ''}`} title={`Photo from Wikipedia: ${cpu.name}`}>
       <img
-        src={imgPath}
+        key={imgSrc}
+        src={imgSrc}
         alt={cpu.name}
         className="component-real-img"
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
+        onError={(e) => {
+          setLoaded(true);
+          if (e.target.src !== fallbackImg) {
+            e.target.src = fallbackImg;
+          }
+        }}
       />
       <span className={`component-brand-tag ${brandClass}`}>{brand}</span>
+      <span className="component-wiki-badge" title="Source: Wikipedia / Wikimedia">W</span>
     </div>
   );
 }
@@ -88,9 +148,9 @@ export function RamVisual({ ram }) {
   return (
     <div className={`component-img-wrap ${!loaded ? 'skeleton-loading' : ''}`}>
       <img
-        src="/components/ram.png"
+        src="/components/ram.png?v=2"
         alt={`${ram}GB RAM`}
-        className="component-real-img"
+        className="component-real-img ram-real-img"
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}

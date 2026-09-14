@@ -5,10 +5,6 @@ import { DEFAULT_GAMES } from './data/games.js';
 import { calculateFps } from './services/fpsEngine.js';
 import { getGameGrid, getGameHero, getGameWideCover, getGameLogo } from './services/steamGrid.js';
 import { getSystemPeriod, getGameTrendingScore } from './services/systemTrending.js';
-import {
-  saveSteamUser,
-  getStoredSteamUser
-} from './services/authAndSteam.js';
 import { searchGamesWithContext } from './services/gameSearch.js';
 
 import { AmbientBackdrop } from './components/AmbientBackdrop.jsx';
@@ -17,6 +13,7 @@ import { SystemStatusBar } from './components/SystemStatusBar.jsx';
 import { GameCarousel } from './components/GameCarousel.jsx';
 import { GamesGrid } from './components/GamesGrid.jsx';
 import { Footer } from './components/Footer.jsx';
+import { GameDetailPageSkeleton } from './components/SkeletonLoader.jsx';
 
 // Code-split heavy modals and detail page for instant initial load
 const GameDetailPage = React.lazy(() => import('./components/GameDetailPage.jsx').then(m => ({ default: m.GameDetailPage })));
@@ -108,63 +105,58 @@ export function App() {
     () => DEFAULT_GAMES[0]?.heroUrl || DEFAULT_GAMES[0]?.wideCoverUrl || DEFAULT_GAMES[0]?.coverUrl || ''
   );
   const [detailWideBg, setDetailWideBg] = useState('');
+  const [activeDetailGame, setActiveDetailGame] = useState(null);
 
-  // Neutral dark mode attribute on root
+  // Dynamic theme attribute on root: Catppuccin Mocha for Homepage when selected, dark default otherwise
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }, []);
+    if (userSettings.theme === 'catppuccin-mocha' && !activeDetailGame) {
+      document.documentElement.setAttribute('data-theme', 'catppuccin-mocha');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  }, [userSettings.theme, activeDetailGame]);
 
-  // Global Tactile Ripple Animation
+  // Android-like Material ink ripple effect (for all buttons only)
   useEffect(() => {
     function handlePointerDown(e) {
-      // Ignore right clicks or middle clicks
       if (e.button !== 0) return;
 
-      const target = e.target.closest(
-        'button, .preset-chip, .tab-btn, .segmented-btn, .brand-pill, .search-result-card, .theme-card-option, .hltb-card, .carousel-cta-btn, .carousel-arrow, .carousel-dot'
-      );
-      if (!target) return;
+      const btn = e.target.closest('button');
+      if (!btn || btn.disabled) return;
 
-      // Don't trigger inside popouts
-      if (target.closest('.profile-popout')) return;
-
-      if (!target.classList.contains('ripple-target')) {
-        const computedPos = window.getComputedStyle(target).position;
-        if (computedPos === 'static') {
-          target.classList.add('ripple-target');
-        } else {
-          target.style.overflow = 'hidden';
-        }
+      const computed = window.getComputedStyle(btn);
+      if (computed.position === 'static') {
+        btn.style.position = 'relative';
       }
+      btn.style.overflow = 'hidden';
 
-      const rect = target.getBoundingClientRect();
-      // Calculate the farthest corner distance from click origin —
-      // this ensures the ripple circle expands exactly to cover the element
-      // boundary with scale(1), so it never bleeds beyond the container.
+      const rect = btn.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
+
       const dx = Math.max(clickX, rect.width - clickX);
       const dy = Math.max(clickY, rect.height - clickY);
-      const diameter = Math.ceil(Math.sqrt(dx * dx + dy * dy) * 2);
-      const radius = diameter / 2;
+      const radius = Math.sqrt(dx * dx + dy * dy);
+      const diameter = radius * 2;
 
       const ripple = document.createElement('span');
-      ripple.className = 'ripple-wave';
+      ripple.className = 'md-android-ripple';
       ripple.style.width = `${diameter}px`;
       ripple.style.height = `${diameter}px`;
       ripple.style.left = `${clickX - radius}px`;
       ripple.style.top = `${clickY - radius}px`;
 
-      // Clean up previous ripples if user spam clicks
-      const existingRipples = target.querySelectorAll('.ripple-wave');
-      if (existingRipples.length > 2) {
-        existingRipples[0].remove();
+      const oldRipples = btn.querySelectorAll('.md-android-ripple');
+      if (oldRipples.length > 2) {
+        oldRipples[0].remove();
       }
 
-      target.appendChild(ripple);
+      btn.appendChild(ripple);
 
       ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
-      setTimeout(() => { if (ripple.parentNode) ripple.remove(); }, 700);
+      setTimeout(() => {
+        if (ripple.parentNode) ripple.remove();
+      }, 650);
     }
 
     document.addEventListener('pointerdown', handlePointerDown);
@@ -174,14 +166,16 @@ export function App() {
   // Hardware Specs State
   const [specs, setSpecs] = useState(() => {
     const saved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_SPECS) || '{}');
+    const gpu = saved.gpuId ? (GPUS.find(g => g.id === saved.gpuId) || null) : null;
+    const canRt = Boolean(gpu && gpu.rtScore > 0);
     return {
-      gpu: saved.gpuId ? (GPUS.find(g => g.id === saved.gpuId) || null) : null,
+      gpu,
       cpu: saved.cpuId ? (CPUS.find(c => c.id === saved.cpuId) || null) : null,
       ram: saved.ram || null,
       resolution: saved.resolution || '1440p',
       preset: saved.preset || 'high',
       upscaling: saved.upscaling || 'quality',
-      rayTracing: saved.rayTracing !== undefined ? saved.rayTracing : false
+      rayTracing: canRt ? (saved.rayTracing !== undefined ? saved.rayTracing : false) : false
     };
   });
 
@@ -235,15 +229,12 @@ export function App() {
 
   // Modals & Popout
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
-  const [activeDetailGame, setActiveDetailGame] = useState(null);
   const [isSteamGridSearchOpen, setIsSteamGridSearchOpen] = useState(false);
   const [steamGridSearchInitialQuery, setSteamGridSearchInitialQuery] = useState('');
 
-  // Authentication states
-  const [steamUser, setSteamUser] = useState(getStoredSteamUser);
+  // Profile & Rig Templates
   const [profileName, setProfileName] = useState(() => {
-    const savedProfileName = localStorage.getItem(LOCAL_STORAGE_PROFILE_NAME);
-    return savedProfileName || steamUser?.name || 'Gamer';
+    return localStorage.getItem(LOCAL_STORAGE_PROFILE_NAME) || 'Gamer';
   });
   const [savedRigTemplates, setSavedRigTemplates] = useState(() => {
     try {
@@ -261,12 +252,6 @@ export function App() {
     localStorage.setItem(LOCAL_STORAGE_CUSTOM_PRESETS, JSON.stringify(savedRigTemplates));
   }, [savedRigTemplates]);
 
-  useEffect(() => {
-    if (steamUser && !localStorage.getItem(LOCAL_STORAGE_PROFILE_NAME)) {
-      setProfileName(steamUser.name || 'Gamer');
-    }
-  }, [steamUser]);
-
   // Calculate FPS for all games
   const processedGames = useMemo(() => {
     return games.map(game => {
@@ -277,27 +262,13 @@ export function App() {
         upscaling: specs.upscaling
       });
 
-      const isSteamOwned = Boolean(
-        game.isSteamOwned ||
-        (steamUser && Array.isArray(steamUser.games) && steamUser.games.some(g =>
-          (g.title && g.title.toLowerCase() === game.title.toLowerCase()) ||
-          (g.id && (game.steamGridId === g.id || game.id === g.id)) ||
-          (g.steamAppId && game.steamAppId === g.steamAppId)
-        ))
-      );
-
       return {
         game,
-        isSteamOwned,
+        isSteamOwned: Boolean(game.isSteamOwned),
         ...fpsData
       };
     });
-  }, [games, specs, steamUser]);
-
-  const steamGameCount = useMemo(() => {
-    if (!steamUser) return 0;
-    return processedGames.filter(item => item.isSteamOwned).length;
-  }, [steamUser, processedGames]);
+  }, [games, specs]);
 
   // Filter & Sort
   const filteredAndSortedGames = useMemo(() => {
@@ -418,6 +389,7 @@ export function App() {
   const handleApplyPreset = useCallback((preset) => {
     const gpu = GPUS.find(g => g.id === preset.gpuId) || null;
     const cpu = CPUS.find(c => c.id === preset.cpuId) || null;
+    const canRt = Boolean(gpu && gpu.rtScore > 0);
     setSpecs({
       gpu,
       cpu,
@@ -425,7 +397,7 @@ export function App() {
       resolution: preset.resolution,
       preset: preset.preset,
       upscaling: preset.upscaling,
-      rayTracing: preset.rayTracing
+      rayTracing: canRt ? Boolean(preset.rayTracing) : false
     });
     setGpuBrandFilter('all');
     setCpuBrandFilter('all');
@@ -612,82 +584,6 @@ export function App() {
     });
   }, []);
 
-  const handleImportSteamProfile = useCallback((profile) => {
-    setSteamUser(profile);
-    saveSteamUser(profile);
-
-    const newImported = [];
-    if (profile && Array.isArray(profile.games)) {
-      profile.games.forEach(g => {
-        const exists = games.find(item =>
-          item.title.toLowerCase() === g.title.toLowerCase() ||
-          (g.id && item.steamGridId === g.id) ||
-          (g.steamAppId && item.steamAppId === g.steamAppId)
-        );
-        if (!exists) {
-          const steamAppId = g.steamAppId || null;
-          const coverUrl = g.coverUrl || (steamAppId
-            ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_600x900_2x.jpg`
-            : 'https://cdn2.steamgriddb.com/thumb/f39b781760a403dedaa05587e8889c1a.jpg');
-          const heroUrl = g.heroUrl || (steamAppId
-            ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_hero.jpg`
-            : '');
-          const wideCoverUrl = g.wideCoverUrl || (steamAppId
-            ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/header.jpg`
-            : '');
-          const logoUrl = g.logoUrl || (steamAppId
-            ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/logo.png`
-            : '');
-
-          newImported.push({
-            id: `steam-imported-${g.id || g.steamAppId || Math.random().toString(36).slice(2, 9)}`,
-            title: g.title,
-            genre: g.genre || 'PC Game',
-            publisher: g.publisher || 'Steam Library Import',
-            category: g.category || 'aaa',
-            releaseYear: g.releaseYear || 2022,
-            steamAppId,
-            steamGridId: g.id || null,
-            coverUrl,
-            heroUrl,
-            wideCoverUrl,
-            logoUrl,
-            baseFps: g.baseFps || 80,
-            gpuIntensity: g.gpuIntensity || 1.1,
-            cpuIntensity: g.cpuIntensity || 1.1,
-            vramAt1080p: g.vramAt1080p || 6.0,
-            vramAt1440p: g.vramAt1440p || 8.0,
-            vramAt4k: g.vramAt4k || 11.0,
-            ramRecommended: g.ramRecommended || 16,
-            supportsRayTracing: Boolean(g.supportsRayTracing),
-            rtImpact: g.rtImpact || 0.0,
-            isSteamOwned: true,
-            steamPlaytime: g.playtime || '',
-            description: g.description || `Imported from Steam account (${g.playtime ? g.playtime + ' played' : 'Owned on Steam'}).`
-          });
-        }
-      });
-    }
-
-    if (newImported.length > 0) {
-      setCustomGames(prev => {
-        const updated = [...newImported, ...prev];
-        localStorage.setItem(LOCAL_STORAGE_CUSTOM_GAMES, JSON.stringify(updated));
-        return updated;
-      });
-    }
-
-    // Auto switch category to Steam so user immediately sees their games
-    setCategory('steam');
-    setIsSteamImportOpen(false);
-  }, [games]);
-
-  const handleDisconnectSteam = useCallback(() => {
-    setSteamUser(null);
-    saveSteamUser(null);
-    setCategory(prev => prev === 'steam' ? 'all' : prev);
-  }, []);
-
   const handleResetAllData = useCallback(() => {
     if (confirm('Clear all stored specs, imported games, and profile settings?')) {
       localStorage.clear();
@@ -712,7 +608,6 @@ export function App() {
       <div className={`app-shell ${isMobile ? 'mobile-device' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Arc Unified Left Sidebar */}
         <ArcSidebar
-          steamUser={steamUser}
           profileName={profileName}
           onOpenSteamGridSearch={(q) => {
             setSteamGridSearchInitialQuery(q || '');
@@ -734,13 +629,22 @@ export function App() {
           rayTracing={specs.rayTracing}
           gpuBrandFilter={gpuBrandFilter}
           cpuBrandFilter={cpuBrandFilter}
-          onSelectGpu={(gpu) => setSpecs(prev => ({ ...prev, gpu }))}
+          onSelectGpu={(gpu) => setSpecs(prev => ({
+            ...prev,
+            gpu,
+            rayTracing: (gpu && gpu.rtScore > 0) ? prev.rayTracing : false
+          }))}
           onSelectCpu={(cpu) => setSpecs(prev => ({ ...prev, cpu }))}
           onSelectRam={(ram) => setSpecs(prev => ({ ...prev, ram }))}
           onSelectResolution={(resolution) => setSpecs(prev => ({ ...prev, resolution }))}
           onSelectPreset={(preset) => setSpecs(prev => ({ ...prev, preset }))}
           onSelectUpscaling={(upscaling) => setSpecs(prev => ({ ...prev, upscaling }))}
-          onToggleRayTracing={(rayTracing) => setSpecs(prev => ({ ...prev, rayTracing }))}
+          onToggleRayTracing={(rayTracing) => setSpecs(prev => {
+            if (!prev.gpu || prev.gpu.rtScore <= 0) {
+              return { ...prev, rayTracing: false };
+            }
+            return { ...prev, rayTracing };
+          })}
           onSetGpuBrandFilter={setGpuBrandFilter}
           onSetCpuBrandFilter={setCpuBrandFilter}
           onResetSpecs={handleResetSpecs}
@@ -767,7 +671,7 @@ export function App() {
               <PanelLeft size={18} />
               <span>Rig & Menu</span>
             </button>
-            <span className="arc-mobile-brand">FPS Estimator</span>
+            <span className="arc-mobile-brand">Grace</span>
             <button
               type="button"
               className="arc-mobile-search-btn"
@@ -784,11 +688,7 @@ export function App() {
 
           <main className="main-content">
             {activeDetailGame ? (
-              <React.Suspense fallback={
-                <div className="empty-state" style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div className="spinner" />
-                </div>
-              }>
+              <React.Suspense fallback={<GameDetailPageSkeleton />}>
                 <GameDetailPage
                   game={activeDetailGame}
                   gpu={specs.gpu}

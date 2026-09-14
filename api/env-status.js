@@ -4,17 +4,16 @@ export default function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
-  const steamKey = process.env.STEAMGRID_API_KEY || '';
-  const clientId = process.env.IGDB_CLIENT_ID || '';
-  const clientSecret = process.env.IGDB_CLIENT_SECRET || '';
-  const accessToken = process.env.IGDB_ACCESS_TOKEN || '';
+  const steamKey = (process.env.STEAMGRID_API_KEY || process.env.VITE_STEAMGRID_API_KEY || '').trim();
+  const clientId = (process.env.IGDB_CLIENT_ID || process.env.VITE_IGDB_CLIENT_ID || '').trim();
+  const clientSecret = (process.env.IGDB_CLIENT_SECRET || process.env.VITE_IGDB_CLIENT_SECRET || '').trim();
+  const accessToken = (process.env.IGDB_ACCESS_TOKEN || process.env.VITE_IGDB_ACCESS_TOKEN || '').trim();
 
   res.status(200).json({
-    hasSteamGridKey: Boolean(steamKey.trim()),
-    hasIgdbKeys: Boolean(clientId.trim() && (clientSecret.trim() || accessToken.trim()))
+    hasSteamGridKey: Boolean(steamKey),
+    hasIgdbKeys: Boolean(clientId && (clientSecret || accessToken))
   });
 }
