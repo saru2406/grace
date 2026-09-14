@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star } from 'lucide-react';
+import { Star, Trash2 } from 'lucide-react';
 import { DEFAULT_PLACEHOLDER_COVER } from '../services/gameAssets.js';
 
 export function GameCard({
@@ -10,12 +10,15 @@ export function GameCard({
   onLeave,
   onSelect,
   onToggleFavorite,
+  onDeleteGame,
   isFavorite = false,
   fpsDetail = 'detailed',
   showBottlenecks = true,
   targetFps = 60
 }) {
   const [loaded, setLoaded] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  if (!item || !item.game) return null;
   const { game, avgFps, low1PercentFps, bottleneck } = item;
 
   let fpsRatingClass = 'fps-unconfigured';
@@ -34,17 +37,31 @@ export function GameCard({
     ? 'Rig Unset'
     : (bottleneck.culprit ? `${bottleneck.culprit} Bound` : 'Balanced');
 
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (isDeleting) return;
+    setIsDeleting(true);
+    setTimeout(() => {
+      if (onDeleteGame) {
+        onDeleteGame(game.id);
+      }
+    }, 320);
+  };
+
   return (
     <div
-      className="game-card"
+      className={`game-card ${isDeleting ? 'card-deleting' : ''}`}
       data-game-id={game.id}
       data-fps={isConfigured ? avgFps : ''}
-      onMouseEnter={() => onHover(game)}
+      onMouseEnter={() => !isDeleting && onHover(game)}
       onMouseLeave={onLeave}
-      onClick={() => onSelect(game)}
+      onClick={() => {
+        if (!isDeleting) onSelect(game);
+      }}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
+        if (isDeleting) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onSelect(game);
@@ -70,24 +87,37 @@ export function GameCard({
             e.target.src = DEFAULT_PLACEHOLDER_COVER;
           }}
         />
-        <button
-          type="button"
-          className={`favorite-toggle ${isFavorite ? 'active' : ''}`}
-          aria-label={isFavorite ? `Remove ${game.title} from favourites` : `Add ${game.title} to favourites`}
-          title={isFavorite ? `Remove from favourites` : `Add to favourites`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavorite(game.id);
-          }}
-        >
-          <Star
-            size={14}
-            className="fav-icon"
-            fill={isFavorite ? "currentColor" : "none"}
-            stroke="currentColor"
-            strokeWidth={isFavorite ? 2.5 : 2}
-          />
-        </button>
+        <div className="card-top-actions">
+          <button
+            type="button"
+            className={`favorite-toggle ${isFavorite ? 'active' : ''}`}
+            aria-label={isFavorite ? `Remove ${game.title} from favourites` : `Add ${game.title} to favourites`}
+            title={isFavorite ? `Remove from favourites` : `Add to favourites`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(game.id);
+            }}
+          >
+            <Star
+              size={14}
+              className="fav-icon"
+              fill={isFavorite ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth={isFavorite ? 2.5 : 2}
+            />
+          </button>
+          {onDeleteGame && (
+            <button
+              type="button"
+              className="card-delete-toggle"
+              aria-label={`Delete ${game.title} from library`}
+              title={`Delete ${game.title} from library`}
+              onClick={handleDelete}
+            >
+              <Trash2 size={13} className="delete-icon" />
+            </button>
+          )}
+        </div>
 
         {game.supportsRayTracing && (
           <span className="card-feature-badge" title="Hardware Ray Tracing Supported">

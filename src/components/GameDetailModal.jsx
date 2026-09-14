@@ -14,6 +14,7 @@ export function GameDetailModal({
   preset,
   upscaling,
   rayTracing,
+  pathTracing,
   onClose
 }) {
   const [heroUrl, setHeroUrl] = useState('');
@@ -61,6 +62,7 @@ export function GameDetailModal({
     resolution,
     preset,
     rayTracing,
+    pathTracing,
     upscaling
   });
 
@@ -70,6 +72,7 @@ export function GameDetailModal({
     resolution,
     preset,
     rayTracing,
+    pathTracing,
     upscaling
   });
 

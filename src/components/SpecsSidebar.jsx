@@ -11,6 +11,7 @@ export function SpecsSidebar({
   preset,
   upscaling,
   rayTracing,
+  pathTracing,
   gpuBrandFilter,
   cpuBrandFilter,
   savedRigTemplates = [],
@@ -21,6 +22,7 @@ export function SpecsSidebar({
   onSelectPreset,
   onSelectUpscaling,
   onToggleRayTracing,
+  onTogglePathTracing,
   onSetGpuBrandFilter,
   onSetCpuBrandFilter,
   onResetSpecs,
@@ -34,10 +36,13 @@ export function SpecsSidebar({
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveName, setSaveName] = React.useState('');
   const [saveToast, setSaveToast] = React.useState('');
+  const [showRtInfo, setShowRtInfo] = React.useState(false);
+  const [showPtInfo, setShowPtInfo] = React.useState(false);
   const saveInputRef = React.useRef(null);
 
   const canSave = Boolean(gpu && cpu && ram);
   const supportsRt = Boolean(gpu && gpu.rtScore > 0);
+  const supportsPt = Boolean(gpu && gpu.rtScore >= 60);
 
   const defaultSuggestedName = React.useMemo(() => {
     if (!gpu && !cpu) return 'My Custom Rig';
@@ -385,28 +390,33 @@ export function SpecsSidebar({
       </div>
 
       {/* Ray Tracing */}
-      <div className="spec-group">
-        <div className={`rt-toggle-wrapper ${!supportsRt ? 'rt-disabled-wrapper' : ''}`}>
-          <label
+      <div className={`spec-group ${showRtInfo ? 'has-rt-popup-open' : ''}`} style={showRtInfo ? { position: 'relative', zIndex: 1000 } : undefined}>
+        <div className={`rt-toggle-wrapper ${!supportsRt ? 'rt-disabled-wrapper' : ''} ${showRtInfo ? 'popup-active' : ''}`} style={showRtInfo ? { position: 'relative', zIndex: 1000 } : undefined}>
+          <div
             className={`switch-label ${!supportsRt ? 'disabled' : ''}`}
-            htmlFor={supportsRt ? "specs-ray-tracing-toggle" : undefined}
+            onClick={(e) => {
+              if (!supportsRt) {
+                setShowRtInfo(prev => !prev);
+              }
+            }}
           >
             <div className="switch-title-wrap">
               <span className="switch-title">Ray Tracing</span>
               {!supportsRt && (
                 <div className="rt-info-container">
-                  <a
-                    href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
                     className="rt-info-btn"
-                    title="This card does not support hardware ray tracing. Click to learn more on Wikipedia."
-                    aria-label="Ray tracing unsupported. Learn more on Wikipedia."
-                    onClick={(e) => e.stopPropagation()}
+                    title="This card does not support hardware ray tracing."
+                    aria-label="Ray tracing unsupported."
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowRtInfo(prev => !prev);
+                    }}
                   >
                     <Info size={13} className="rt-info-icon" />
-                  </a>
-                  <div className="rt-info-tooltip" onClick={(e) => e.stopPropagation()}>
+                  </button>
+                  <div className={`rt-info-tooltip ${showRtInfo ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
                     <div className="rt-info-tooltip-header">
                       <Info size={12} className="rt-info-tooltip-icon" />
                       <span>No Hardware Ray Tracing</span>
@@ -446,7 +456,78 @@ export function SpecsSidebar({
               />
               <span className="switch-slider"></span>
             </div>
-          </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Path Tracing */}
+      <div className={`spec-group ${showPtInfo ? 'has-pt-popup-open' : ''}`} style={showPtInfo ? { position: 'relative', zIndex: 999 } : undefined}>
+        <div className={`pt-toggle-wrapper ${!supportsPt ? 'pt-disabled-wrapper' : ''} ${showPtInfo ? 'popup-active' : ''}`} style={showPtInfo ? { position: 'relative', zIndex: 999 } : undefined}>
+          <div
+            className={`switch-label ${!supportsPt ? 'disabled' : ''}`}
+            onClick={(e) => {
+              if (!supportsPt) {
+                setShowPtInfo(prev => !prev);
+              }
+            }}
+          >
+            <div className="switch-title-wrap">
+              <span className="switch-title">Path Tracing</span>
+              {!supportsPt && (
+                <div className="pt-info-container">
+                  <button
+                    type="button"
+                    className="pt-info-btn"
+                    title="This card does not support full path tracing."
+                    aria-label="Path tracing unsupported."
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPtInfo(prev => !prev);
+                    }}
+                  >
+                    <Info size={13} className="pt-info-icon" />
+                  </button>
+                  <div className={`pt-info-tooltip ${showPtInfo ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
+                    <div className="pt-info-tooltip-header">
+                      <Info size={12} className="pt-info-tooltip-icon" />
+                      <span>No Path Tracing Support</span>
+                    </div>
+                    <p className="pt-info-tooltip-msg">
+                      {gpu
+                        ? `${gpu.name} lacks hardware path tracing acceleration (RTX 3070+ / RTX 40 series recommended).`
+                        : 'Select a high-end graphics card with path tracing support to enable this toggle.'}
+                    </p>
+                    <a
+                      href="https://en.wikipedia.org/wiki/Path_tracing"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="pt-info-tooltip-link"
+                    >
+                      Learn what path tracing is on Wikipedia ↗
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className={`switch-container ${!supportsPt ? 'disabled' : ''}`}>
+              <span className={`switch-state-label ${supportsPt && pathTracing ? 'active' : ''} ${!supportsPt ? 'disabled' : ''}`}>
+                {supportsPt && pathTracing ? 'ON' : 'OFF'}
+              </span>
+              <input
+                type="checkbox"
+                id="specs-path-tracing-toggle"
+                className="switch-input"
+                checked={supportsPt && Boolean(pathTracing)}
+                disabled={!supportsPt}
+                onChange={(e) => {
+                  if (supportsPt) {
+                    onTogglePathTracing(e.target.checked);
+                  }
+                }}
+              />
+              <span className="switch-slider"></span>
+            </div>
+          </div>
         </div>
       </div>
 

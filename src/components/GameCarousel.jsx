@@ -36,7 +36,12 @@ export function GameCarousel({
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [wideArtUrl, setWideArtUrl] = useState("");
+  const [wideArtUrl, setWideArtUrl] = useState(() => {
+    const initial = featuredGames[0];
+    if (!initial) return null;
+    return initial.heroUrl || initial.wideCoverUrl ||
+      (initial.steamAppId ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${initial.steamAppId}/library_hero.jpg` : initial.coverUrl) || null;
+  });
   const [loadedWideArtUrl, setLoadedWideArtUrl] = useState("");
   const [loadedBoxGameId, setLoadedBoxGameId] = useState(null);
   const timerRef = useRef(null);
@@ -116,26 +121,28 @@ export function GameCarousel({
       {/* Background: Wide landscape art */}
       <div className="carousel-slide-backdrop">
         {!wideArtLoaded && <div className="carousel-bg-skeleton" />}
-        <img
-          key={wideArtUrl}
-          src={wideArtUrl}
-          alt=""
-          decoding="async"
-          className={"carousel-bg-img" + (wideArtLoaded ? " loaded" : "")}
-          ref={(el) => {
-            if (el && el.complete && el.naturalWidth > 0 && loadedWideArtUrl !== wideArtUrl) {
+        {wideArtUrl ? (
+          <img
+            key={wideArtUrl}
+            src={wideArtUrl}
+            alt=""
+            decoding="async"
+            className={"carousel-bg-img" + (wideArtLoaded ? " loaded" : "")}
+            ref={(el) => {
+              if (el && el.complete && el.naturalWidth > 0 && loadedWideArtUrl !== wideArtUrl) {
+                setLoadedWideArtUrl(wideArtUrl);
+              }
+            }}
+            onLoad={() => setLoadedWideArtUrl(wideArtUrl)}
+            onError={(e) => {
               setLoadedWideArtUrl(wideArtUrl);
-            }
-          }}
-          onLoad={() => setLoadedWideArtUrl(wideArtUrl)}
-          onError={(e) => {
-            setLoadedWideArtUrl(wideArtUrl);
-            if (activeGame?.coverUrl && e.target.src !== activeGame.coverUrl) {
-              e.target.onerror = null;
-              e.target.src = activeGame.coverUrl;
-            }
-          }}
-        />
+              if (activeGame?.coverUrl && e.target.src !== activeGame.coverUrl) {
+                e.target.onerror = null;
+                e.target.src = activeGame.coverUrl;
+              }
+            }}
+          />
+        ) : null}
         <div className="carousel-gradient-overlay" />
       </div>
 

@@ -20,6 +20,7 @@ const GameDetailPage = React.lazy(() => import('./components/GameDetailPage.jsx'
 const SteamGridSearchModal = React.lazy(() => import('./components/SteamGridSearchModal.jsx').then(m => ({ default: m.SteamGridSearchModal })));
 
 const LOCAL_STORAGE_CUSTOM_GAMES = 'fps_estimator_custom_games';
+const LOCAL_STORAGE_DELETED_GAMES = 'fps_estimator_deleted_games';
 const LOCAL_STORAGE_SPECS = 'fps_estimator_specs';
 const LOCAL_STORAGE_USER_SETTINGS = 'fps_estimator_user_settings';
 const LOCAL_STORAGE_PROFILE_NAME = 'fps_estimator_profile_name';
@@ -32,8 +33,6 @@ const DEFAULT_USER_SETTINGS = {
   showBottlenecks: true,
   ambientBlur: true
 };
-
-const HIDDEN_GAME_IDS = new Set();
 
 function isMobileUserAgent() {
   if (typeof navigator === 'undefined') return false;
@@ -84,21 +83,8 @@ export function App() {
   // Remember library scroll position when navigating into game details
   const libraryScrollPosRef = useRef(0);
 
-  // Arc Sidebar collapse & mobile drawer state
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // Arc Sidebar mobile drawer state
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
-  // Keyboard shortcut (Ctrl+B / Cmd+B) to toggle sidebar
-  useEffect(() => {
-    function handleKeyDown(e) {
-      if ((e.key === 'b' || e.key === 'B') && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setIsSidebarCollapsed(prev => !prev);
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   // Background artwork sync: driven by current active carousel slide on home, and game wide art on full game page
   const [carouselBg, setCarouselBg] = useState(
@@ -116,58 +102,13 @@ export function App() {
     }
   }, [userSettings.theme, activeDetailGame]);
 
-  // Android-like Material ink ripple effect (for all buttons only)
-  useEffect(() => {
-    function handlePointerDown(e) {
-      if (e.button !== 0) return;
-
-      const btn = e.target.closest('button');
-      if (!btn || btn.disabled) return;
-
-      const computed = window.getComputedStyle(btn);
-      if (computed.position === 'static') {
-        btn.style.position = 'relative';
-      }
-      btn.style.overflow = 'hidden';
-
-      const rect = btn.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
-
-      const dx = Math.max(clickX, rect.width - clickX);
-      const dy = Math.max(clickY, rect.height - clickY);
-      const radius = Math.sqrt(dx * dx + dy * dy);
-      const diameter = radius * 2;
-
-      const ripple = document.createElement('span');
-      ripple.className = 'md-android-ripple';
-      ripple.style.width = `${diameter}px`;
-      ripple.style.height = `${diameter}px`;
-      ripple.style.left = `${clickX - radius}px`;
-      ripple.style.top = `${clickY - radius}px`;
-
-      const oldRipples = btn.querySelectorAll('.md-android-ripple');
-      if (oldRipples.length > 2) {
-        oldRipples[0].remove();
-      }
-
-      btn.appendChild(ripple);
-
-      ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
-      setTimeout(() => {
-        if (ripple.parentNode) ripple.remove();
-      }, 650);
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, []);
 
   // Hardware Specs State
   const [specs, setSpecs] = useState(() => {
     const saved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_SPECS) || '{}');
     const gpu = saved.gpuId ? (GPUS.find(g => g.id === saved.gpuId) || null) : null;
     const canRt = Boolean(gpu && gpu.rtScore > 0);
+    const canPt = Boolean(gpu && gpu.rtScore >= 60);
     return {
       gpu,
       cpu: saved.cpuId ? (CPUS.find(c => c.id === saved.cpuId) || null) : null,
@@ -175,7 +116,8 @@ export function App() {
       resolution: saved.resolution || '1440p',
       preset: saved.preset || 'high',
       upscaling: saved.upscaling || 'quality',
-      rayTracing: canRt ? (saved.rayTracing !== undefined ? saved.rayTracing : false) : false
+      rayTracing: canRt ? (saved.rayTracing !== undefined ? saved.rayTracing : false) : false,
+      pathTracing: canPt ? (saved.pathTracing !== undefined ? saved.pathTracing : false) : false
     };
   });
 
@@ -188,7 +130,8 @@ export function App() {
       resolution: specs.resolution,
       preset: specs.preset,
       upscaling: specs.upscaling,
-      rayTracing: specs.rayTracing
+      rayTracing: specs.rayTracing,
+      pathTracing: specs.pathTracing
     }));
   }, [specs]);
 
@@ -199,6 +142,14 @@ export function App() {
   // Games Library state
   const [customGames, setCustomGames] = useState(() => {
     return JSON.parse(localStorage.getItem(LOCAL_STORAGE_CUSTOM_GAMES) || '[]');
+  });
+  const [deletedGameIds, setDeletedGameIds] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_DELETED_GAMES) || '[]');
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
   });
   const [favoriteGameIds, setFavoriteGameIds] = useState(() => {
     try {
@@ -213,10 +164,30 @@ export function App() {
     localStorage.setItem(LOCAL_STORAGE_FAVORITES, JSON.stringify(favoriteGameIds));
   }, [favoriteGameIds]);
 
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_DELETED_GAMES, JSON.stringify(deletedGameIds));
+  }, [deletedGameIds]);
+
   const games = useMemo(() => {
-    const visibleDefaultGames = DEFAULT_GAMES.filter(game => !HIDDEN_GAME_IDS.has(game.id));
-    return [...customGames, ...visibleDefaultGames];
-  }, [customGames]);
+    const deletedSet = new Set(deletedGameIds);
+    const visibleDefaultGames = DEFAULT_GAMES.filter(game => !deletedSet.has(game.id));
+    const visibleCustomGames = customGames.filter(game => !deletedSet.has(game.id));
+    return [...visibleCustomGames, ...visibleDefaultGames];
+  }, [customGames, deletedGameIds]);
+
+  const handleDeleteGame = useCallback((gameId) => {
+    setCustomGames(prev => {
+      const updated = prev.filter(g => g.id !== gameId);
+      localStorage.setItem(LOCAL_STORAGE_CUSTOM_GAMES, JSON.stringify(updated));
+      return updated;
+    });
+    setDeletedGameIds(prev => {
+      if (prev.includes(gameId)) return prev;
+      return [...prev, gameId];
+    });
+    setFavoriteGameIds(prev => prev.filter(id => id !== gameId));
+    setActiveDetailGame(prev => (prev && prev.id === gameId ? null : prev));
+  }, []);
 
   // System Date / Recency period
   const systemPeriod = useMemo(() => getSystemPeriod(), []);
@@ -259,6 +230,7 @@ export function App() {
         resolution: specs.resolution,
         preset: specs.preset,
         rayTracing: specs.rayTracing,
+        pathTracing: specs.pathTracing,
         upscaling: specs.upscaling
       });
 
@@ -283,6 +255,17 @@ export function App() {
       filtered = filtered.filter(item => favoriteGameIds.includes(item.game.id));
     } else if (category === 'recently-added') {
       filtered = filtered.filter(item => item.game.id.startsWith('custom-') || item.game.isCustom);
+    } else if (category === 'path-tracing') {
+      filtered = filtered.filter(item => {
+        const tags = Array.isArray(item.game.tags) ? item.game.tags : [];
+        const tagText = tags.join(' ').toLowerCase();
+        return Boolean(
+          item.game.supportsPathTracing ||
+          item.game.category === 'rt' ||
+          tagText.includes('path tracing') ||
+          tagText.includes('path-tracing')
+        );
+      });
     } else if (category !== 'all') {
       filtered = filtered.filter(item => item.game.category === category);
     }
@@ -515,7 +498,7 @@ export function App() {
     }
 
     const newGame = {
-      id: `custom-${steamItem.id || Date.now()}`,
+      id: `custom-${steamItem.id || ''}-${Date.now()}`,
       title: steamItem.name,
       genre: 'PC Game',
       publisher: steamItem.publisher || 'PC Publisher',
@@ -605,10 +588,11 @@ export function App() {
     <>
       <AmbientBackdrop bgUrl={currentAmbientBg} isActive={isAmbientActive} />
 
-      <div className={`app-shell ${isMobile ? 'mobile-device' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div className={`app-shell ${isMobile ? 'mobile-device' : ''}`}>
         {/* Arc Unified Left Sidebar */}
         <ArcSidebar
           profileName={profileName}
+          onGoHome={handleBackToLibrary}
           onOpenSteamGridSearch={(q) => {
             setSteamGridSearchInitialQuery(q || '');
             setIsSteamGridSearchOpen(true);
@@ -627,12 +611,14 @@ export function App() {
           preset={specs.preset}
           upscaling={specs.upscaling}
           rayTracing={specs.rayTracing}
+          pathTracing={specs.pathTracing}
           gpuBrandFilter={gpuBrandFilter}
           cpuBrandFilter={cpuBrandFilter}
           onSelectGpu={(gpu) => setSpecs(prev => ({
             ...prev,
             gpu,
-            rayTracing: (gpu && gpu.rtScore > 0) ? prev.rayTracing : false
+            rayTracing: (gpu && gpu.rtScore > 0) ? prev.rayTracing : false,
+            pathTracing: (gpu && gpu.rtScore >= 60) ? prev.pathTracing : false
           }))}
           onSelectCpu={(cpu) => setSpecs(prev => ({ ...prev, cpu }))}
           onSelectRam={(ram) => setSpecs(prev => ({ ...prev, ram }))}
@@ -645,6 +631,12 @@ export function App() {
             }
             return { ...prev, rayTracing };
           })}
+          onTogglePathTracing={(pathTracing) => setSpecs(prev => {
+            if (!prev.gpu || prev.gpu.rtScore < 60) {
+              return { ...prev, pathTracing: false };
+            }
+            return { ...prev, pathTracing };
+          })}
           onSetGpuBrandFilter={setGpuBrandFilter}
           onSetCpuBrandFilter={setCpuBrandFilter}
           onResetSpecs={handleResetSpecs}
@@ -652,8 +644,6 @@ export function App() {
           savedRigTemplates={savedRigTemplates}
           onSaveRigTemplate={handleSaveRigTemplate}
           onDeleteRigTemplate={handleDeleteRigTemplate}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
           isMobileOpen={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
         />
@@ -698,8 +688,10 @@ export function App() {
                   preset={specs.preset}
                   upscaling={specs.upscaling}
                   rayTracing={specs.rayTracing}
+                  pathTracing={specs.pathTracing}
                   isFavorite={favoriteGameIds.includes(activeDetailGame.id)}
                   onToggleFavorite={() => handleToggleFavorite(activeDetailGame.id)}
+                  onDeleteGame={handleDeleteGame}
                   onBack={handleBackToLibrary}
                   onWideArtChange={handleWideArtChange}
                 />
@@ -736,6 +728,7 @@ export function App() {
                   onLeaveGame={() => {}}
                   onSelectGame={handleSelectGame}
                   onToggleFavorite={handleToggleFavorite}
+                  onDeleteGame={handleDeleteGame}
                   favoriteIds={favoriteGameIds}
                   onOpenSearchModal={(q) => {
                     setSteamGridSearchInitialQuery(q || '');

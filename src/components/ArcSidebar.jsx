@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
-  PanelLeftClose,
-  PanelLeftOpen,
+  Home,
   Plus,
   Settings,
   Cpu,
@@ -16,6 +15,7 @@ import { SettingsPopout } from './SettingsPopout.jsx';
 export function ArcSidebar({
   // Navigation & Header props
   profileName,
+  onGoHome,
   onOpenSteamGridSearch,
   isPopoutOpen,
   onTogglePopout,
@@ -33,6 +33,7 @@ export function ArcSidebar({
   preset,
   upscaling,
   rayTracing,
+  pathTracing,
   gpuBrandFilter,
   cpuBrandFilter,
   savedRigTemplates = [],
@@ -43,6 +44,7 @@ export function ArcSidebar({
   onSelectPreset,
   onSelectUpscaling,
   onToggleRayTracing,
+  onTogglePathTracing,
   onSetGpuBrandFilter,
   onSetCpuBrandFilter,
   onResetSpecs,
@@ -51,8 +53,6 @@ export function ArcSidebar({
   onDeleteRigTemplate,
 
   // Sidebar state
-  isCollapsed = false,
-  onToggleCollapse,
   isMobileOpen = false,
   onCloseMobile
 }) {
@@ -62,10 +62,13 @@ export function ArcSidebar({
   const [isSaving, setIsSaving] = useState(false);
   const [saveName, setSaveName] = useState('');
   const [saveToast, setSaveToast] = useState('');
+  const [showRtInfo, setShowRtInfo] = useState(false);
+  const [showPtInfo, setShowPtInfo] = useState(false);
   const saveInputRef = useRef(null);
 
   const canSave = Boolean(gpu && cpu && ram);
   const supportsRt = Boolean(gpu && gpu.rtScore > 0);
+  const supportsPt = Boolean(gpu && gpu.rtScore >= 60);
 
   // Resizable sidebar logic
   const DEFAULT_SIDEBAR_WIDTH = 300;
@@ -92,19 +95,11 @@ export function ArcSidebar({
     setIsResizing(true);
 
     const startX = mouseDownEvent.clientX;
-    const startW = isCollapsed ? 58 : sidebarWidth;
+    const startW = sidebarWidth;
 
     const onMouseMove = (moveEvent) => {
       const deltaX = moveEvent.clientX - startX;
       let newW = startW + deltaX;
-
-      if (isCollapsed && newW > 120) {
-        if (onToggleCollapse) onToggleCollapse();
-      } else if (!isCollapsed && newW < 120) {
-        if (onToggleCollapse) onToggleCollapse();
-        return;
-      }
-
       newW = Math.min(Math.max(newW, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH);
       setSidebarWidth(newW);
     };
@@ -127,7 +122,7 @@ export function ArcSidebar({
     document.body.classList.add('sidebar-resizing');
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-  }, [sidebarWidth, isCollapsed, onToggleCollapse]);
+  }, [sidebarWidth]);
 
   const handleResetSidebarWidth = useCallback(() => {
     setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
@@ -136,12 +131,12 @@ export function ArcSidebar({
     } catch {}
   }, []);
 
-  // Global hotkey 'Alt+Space' (or Ctrl+K or '/') to open Add Game
+  // Global hotkey 'Ctrl+Space' (or Ctrl+K or '/') to open Add Game
   useEffect(() => {
     function handleGlobalKeyDown(e) {
-      const isAltSpace = e.altKey && (e.code === 'Space' || e.key === ' ' || e.key === 'Space');
+      const isCtrlSpace = (e.ctrlKey || e.metaKey) && (e.code === 'Space' || e.key === ' ' || e.key === 'Space');
       if (
-        isAltSpace ||
+        isCtrlSpace ||
         (e.key === 'k' && (e.metaKey || e.ctrlKey)) ||
         (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName))
       ) {
@@ -199,8 +194,8 @@ export function ArcSidebar({
       )}
 
       <aside
-        className={`arc-sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''} ${isResizing ? 'resizing' : ''}`}
-        style={!isCollapsed ? { width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px`, maxWidth: `${sidebarWidth}px` } : undefined}
+        className={`arc-sidebar ${isMobileOpen ? 'mobile-open' : ''} ${isResizing ? 'resizing' : ''}`}
+        style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px`, maxWidth: `${sidebarWidth}px` }}
       >
         {/* Resize Handle for Desktop */}
         <div
@@ -215,26 +210,30 @@ export function ArcSidebar({
         </div>
 
         {/* ============================================================
-            1. ARC TOP WINDOW BAR (App Title & Collapse)
+            1. ARC TOP WINDOW BAR (App Title, Home)
             ============================================================ */}
         <div className="arc-topbar">
-          <div className="arc-brand">
+          <div className="arc-brand" onClick={() => onGoHome && onGoHome()} style={{ cursor: onGoHome ? 'pointer' : 'default' }}>
             <span className="arc-brand-title" style={{ fontFamily: "'Chelsea Market', cursive" }}>Grace</span>
           </div>
 
-          <button
-            type="button"
-            className="arc-collapse-btn"
-            onClick={onToggleCollapse}
-            title={isCollapsed ? 'Expand sidebar (Ctrl+B)' : 'Collapse sidebar (Ctrl+B)'}
-            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-          </button>
+          <div className="arc-topbar-actions">
+            {onGoHome && (
+              <button
+                type="button"
+                className="arc-topbar-btn arc-home-btn"
+                onClick={onGoHome}
+                title="Go to Home / Library"
+                aria-label="Go to Home / Library"
+              >
+                <Home size={15} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* ============================================================
-            2. ARC COMMAND BAR (Add Game... Alt+Space)
+            2. ARC COMMAND BAR (Add Game... Ctrl+Space)
             ============================================================ */}
         <div className="arc-command-section">
           <button
@@ -242,13 +241,13 @@ export function ArcSidebar({
             className="arc-command-bar"
             type="button"
             onClick={() => onOpenSteamGridSearch && onOpenSteamGridSearch('')}
-            title={isCollapsed ? "Search & Add Game (Alt+Space)" : "Search and add games (Alt+Space)"}
+            title="Search and add games (Ctrl+Space)"
           >
             <div className="arc-command-left">
               <Plus size={14} strokeWidth={2.2} />
               <span className="arc-command-text">Add game...</span>
             </div>
-            <kbd className="arc-command-kbd">Alt+Space</kbd>
+            <kbd className="arc-command-kbd">Ctrl+Space</kbd>
           </button>
         </div>
 
@@ -269,11 +268,9 @@ export function ArcSidebar({
               aria-label="Preferences"
             >
               <Settings size={15} strokeWidth={2} />
-              {!isCollapsed && (
-                <span className="arc-settings-btn-text">
-                  Preferences
-                </span>
-              )}
+              <span className="arc-settings-btn-text">
+                Preferences
+              </span>
             </button>
 
             <SettingsPopout
@@ -288,39 +285,6 @@ export function ArcSidebar({
             />
           </div>
         </div>
-
-        {/* Collapsed Rail Mini Badges */}
-        {isCollapsed && (
-          <div className="arc-collapsed-badges">
-            <button
-              type="button"
-              className="arc-collapsed-chip"
-              onClick={onToggleCollapse}
-              title={`GPU: ${gpu ? gpu.name : 'Unselected'} (Click to expand)`}
-            >
-              <span className="collapsed-chip-lbl">GPU</span>
-              <span className="collapsed-chip-val">{gpu ? (gpu.name.match(/\d{3,4}/)?.[0] || gpu.name.slice(0, 4)) : '—'}</span>
-            </button>
-            <button
-              type="button"
-              className="arc-collapsed-chip"
-              onClick={onToggleCollapse}
-              title={`CPU: ${cpu ? cpu.name : 'Unselected'} (Click to expand)`}
-            >
-              <span className="collapsed-chip-lbl">CPU</span>
-              <span className="collapsed-chip-val">{cpu ? (cpu.name.includes('Ryzen') ? 'AMD' : 'INTEL') : '—'}</span>
-            </button>
-            <button
-              type="button"
-              className="arc-collapsed-chip"
-              onClick={onToggleCollapse}
-              title={`Target: ${resolution ? resolution.toUpperCase() : '1440P'} · ${preset ? preset.toUpperCase() : 'HIGH'} (Click to expand)`}
-            >
-              <span className="collapsed-chip-lbl">RES</span>
-              <span className="collapsed-chip-val">{resolution ? resolution.replace('p', 'P') : '1440'}</span>
-            </button>
-          </div>
-        )}
 
         {/* ============================================================
             4. RIG CONFIGURATION SECTION HEADER & RESET
@@ -568,28 +532,33 @@ export function ArcSidebar({
           </div>
 
           {/* Ray Tracing */}
-          <div className="spec-group">
-            <div className={`rt-toggle-wrapper ${!supportsRt ? 'rt-disabled-wrapper' : ''}`}>
-              <label
+          <div className={`spec-group ${showRtInfo ? 'has-rt-popup-open' : ''}`} style={showRtInfo ? { position: 'relative', zIndex: 1000 } : undefined}>
+            <div className={`rt-toggle-wrapper ${!supportsRt ? 'rt-disabled-wrapper' : ''} ${showRtInfo ? 'popup-active' : ''}`} style={showRtInfo ? { position: 'relative', zIndex: 1000 } : undefined}>
+              <div
                 className={`switch-label ${!supportsRt ? 'disabled' : ''}`}
-                htmlFor={supportsRt ? "ray-tracing-toggle" : undefined}
+                onClick={(e) => {
+                  if (!supportsRt) {
+                    setShowRtInfo(prev => !prev);
+                  }
+                }}
               >
                 <div className="switch-title-wrap">
                   <span className="switch-title">Ray Tracing</span>
                   {!supportsRt && (
                     <div className="rt-info-container">
-                      <a
-                        href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
                         className="rt-info-btn"
-                        title="This card does not support hardware ray tracing. Click to learn more on Wikipedia."
-                        aria-label="Ray tracing unsupported. Learn more on Wikipedia."
-                        onClick={(e) => e.stopPropagation()}
+                        title="This card does not support hardware ray tracing."
+                        aria-label="Ray tracing unsupported."
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowRtInfo(prev => !prev);
+                        }}
                       >
                         <Info size={13} className="rt-info-icon" />
-                      </a>
-                      <div className="rt-info-tooltip" onClick={(e) => e.stopPropagation()}>
+                      </button>
+                      <div className={`rt-info-tooltip ${showRtInfo ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
                         <div className="rt-info-tooltip-header">
                           <Info size={12} className="rt-info-tooltip-icon" />
                           <span>No Hardware Ray Tracing</span>
@@ -629,7 +598,78 @@ export function ArcSidebar({
                   />
                   <span className="switch-slider"></span>
                 </div>
-              </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Path Tracing */}
+          <div className={`spec-group ${showPtInfo ? 'has-pt-popup-open' : ''}`} style={showPtInfo ? { position: 'relative', zIndex: 999 } : undefined}>
+            <div className={`pt-toggle-wrapper ${!supportsPt ? 'pt-disabled-wrapper' : ''} ${showPtInfo ? 'popup-active' : ''}`} style={showPtInfo ? { position: 'relative', zIndex: 999 } : undefined}>
+              <div
+                className={`switch-label ${!supportsPt ? 'disabled' : ''}`}
+                onClick={(e) => {
+                  if (!supportsPt) {
+                    setShowPtInfo(prev => !prev);
+                  }
+                }}
+              >
+                <div className="switch-title-wrap">
+                  <span className="switch-title">Path Tracing</span>
+                  {!supportsPt && (
+                    <div className="pt-info-container">
+                      <button
+                        type="button"
+                        className="pt-info-btn"
+                        title="This card does not support full path tracing."
+                        aria-label="Path tracing unsupported."
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowPtInfo(prev => !prev);
+                        }}
+                      >
+                        <Info size={13} className="pt-info-icon" />
+                      </button>
+                      <div className={`pt-info-tooltip ${showPtInfo ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
+                        <div className="pt-info-tooltip-header">
+                          <Info size={12} className="pt-info-tooltip-icon" />
+                          <span>No Path Tracing Support</span>
+                        </div>
+                        <p className="pt-info-tooltip-msg">
+                          {gpu
+                            ? `${gpu.name} lacks hardware path tracing acceleration (RTX 3070+ / RTX 40 series recommended).`
+                            : 'Select a high-end graphics card with path tracing support to enable this toggle.'}
+                        </p>
+                        <a
+                          href="https://en.wikipedia.org/wiki/Path_tracing"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pt-info-tooltip-link"
+                        >
+                          Learn what path tracing is on Wikipedia ↗
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className={`switch-container ${!supportsPt ? 'disabled' : ''}`}>
+                  <span className={`switch-state-label ${supportsPt && pathTracing ? 'active' : ''} ${!supportsPt ? 'disabled' : ''}`}>
+                    {supportsPt && pathTracing ? 'ON' : 'OFF'}
+                  </span>
+                  <input
+                    type="checkbox"
+                    id="path-tracing-toggle"
+                    className="switch-input"
+                    checked={supportsPt && Boolean(pathTracing)}
+                    disabled={!supportsPt}
+                    onChange={(e) => {
+                      if (supportsPt) {
+                        onTogglePathTracing(e.target.checked);
+                      }
+                    }}
+                  />
+                  <span className="switch-slider"></span>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -28,7 +28,7 @@ export function calculateFps(game, gpu, cpu, ram, settings = {}) {
     };
   }
 
-  const { resolution = '1080p', preset = 'high', rayTracing = false, upscaling = 'off' } = settings;
+  const { resolution = '1080p', preset = 'high', rayTracing = false, pathTracing = false, upscaling = 'off' } = settings;
 
   // 1. Resolution Load Multiplier (affects GPU primarily)
   const resMultipliers = {
@@ -47,10 +47,10 @@ export function calculateFps(game, gpu, cpu, ram, settings = {}) {
   };
   const presetMult = presetMultipliers[preset] || 1.0;
 
-  // 3. Ray Tracing Multiplier
+  // 3. Ray Tracing & Path Tracing Multipliers
   let rtMult = 1.0;
   let rtWarning = false;
-  if (rayTracing && game.supportsRayTracing) {
+  if (rayTracing && (game.supportsRayTracing || game.supportsPathTracing)) {
     if (gpu.rtScore <= 0) {
       rtMult = 0.18; // Unsupported or software emulation penalty
       rtWarning = true;
@@ -59,6 +59,20 @@ export function calculateFps(game, gpu, cpu, ram, settings = {}) {
       const baseImpact = game.rtImpact || 0.40;
       const mitigatedImpact = baseImpact * (1.1 - 0.22 * rtEfficacy);
       rtMult = Math.max(0.25, 1 - mitigatedImpact);
+    }
+  }
+
+  let ptMult = 1.0;
+  let ptWarning = false;
+  if (pathTracing && (game.supportsPathTracing || game.supportsRayTracing)) {
+    if (gpu.rtScore < 60) {
+      ptMult = 0.12; // Massive penalty for unsupported/weak RT hardware on Path Tracing
+      ptWarning = true;
+    } else {
+      const ptEfficacy = Math.min(1.5, gpu.rtScore / 110);
+      const basePtImpact = game.ptImpact || 0.62;
+      const mitigatedPtImpact = basePtImpact * (1.1 - 0.20 * ptEfficacy);
+      ptMult = Math.max(0.20, 1 - mitigatedPtImpact);
     }
   }
 
@@ -74,7 +88,7 @@ export function calculateFps(game, gpu, cpu, ram, settings = {}) {
 
   // 5. Raw GPU Potential FPS
   const gpuRelative = gpu.score / 100;
-  const rawGpuFps = game.baseFps * gpuRelative * resMult * presetMult * rtMult * upscalingMult;
+  const rawGpuFps = game.baseFps * gpuRelative * resMult * presetMult * rtMult * ptMult * upscalingMult;
 
   // 6. CPU Ceiling FPS
   // Resolution does NOT decrease CPU frame limits, but game CPU intensity scales it
@@ -87,7 +101,8 @@ export function calculateFps(game, gpu, cpu, ram, settings = {}) {
   if (resolution === '1440p') requiredVram = game.vramAt1440p || 8.5;
   if (resolution === '4k') requiredVram = game.vramAt4k || 12.0;
   if (preset === 'ultra') requiredVram *= 1.15;
-  if (rayTracing && game.supportsRayTracing) requiredVram *= 1.20;
+  if (pathTracing && (game.supportsPathTracing || game.supportsRayTracing)) requiredVram *= 1.40;
+  else if (rayTracing && (game.supportsRayTracing || game.supportsPathTracing)) requiredVram *= 1.20;
 
   let vramPenaltyAvg = 1.0;
   let vramPenalty1Low = 1.0;
@@ -224,6 +239,9 @@ export function calculateFps(game, gpu, cpu, ram, settings = {}) {
   }
   if (rayTracing && rtWarning) {
     tips.push(`GPU lacks dedicated RT cores: Turn off Ray Tracing for a massive FPS recovery.`);
+  }
+  if (pathTracing && ptWarning) {
+    tips.push(`GPU lacks Path Tracing hardware capability: Turn off Path Tracing to restore normal framerates.`);
   }
 
   return {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  ChevronLeft, Star, Clock, Monitor, Cpu, HardDrive, MemoryStick,
+  ChevronLeft, Star, Trash2, Clock, Monitor, Cpu, HardDrive, MemoryStick,
   Gauge, Zap, Activity, Layers, AlertTriangle, CheckCircle, XCircle, Info, Shield, ExternalLink
 } from "lucide-react";
 import { calculateFps, calculateResolutionComparison } from "../services/fpsEngine.js";
@@ -9,7 +9,7 @@ import { getGameMetadata, getGameReleaseInfo } from "../data/gameMetadata.js";
 import { DEFAULT_PLACEHOLDER_COVER } from "../services/gameAssets.js";
 import { enrichSingleGame } from "../services/igdb.js";
 
-export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscaling, rayTracing, isFavorite, onToggleFavorite, onBack, onWideArtChange }) {
+export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscaling, rayTracing, pathTracing, isFavorite, onToggleFavorite, onDeleteGame, onBack, onWideArtChange }) {
   const [heroUrl, setHeroUrl] = useState("");
   const [heroLoaded, setHeroLoaded] = useState(false);
   const [thumbLoaded, setThumbLoaded] = useState(false);
@@ -21,12 +21,11 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
   const [igdbData, setIgdbData] = useState(null);
   const [igdbLoading, setIgdbLoading] = useState(true);
 
+  // Trigger entrance animation on mount
   useEffect(() => {
-    if (!game) return;
-    setVisible(false);
-    const enterTimer = setTimeout(() => setVisible(true), 30);
-    return () => clearTimeout(enterTimer);
-  }, [game]);
+    const id = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   useEffect(() => {
     if (!game) return;
@@ -36,7 +35,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
     setLogoLoaded(Boolean(initialLogo));
     setLogoFailed(false);
 
-    if (initialLogo) return;
+    if (initialLogo) return () => { cancelled = true; };
 
     getGameLogo(game.steamGridId, game.steamAppId, game.title)
       .then(logo => {
@@ -110,8 +109,8 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
   const showIgdbSkeleton = igdbLoading && !igdbData;
   const steamRatingDisplay = igdbData?.igdbRating != null ? `${igdbData.igdbRating}%` : metadata.steamRating;
   const isConfigured = Boolean(gpu && cpu);
-  const fpsData = calculateFps(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, upscaling });
-  const resComparison = calculateResolutionComparison(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, upscaling });
+  const fpsData = calculateFps(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, pathTracing, upscaling });
+  const resComparison = calculateResolutionComparison(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, pathTracing, upscaling });
 
   let fpsColor = "var(--ctp-subtext0)";
   if (isConfigured) {
@@ -147,32 +146,48 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
             <span>{isFavorite ? "Favourited" : "Favourite"}</span>
           </button>
         )}
+        {onDeleteGame && (
+          <button
+            type="button"
+            className="gdp-back-btn gdp-delete-btn"
+            onClick={() => {
+              onDeleteGame(game.id);
+              if (onBack) onBack();
+            }}
+            title={`Delete ${game.title} from library`}
+          >
+            <Trash2 size={13} />
+            <span>Delete Game</span>
+          </button>
+        )}
       </div>
 
       {/* Hero Banner */}
       <div className={`gdp-hero ${heroLoaded ? "hero-loaded" : "hero-loading"}`}
         style={{ backgroundImage: heroLoaded ? `url("${heroUrl || game.coverUrl}")` : "none" }}>
         {!heroLoaded && <div className="gdp-hero-skeleton" />}
-        <img
-          src={heroUrl || game.coverUrl}
-          alt=""
-          decoding="async"
-          style={{ display: "none" }}
-          ref={(el) => {
-            if (el && el.complete && el.naturalWidth > 0 && !heroLoaded) {
-              setHeroLoaded(true);
-            }
-          }}
-          onLoad={() => setHeroLoaded(true)}
-          onError={(e) => {
-            e.target.onerror = null;
-            if (heroUrl && game.coverUrl && heroUrl !== game.coverUrl) {
-              setHeroUrl(game.coverUrl);
-            } else {
-              setHeroLoaded(true);
-            }
-          }}
-        />
+        {(heroUrl || game.coverUrl) ? (
+          <img
+            src={heroUrl || game.coverUrl}
+            alt=""
+            decoding="async"
+            style={{ display: "none" }}
+            ref={(el) => {
+              if (el && el.complete && el.naturalWidth > 0 && !heroLoaded) {
+                setHeroLoaded(true);
+              }
+            }}
+            onLoad={() => setHeroLoaded(true)}
+            onError={(e) => {
+              e.target.onerror = null;
+              if (heroUrl && game.coverUrl && heroUrl !== game.coverUrl) {
+                setHeroUrl(game.coverUrl);
+              } else {
+                setHeroLoaded(true);
+              }
+            }}
+          />
+        ) : null}
         <div className="gdp-hero-overlay" />
 
         <div className="gdp-hero-content">

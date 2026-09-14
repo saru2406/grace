@@ -196,7 +196,6 @@ export function SettingsPopout({
                       padding: '6px 8px',
                       borderRadius: '8px',
                       background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.08)',
                       fontSize: '11px'
                     }}
                   >

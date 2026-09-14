@@ -14,12 +14,12 @@ export function Header({
   onProfileNameChange,
   onResetData
 }) {
-  // Global hotkey 'Alt+Space' (or Ctrl+K or '/') to quickly open the Add Game modal
+  // Global hotkey 'Ctrl+Space' (or Ctrl+K or '/') to quickly open the Add Game modal
   useEffect(() => {
     function handleGlobalKeyDown(e) {
-      const isAltSpace = e.altKey && (e.code === 'Space' || e.key === ' ' || e.key === 'Space');
+      const isCtrlSpace = (e.ctrlKey || e.metaKey) && (e.code === 'Space' || e.key === ' ' || e.key === 'Space');
       if (
-        isAltSpace ||
+        isCtrlSpace ||
         (e.key === 'k' && (e.metaKey || e.ctrlKey)) ||
         (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName))
       ) {
@@ -45,13 +45,13 @@ export function Header({
           className="header-add-pill-btn"
           type="button"
           onClick={() => onOpenSteamGridSearch && onOpenSteamGridSearch('')}
-          title="Search and add games (Alt+Space)"
+          title="Search and add games (Ctrl+Space)"
         >
           <div className="add-pill-left">
             <Plus size={14} strokeWidth={2} />
             <span className="add-pill-text">Add game...</span>
           </div>
-          <kbd className="add-pill-kbd">Alt+Space</kbd>
+          <kbd className="add-pill-kbd">Ctrl+Space</kbd>
         </button>
       </div>
 

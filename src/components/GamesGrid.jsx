@@ -16,6 +16,7 @@ export function GamesGrid({
   onLeaveGame,
   onSelectGame,
   onToggleFavorite,
+  onDeleteGame,
   favoriteIds,
   onOpenSearchModal,
   userSettings = {},
@@ -28,6 +29,7 @@ export function GamesGrid({
     { id: 'favorites', label: 'Favourites' },
     { id: 'recently-added', label: `Recently Added${customGameCount > 0 ? ` (${customGameCount})` : ''}` },
     { id: 'trending', label: `Popular (${systemPeriod.monthShort} ${systemPeriod.year})` },
+    { id: 'path-tracing', label: 'Path Tracing' },
     { id: 'aaa', label: 'AAA Visuals' },
     { id: 'esports', label: 'Esports' },
     { id: 'openworld', label: 'Open World' },
@@ -139,6 +141,7 @@ export function GamesGrid({
               onLeave={onLeaveGame}
               onSelect={onSelectGame}
               onToggleFavorite={onToggleFavorite}
+              onDeleteGame={onDeleteGame}
               isFavorite={favoriteIds.includes(item.game.id)}
               fpsDetail={userSettings.fpsDetail}
               showBottlenecks={userSettings.showBottlenecks !== false}
