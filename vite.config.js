@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import https from 'https';
 
@@ -52,12 +52,31 @@ function httpsGet(url, options = {}) {
   });
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const steamGridApiKey = env.STEAMGRID_API_KEY || process.env.STEAMGRID_API_KEY || '';
+  const igdbClientId = env.IGDB_CLIENT_ID || process.env.IGDB_CLIENT_ID || '';
+  const igdbClientSecret = env.IGDB_CLIENT_SECRET || process.env.IGDB_CLIENT_SECRET || '';
+  const igdbAccessToken = env.IGDB_ACCESS_TOKEN || process.env.IGDB_ACCESS_TOKEN || '';
+
+  const steamGridProxyHeaders = steamGridApiKey
+    ? { Authorization: `Bearer ${steamGridApiKey}` }
+    : {};
+
+  return {
   plugins: [
     react(),
     {
       name: 'steam-api-middleware',
       configureServer(server) {
+        server.middlewares.use('/api/env-status', (req, res) => {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            hasSteamGridKey: Boolean(steamGridApiKey && steamGridApiKey.trim()),
+            hasIgdbKeys: Boolean(igdbClientId.trim() && (igdbClientSecret.trim() || igdbAccessToken.trim()))
+          }));
+        });
+
         server.middlewares.use('/api/steam-resolve', async (req, res) => {
           if (req.method !== 'POST') {
             res.statusCode = 405;
@@ -182,6 +201,112 @@ export default defineConfig({
             res.end(JSON.stringify({ total: 0, items: [] }));
           }
         });
+
+        // Twitch OAuth2 token manager for IGDB
+        let cachedTwitchToken = null;
+        let twitchTokenExpiry = 0;
+
+        async function getTwitchToken() {
+          if (cachedTwitchToken && Date.now() < twitchTokenExpiry) {
+            return cachedTwitchToken;
+          }
+
+          const candidateSecret = igdbClientSecret || (igdbAccessToken && igdbAccessToken.length <= 32 ? igdbAccessToken : null);
+          if (igdbClientId && candidateSecret) {
+            try {
+              const params = new URLSearchParams({
+                client_id: igdbClientId.trim(),
+                client_secret: candidateSecret.trim(),
+                grant_type: 'client_credentials'
+              });
+              const tokenRes = await fetch(`https://id.twitch.tv/oauth2/token?${params.toString()}`, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' }
+              });
+              if (tokenRes.ok) {
+                const data = await tokenRes.json();
+                if (data && data.access_token) {
+                  cachedTwitchToken = data.access_token;
+                  twitchTokenExpiry = Date.now() + Math.max((data.expires_in || 3600) - 120, 60) * 1000;
+                  return cachedTwitchToken;
+                }
+              }
+            } catch (err) {
+              console.warn('Vite proxy Twitch OAuth token error:', err);
+            }
+          }
+
+          return igdbAccessToken ? igdbAccessToken.trim() : (cachedTwitchToken || '');
+        }
+
+        server.middlewares.use('/api/igdb', async (req, res) => {
+          if (req.method === 'OPTIONS') {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Client-ID, Authorization');
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          let token = await getTwitchToken();
+          if (!igdbClientId || !token) {
+            res.setHeader('Content-Type', 'application/json');
+            res.statusCode = 200;
+            res.end(JSON.stringify({
+              error: 'IGDB credentials not configured. Please set IGDB_CLIENT_ID and IGDB_CLIENT_SECRET (or IGDB_ACCESS_TOKEN) in .env.'
+            }));
+            return;
+          }
+
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', async () => {
+            try {
+              const subPath = (req.url || '').replace(/^\//, '').split('?')[0];
+              const targetUrl = `https://api.igdb.com/v4/${subPath}`;
+
+              const headers = {
+                'Client-ID': igdbClientId.trim(),
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'text/plain',
+                'Accept': 'application/json'
+              };
+
+              let igdbRes = await fetch(targetUrl, {
+                method: req.method,
+                headers,
+                body: req.method === 'GET' ? undefined : (body || '')
+              });
+
+              // Retry on 401 if candidate secret is available
+              const candidateSecret = igdbClientSecret || (igdbAccessToken && igdbAccessToken.length <= 32 ? igdbAccessToken : null);
+              if (igdbRes.status === 401 && candidateSecret) {
+                cachedTwitchToken = null;
+                twitchTokenExpiry = 0;
+                const freshToken = await getTwitchToken();
+                if (freshToken) {
+                  headers['Authorization'] = `Bearer ${freshToken}`;
+                  igdbRes = await fetch(targetUrl, {
+                    method: req.method,
+                    headers,
+                    body: req.method === 'GET' ? undefined : (body || '')
+                  });
+                }
+              }
+
+              res.statusCode = igdbRes.status;
+              res.setHeader('Content-Type', igdbRes.headers.get('content-type') || 'application/json');
+              const text = await igdbRes.text();
+              res.end(text);
+            } catch (e) {
+              console.error('Vite /api/igdb proxy error:', e);
+              res.statusCode = 502;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: e.message || 'IGDB request failed' }));
+            }
+          });
+        });
       }
     }
   ],
@@ -195,12 +320,6 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/steamgriddb/, ''),
         headers: steamGridProxyHeaders
       },
-      '/api/igdb': {
-        target: 'https://api.igdb.com/v4',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/igdb/, ''),
-        headers: igdbProxyHeaders
-      },
       '/api/steamstore': {
         target: 'https://store.steampowered.com/api',
         changeOrigin: true,
@@ -208,4 +327,5 @@ export default defineConfig({
       }
     }
   }
+};
 });

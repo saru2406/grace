@@ -112,13 +112,38 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
             </div>
           ))}
           {!loading && query.trim().length < 1 && (
-            <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-              Start typing above to search the global PC games database instantly...
+            <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '24px 16px' }}>
+              <p style={{ color: 'var(--ctp-subtext1)', marginBottom: '14px', fontSize: '13px' }}>
+                Start typing to search the global PC games database, or pick a popular title:
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', maxWidth: '640px', margin: '0 auto' }}>
+                {['Cyberpunk 2077', 'Resident Evil 4', 'Counter-Strike 2', 'Grand Theft Auto V', 'Elden Ring', 'Minecraft', 'The Witcher 3', 'Helldivers 2', 'Black Myth: Wukong', 'Space Marine 2'].map(s => (
+                  <button
+                    key={s}
+                    type="button"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.07)',
+                      border: '1px solid rgba(255, 255, 255, 0.14)',
+                      color: 'var(--ctp-text, #e2e8f0)',
+                      borderRadius: '16px',
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onClick={() => setQuery(s)}
+                  >
+                    + {s}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
           {!loading && query.trim().length >= 1 && results.length === 0 && (
-            <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-              No games found matching "{query}". Try checking the spelling or use another keyword.
+            <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '24px 16px' }}>
+              <p style={{ color: 'var(--ctp-subtext1)', marginBottom: '10px' }}>
+                No games found matching "{query}". Try checking the spelling or use another keyword.
+              </p>
             </div>
           )}
           {!loading && results.slice(0, 16).map((item) => (
@@ -135,31 +160,35 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
 }
 
 function SearchResultCard({ item, onSelect }) {
-  const [thumb, setThumb] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const initialThumb = item.thumb || item.url || item.coverUrl || null;
+  const [thumb, setThumb] = useState(initialThumb);
+  const [isLoading, setIsLoading] = useState(!initialThumb);
 
   useEffect(() => {
     let cancelled = false;
 
-    setIsLoading(true);
-    setThumb(null);
+    if (!initialThumb) {
+      setIsLoading(true);
+    }
 
-    getGameGrid(item.id)
+    getGameGrid(item.id, item.steamAppId)
       .then(grid => {
         if (!cancelled) {
-          setThumb(grid?.thumb || grid?.url || null);
+          const bestThumb = grid?.thumb || grid?.url || initialThumb;
+          if (bestThumb) {
+            setThumb(bestThumb);
+          }
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setThumb(null);
           setIsLoading(false);
         }
       });
 
     return () => { cancelled = true; };
-  }, [item.id]);
+  }, [item.id, item.steamAppId, initialThumb]);
 
   const releaseYear = item.release_date ? new Date(item.release_date * 1000).getFullYear() : null;
 

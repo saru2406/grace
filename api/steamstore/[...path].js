@@ -1,39 +1,58 @@
+const STEAM_STORE_BASE = 'https://store.steampowered.com/api';
+
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
-  const { path, ...queryParams } = req.query;
-  const pathStr = Array.isArray(path) ? path.join('/') : (path || '');
+  const pathParts = req.query.path || [];
+  const subPath = Array.isArray(pathParts) ? pathParts.join('/') : pathParts;
 
-  const searchParams = new URLSearchParams();
-  Object.entries(queryParams).forEach(([key, val]) => {
-    if (Array.isArray(val)) {
-      val.forEach(v => searchParams.append(key, v));
-    } else if (val !== undefined) {
-      searchParams.append(key, val);
+  const queryParams = new URLSearchParams();
+  Object.entries(req.query || {}).forEach(([k, v]) => {
+    if (k !== 'path') {
+      if (Array.isArray(v)) {
+        v.forEach(val => queryParams.append(k, val));
+      } else if (v !== undefined) {
+        queryParams.append(k, v);
+      }
     }
   });
 
-  const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
-  const targetUrl = `https://store.steampowered.com/api/${pathStr}${queryString}`;
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  const targetUrl = `${STEAM_STORE_BASE}/${subPath}${queryString}`;
 
   try {
-    const upstreamRes = await fetch(targetUrl, {
+    const steamRes = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        Accept: 'application/json'
+      }
+    });
+
         'Accept': 'application/json'
       }
     });
 
-    const data = await upstreamRes.text();
-    res.setHeader('Content-Type', upstreamRes.headers.get('content-type') || 'application/json');
-    return res.status(upstreamRes.status).send(data);
+    const contentType = steamRes.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await steamRes.json();
+      return res.status(steamRes.status).json(data);
+    }
+
+    const text = await steamRes.text();
+    return res.status(steamRes.status).send(text);
   } catch (err) {
-    console.error('SteamStore Vercel proxy error:', err);
-    return res.status(502).json({ error: 'Failed to fetch from Steam Store', details: err.message });
+    console.error('Steam store API proxy error:', err);
+    return res.status(502).json({ error: err.message });
+  }
+}
   }
 }

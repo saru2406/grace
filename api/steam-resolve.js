@@ -17,12 +17,16 @@ function parseSteamInput(input) {
 }
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
+  }
+
   }
 
   if (req.method !== 'POST') {
@@ -30,29 +34,44 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
-  const { query, apiKey: userProvidedApiKey } = typeof body === 'string' ? JSON.parse(body || '{}') : body;
+  const payload = typeof body === 'string'
+    ? (() => {
+        try {
+          return JSON.parse(body || '{}');
+        } catch (e) {
+          return {};
+        }
+      })()
+    : body;
+
+  const { query, apiKey: userProvidedApiKey } = payload || {};
   const envApiKey = process.env.STEAM_API_KEY || process.env.VITE_STEAM_API_KEY || '';
   const apiKey = (userProvidedApiKey && userProvidedApiKey.trim()) || envApiKey;
 
   const parsed = parseSteamInput(query);
   if (!parsed || !parsed.id) {
-    return res.status(400).json({ success: false, error: 'Invalid Steam username, ID, or URL provided.' });
+    return res.status(200).json({ success: false, error: 'Invalid Steam username, ID, or URL provided.' });
   }
 
   try {
     const profileUrl = `https://steamcommunity.com/${parsed.type}/${encodeURIComponent(parsed.id)}/?xml=1`;
-    const xmlRes = await fetch(profileUrl, {
+    const xmlResponse = await fetch(profileUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': 'text/xml, application/xml, */*'
       }
     });
 
-    if (!xmlRes.ok) {
+        'Accept': 'text/xml, application/xml, */*'
+      }
+    });
+
+    if (!xmlResponse.ok) {
       return res.status(200).json({ success: false, error: 'Failed to contact Steam community servers.' });
     }
 
-    const xml = await xmlRes.text();
+    const xml = await xmlResponse.text();
+
     const errorTag = extractXmlTag(xml, 'error');
     if (errorTag) {
       return res.status(200).json({ success: false, error: errorTag });
@@ -79,7 +98,13 @@ export default async function handler(req, res) {
     let games = [];
     if (apiKey && steamID64) {
       const apiUrl = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${encodeURIComponent(apiKey.trim())}&steamid=${encodeURIComponent(steamID64)}&include_appinfo=1&include_played_free_games=1&format=json`;
-      const apiRes = await fetch(apiUrl);
+      const apiRes = await fetch(apiUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': 'application/json'
+        }
+      });
+
       if (apiRes.ok) {
         try {
           const apiData = await apiRes.json();
@@ -113,7 +138,8 @@ export default async function handler(req, res) {
       gameCount: games.length
     });
   } catch (err) {
-    console.error('Steam resolve error:', err);
-    return res.status(500).json({ success: false, error: err.message || 'Internal server error' });
+    console.error('Steam resolve error on Vercel:', err);
+    return res.status(200).json({ success: false, error: err.message || 'Internal server error' });
+
   }
 }
