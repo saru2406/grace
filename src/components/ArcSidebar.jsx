@@ -265,13 +265,13 @@ export function ArcSidebar({
                 e.stopPropagation();
                 onTogglePopout();
               }}
-              title="Rig Options & Preferences"
+              title="Preferences"
               aria-label="Preferences"
             >
               <Settings size={15} strokeWidth={2} />
               {!isCollapsed && (
                 <span className="arc-settings-btn-text">
-                  Preferences &amp; Rig Options
+                  Preferences
                 </span>
               )}
             </button>

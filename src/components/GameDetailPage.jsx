@@ -14,11 +14,12 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
   const [heroLoaded, setHeroLoaded] = useState(false);
   const [thumbLoaded, setThumbLoaded] = useState(false);
   const [logoUrl, setLogoUrl] = useState(game?.logoUrl || "");
-  const [logoLoaded, setLogoLoaded] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(Boolean(game?.logoUrl));
   const [logoFailed, setLogoFailed] = useState(false);
   const [reqTab, setReqTab] = useState("recommended");
   const [visible, setVisible] = useState(false);
   const [igdbData, setIgdbData] = useState(null);
+  const [igdbLoading, setIgdbLoading] = useState(true);
 
   useEffect(() => {
     if (!game) return;
@@ -41,7 +42,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
       .then(logo => {
         if (!cancelled && logo?.url) {
           setLogoUrl(logo.url);
-          setLogoLoaded(true);
+          setLogoLoaded(false);
         }
       })
       .catch(() => {
@@ -87,12 +88,18 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
   useEffect(() => {
     if (!game) return;
     let cancelled = false;
+    setIgdbLoading(true);
     setIgdbData(null);
     enrichSingleGame(game)
       .then(data => {
-        if (!cancelled && data) setIgdbData(data);
+        if (!cancelled) {
+          setIgdbData(data || null);
+          setIgdbLoading(false);
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setIgdbLoading(false);
+      });
     return () => { cancelled = true; };
   }, [game]);
 
@@ -100,6 +107,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
 
   const metadata = getGameMetadata(game);
   const releaseInfo = getGameReleaseInfo(game);
+  const showIgdbSkeleton = igdbLoading && !igdbData;
   const steamRatingDisplay = igdbData?.igdbRating != null ? `${igdbData.igdbRating}%` : metadata.steamRating;
   const isConfigured = Boolean(gpu && cpu);
   const fpsData = calculateFps(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, upscaling });
@@ -189,7 +197,11 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
             />
           </div>
           <div className="gdp-hero-text">
-            {logoUrl && !logoFailed ? (
+            {!logoLoaded && !logoFailed ? (
+              <div className="gdp-logo-wrap">
+                <div className="skeleton-loading" style={{ width: '180px', height: '42px', borderRadius: '10px' }} />
+              </div>
+            ) : logoUrl && !logoFailed ? (
               <div className="gdp-logo-wrap">
                 <img
                   className={`gdp-logo-img ${logoLoaded ? "loaded" : ""}`}
@@ -226,12 +238,20 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
             <div className="gdp-studios-strip">
               <div className="gdp-studio-card">
                 <span className="gdp-studio-label">DEVELOPER</span>
-                <span className="gdp-studio-name">{igdbData?.developer || metadata.developer || 'Game Studio'}</span>
+                {showIgdbSkeleton ? (
+                  <div className="skeleton-loading" style={{ width: '110px', height: '14px', borderRadius: '4px' }} />
+                ) : (
+                  <span className="gdp-studio-name">{igdbData?.developer || metadata.developer || 'Game Studio'}</span>
+                )}
               </div>
               <div className="gdp-studio-divider" />
               <div className="gdp-studio-card">
                 <span className="gdp-studio-label">PUBLISHER</span>
-                <span className="gdp-studio-name">{igdbData?.publisher || metadata.publisher || game.publisher || metadata.developer || 'Publisher'}</span>
+                {showIgdbSkeleton ? (
+                  <div className="skeleton-loading" style={{ width: '100px', height: '14px', borderRadius: '4px' }} />
+                ) : (
+                  <span className="gdp-studio-name">{igdbData?.publisher || metadata.publisher || game.publisher || metadata.developer || 'Publisher'}</span>
+                )}
               </div>
               {igdbData?.genres?.length > 0 && (
                 <>
