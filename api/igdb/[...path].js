@@ -5,6 +5,28 @@
 
 const IGDB_BASE = 'https://api.igdb.com/v4';
 
+function getSubPath(req) {
+  const queryPath = req.query?.path;
+  if (Array.isArray(queryPath) && queryPath.length) {
+    return queryPath.join('/');
+  }
+
+  if (typeof queryPath === 'string' && queryPath.trim()) {
+    return queryPath;
+  }
+
+  try {
+    const pathname = new URL(req.url || '/', 'https://localhost').pathname;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'api' && parts.length > 2) {
+      return parts.slice(2).join('/');
+    }
+    return parts.slice(1).join('/');
+  } catch {
+    return '';
+  }
+}
+
 // In-memory token cache across warm serverless invocations
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -87,8 +109,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const pathParts = req.query.path || [];
-  const subPath = Array.isArray(pathParts) ? pathParts.join('/') : pathParts;
+  const subPath = getSubPath(req);
 
   const queryParams = new URLSearchParams();
   Object.entries(req.query || {}).forEach(([k, v]) => {

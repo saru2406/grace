@@ -5,6 +5,28 @@
 
 const STEAMGRID_BASE = 'https://www.steamgriddb.com/api/v2';
 
+function getSubPath(req) {
+  const queryPath = req.query?.path;
+  if (Array.isArray(queryPath) && queryPath.length) {
+    return queryPath.join('/');
+  }
+
+  if (typeof queryPath === 'string' && queryPath.trim()) {
+    return queryPath;
+  }
+
+  try {
+    const pathname = new URL(req.url || '/', 'https://localhost').pathname;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'api' && parts.length > 2) {
+      return parts.slice(2).join('/');
+    }
+    return parts.slice(1).join('/');
+  } catch {
+    return '';
+  }
+}
+
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -20,8 +42,7 @@ export default async function handler(req, res) {
   // Support both standard and VITE_ prefixed environment variables in Vercel
   const apiKey = (process.env.STEAMGRID_API_KEY || process.env.VITE_STEAMGRID_API_KEY || '').trim();
 
-  const pathParts = req.query.path || [];
-  const subPath = Array.isArray(pathParts) ? pathParts.join('/') : pathParts;
+  const subPath = getSubPath(req);
 
   const queryParams = new URLSearchParams();
   Object.entries(req.query || {}).forEach(([k, v]) => {
