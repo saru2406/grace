@@ -5,17 +5,23 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "preview": "node ./node_modules/vite/bin/vite.js preview",
+    "postinstall": "node -e \"try{const fs=require('fs');fs.chmodSync('./node_modules/.bin/vite',0o755);}catch(e){}\""
   },
-  "devDependencies": {
-    "vite": "^6.2.0"
+  "allowScripts": {
+    "esbuild": true
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.7.0",
     "lucide-react": "^1.45.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "steamgriddb": "^2.2.1"
+    "steamgriddb": "^2.2.1",
+    "vite": "^6.2.0"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
   }
 }
+
