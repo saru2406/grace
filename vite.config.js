@@ -2,9 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import https from 'https';
 
-const steamGridApiKey = process.env.STEAMGRID_API_KEY || '';
-const igdbClientId = process.env.IGDB_CLIENT_ID || '';
-const igdbAccessToken = process.env.IGDB_ACCESS_TOKEN || '';
+const steamGridApiKey = process.env.STEAMGRID_API_KEY || process.env.VITE_STEAMGRID_API_KEY || '';
+const igdbClientId = process.env.IGDB_CLIENT_ID || process.env.VITE_IGDB_CLIENT_ID || '';
+const igdbAccessToken = process.env.IGDB_ACCESS_TOKEN || process.env.VITE_IGDB_ACCESS_TOKEN || '';
+const steamApiKey = process.env.STEAM_API_KEY || process.env.VITE_STEAM_API_KEY || '';
 
 const steamGridProxyHeaders = steamGridApiKey
   ? { Authorization: `Bearer ${steamGridApiKey}` }
