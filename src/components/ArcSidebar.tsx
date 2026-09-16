@@ -11,6 +11,7 @@ import {
 import { GPUS, CPUS, RAM_OPTIONS, SYSTEM_PRESETS } from '../data/hardware.js';
 import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual.jsx';
 import { SettingsPopout } from './SettingsPopout.jsx';
+import { QuickBuildsPopout } from './QuickBuildsPopout.jsx';
 
 export function ArcSidebar({
   // Navigation & Header props
@@ -64,6 +65,7 @@ export function ArcSidebar({
   const [saveToast, setSaveToast] = useState('');
   const [showRtInfo, setShowRtInfo] = useState(false);
   const [showPtInfo, setShowPtInfo] = useState(false);
+  const [isQuickBuildsOpen, setIsQuickBuildsOpen] = useState(false);
   const saveInputRef = useRef(null);
 
   const canSave = Boolean(gpu && cpu && ram);
@@ -252,16 +254,17 @@ export function ArcSidebar({
         </div>
 
         {/* ============================================================
-            3. ARC ACTIONS (Preferences Popout)
+            3. ARC ACTIONS (Preferences & Quick Builds Popouts)
             ============================================================ */}
-        <div className="arc-actions-row">
-          <div className="profile-popout-wrapper">
+        <div className="arc-actions-row" style={{ flexDirection: 'column', gap: '8px' }}>
+          <div className="profile-popout-wrapper" style={{ width: '100%' }}>
             <button
               id="open-settings-btn"
               className={`arc-settings-btn ${isPopoutOpen ? 'active' : ''}`}
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+                setIsQuickBuildsOpen(false);
                 onTogglePopout();
               }}
               title="Preferences"
@@ -282,6 +285,34 @@ export function ArcSidebar({
               profileName={profileName}
               onProfileNameChange={onProfileNameChange}
               onResetData={onResetData}
+            />
+          </div>
+
+          <div className="profile-popout-wrapper" style={{ width: '100%' }}>
+            <button
+              id="open-quickbuilds-btn"
+              className={`arc-settings-btn ${isQuickBuildsOpen ? 'active' : ''}`}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isPopoutOpen) onClosePopout();
+                setIsQuickBuildsOpen(prev => !prev);
+              }}
+              title="Quick Builds"
+              aria-label="Quick Builds"
+            >
+              <Cpu size={15} strokeWidth={2} />
+              <span className="arc-settings-btn-text">
+                Quick Builds
+              </span>
+            </button>
+
+            <QuickBuildsPopout
+              isOpen={isQuickBuildsOpen}
+              onClose={() => setIsQuickBuildsOpen(false)}
+              gpu={gpu}
+              cpu={cpu}
+              onApplyPreset={onApplyPreset}
             />
           </div>
         </div>
@@ -309,29 +340,6 @@ export function ArcSidebar({
             5. SCROLLABLE HARDWARE SELECTORS & PRESETS
             ============================================================ */}
         <div className="arc-sidebar-scroll-area">
-          {/* Quick Builds / Presets Section */}
-          <div className="spec-group quick-builds-group">
-            <label className="spec-label">
-              <span>Quick Builds</span>
-              <span className="spec-badge">Presets</span>
-            </label>
-            <div className="quick-builds-grid" id="quick-builds-container">
-              {SYSTEM_PRESETS.map((p) => {
-                const isSelected = gpu?.id === p.gpuId && cpu?.id === p.cpuId;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={`preset-chip ${isSelected ? 'active' : ''}`}
-                    title={`${p.badge} — ${p.gpuId.toUpperCase()} + ${p.cpuId.toUpperCase()}`}
-                    onClick={() => onApplyPreset && onApplyPreset(p)}
-                  >
-                    <span>{p.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           {/* GPU Section */}
           <div className="spec-group">
@@ -534,10 +542,11 @@ export function ArcSidebar({
           {/* Ray Tracing */}
           <div className={`spec-group ${showRtInfo ? 'has-rt-popup-open' : ''}`} style={showRtInfo ? { position: 'relative', zIndex: 1000 } : undefined}>
             <div className={`rt-toggle-wrapper ${!supportsRt ? 'rt-disabled-wrapper' : ''} ${showRtInfo ? 'popup-active' : ''}`} style={showRtInfo ? { position: 'relative', zIndex: 1000 } : undefined}>
-              <div
+              <label
                 className={`switch-label ${!supportsRt ? 'disabled' : ''}`}
                 onClick={(e) => {
                   if (!supportsRt) {
+                    e.preventDefault();
                     setShowRtInfo(prev => !prev);
                   }
                 }}
@@ -598,17 +607,18 @@ export function ArcSidebar({
                   />
                   <span className="switch-slider"></span>
                 </div>
-              </div>
+              </label>
             </div>
           </div>
 
           {/* Path Tracing */}
           <div className={`spec-group ${showPtInfo ? 'has-pt-popup-open' : ''}`} style={showPtInfo ? { position: 'relative', zIndex: 999 } : undefined}>
             <div className={`pt-toggle-wrapper ${!supportsPt ? 'pt-disabled-wrapper' : ''} ${showPtInfo ? 'popup-active' : ''}`} style={showPtInfo ? { position: 'relative', zIndex: 999 } : undefined}>
-              <div
+              <label
                 className={`switch-label ${!supportsPt ? 'disabled' : ''}`}
                 onClick={(e) => {
                   if (!supportsPt) {
+                    e.preventDefault();
                     setShowPtInfo(prev => !prev);
                   }
                 }}
@@ -669,7 +679,7 @@ export function ArcSidebar({
                   />
                   <span className="switch-slider"></span>
                 </div>
-              </div>
+              </label>
             </div>
           </div>
 

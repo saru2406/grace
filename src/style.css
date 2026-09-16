@@ -644,12 +644,12 @@ body.sidebar-resizing * {
   max-width: calc(100vw - 360px);
   transform-origin: top left;
   z-index: 100002;
-  background: rgba(16, 16, 16, 0.96);
-  backdrop-filter: blur(16px) brightness(1.15);
-  -webkit-backdrop-filter: blur(16px) brightness(1.15);
+  background: rgba(16, 18, 27, 0.55);
+  backdrop-filter: blur(32px) saturate(1.8) brightness(1.15);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8) brightness(1.15);
   border-radius: 18px;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   overflow: visible;
   max-height: none;
 }
@@ -670,22 +670,7 @@ body.sidebar-resizing * {
   box-shadow: none !important;
 }
 
-.arc-sidebar .popout-arrow {
-  position: absolute;
-  top: 16px;
-  left: -6px;
-  right: auto;
-  width: 10px;
-  height: 10px;
-  background: rgba(15, 18, 27, 0.28);
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-  border-top: none;
-  border-right: none;
-  transform: rotate(45deg);
-  z-index: 1;
-  pointer-events: none;
-}
+.arc-sidebar .popout-arrow { display: none !important; }
 
 @media (max-width: 1024px) {
   .arc-sidebar .profile-popout {
@@ -699,9 +684,7 @@ body.sidebar-resizing * {
     overflow-y: auto;
   }
 
-  .arc-sidebar .popout-arrow {
-    display: none;
-  }
+  .arc-sidebar .popout-arrow { display: none !important; }
 }
 
 /* --------------------------------------------------------------------------
@@ -1175,12 +1158,10 @@ body.sidebar-resizing * {
 @keyframes popout-spring {
   0% {
     opacity: 0;
-    transform: scale(0.92) translateY(-10px);
   }
 
   100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 }
 
@@ -1189,11 +1170,9 @@ body.sidebar-resizing * {
   top: calc(100% + 12px);
   right: 0;
   width: 380px;
-  background: rgba(17, 20, 29, 0.94);
-  backdrop-filter: blur(24px) saturate(1.8) brightness(1.15);
-  -webkit-backdrop-filter: blur(24px) saturate(1.8) brightness(1.15);
-  border: 1px solid transparent;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  background: #000000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
   border-radius: 18px;
   padding: 12px;
   z-index: 100002;
@@ -1202,9 +1181,30 @@ body.sidebar-resizing * {
   gap: 10px;
   transform-origin: top right;
   animation: popout-spring 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  isolation: isolate;
   overflow: visible;
-  will-change: opacity, transform;
+  isolation: isolate;
+  opacity: 1 !important;
+}
+
+.profile-popout,
+.popout-header,
+.popout-section,
+.popout-segmented-grid,
+.popout-row-toggle,
+.mini-toggle-row,
+.api-diag-card,
+.btn-clear-data {
+  background: #000000 !important;
+}
+
+.profile-popout::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: none;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .profile-popout.hidden {
@@ -1221,19 +1221,7 @@ body.sidebar-resizing * {
   padding-right: 2px;
 }
 
-.popout-arrow {
-  position: absolute;
-  top: -6px;
-  right: 14px;
-  width: 10px;
-  height: 10px;
-  background: rgba(14, 18, 28, 0.92);
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
-  border-left: 1px solid rgba(255, 255, 255, 0.18);
-  transform: rotate(45deg);
-  z-index: 1;
-  pointer-events: none;
-}
+.popout-arrow { display: none !important; }
 
 .popout-header {
   display: flex;
@@ -1347,10 +1335,10 @@ body.sidebar-resizing * {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
   gap: 4px;
-  background: rgba(0, 0, 0, 0.18);
+  background: #000000;
   padding: 3px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .popout-segmented-grid.two-up {
@@ -1416,8 +1404,8 @@ body.sidebar-resizing * {
   user-select: none;
   padding: 6px 8px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .popout-toggle-info {
@@ -1529,7 +1517,7 @@ body.sidebar-resizing * {
 }
 
 .api-diag-card {
-  background: rgba(0, 0, 0, 0.32);
+  background: #000000;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 7px 8px;
@@ -1656,7 +1644,7 @@ body.sidebar-resizing * {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(248, 113, 113, 0.1);
+  background: #000000;
   border: none !important;
   color: var(--ctp-red);
   padding: 7px 14px;
@@ -2174,6 +2162,7 @@ body.sidebar-resizing * {
   line-height: 1.5;
   color: var(--ctp-subtext1);
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -2186,6 +2175,11 @@ body.sidebar-resizing * {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 4px;
+}
+
+.carousel-stat-pill,
+.tag-pill {
+  border-radius: var(--radius-md) !important;
 }
 
 .carousel-stat-pill {
@@ -2912,24 +2906,14 @@ body.sidebar-resizing * {
 }
 
 @keyframes skeleton-shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .skeleton-loading {
-  background: linear-gradient(90deg,
-      rgba(255, 255, 255, 0.02) 25%,
-      rgba(255, 255, 255, 0.08) 50%,
-      rgba(255, 255, 255, 0.02) 75%) !important;
-  background-size: 200% 100% !important;
-  animation: skeleton-shimmer 1.4s infinite linear !important;
-  will-change: background-position;
-  transform: translateZ(0);
+  background: linear-gradient(110deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .skeleton-loading img {
@@ -3753,7 +3737,7 @@ select option:checked,
   background-color: #ffffff;
   top: 3px;
   left: 3px;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease;
 }
 
 .switch-input:checked+.switch-slider {
@@ -3874,10 +3858,12 @@ select option:checked,
   width: 235px;
   max-width: calc(100vw - 32px);
   padding: 12px 14px;
-  background: #10131f !important;
+  background: rgba(16, 19, 31, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(1.8) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.8) !important;
   border: 1px solid rgba(255, 255, 255, 0.22) !important;
   border-radius: 16px !important;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;
   font-size: 11px;
   line-height: 1.45;
@@ -4897,6 +4883,7 @@ select option:checked,
   line-height: 1.35;
   margin: 0;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -4934,6 +4921,7 @@ select option:checked,
   margin: 0;
   font-style: italic;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -5601,7 +5589,7 @@ select option:checked,
 
 
 /* ==========================================================================
-   Game Detail — Inline Page (inside .main-content)
+   Game Detail â€” Inline Page (inside .main-content)
    ========================================================================== */
 
 .gdp-root {
@@ -5965,520 +5953,20 @@ select option:checked,
 
 /* ---- Skeleton keyframe (shared) ---- */
 @keyframes skeleton-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* ---- Responsive ---- */
-@media (max-width: 900px) {
-  .gdp-body {
-    grid-template-columns: 1fr;
-  }
-
-  .gdp-hero {
-    height: 300px;
-    min-height: 290px;
-  }
-
-  .gdp-thumb-wrap {
-    width: 110px;
-    height: 165px;
-  }
-}
-
-@media (max-width: 640px) {
-  .gdp-hero {
-    height: 250px;
-    min-height: 240px;
-  }
-
-  .gdp-hero-content {
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
-    gap: 12px;
-  }
-
-  .gdp-thumb-wrap {
-    width: 80px;
-    height: 120px;
-  }
-
-  .gdp-title {
-    font-size: 18px;
-  }
-}
-
-/* ==========================================================================
-   Global Footer (Copyright & Attribution)
-   ========================================================================== */
-.app-footer {
-  margin-top: 36px;
-  padding: 22px 24px 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: var(--radius-md);
-  background: rgba(10, 12, 20, 0.42);
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  position: relative;
-  z-index: 2;
-}
-
-.footer-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.footer-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.footer-brand-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-}
-
-.footer-pill-tag {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.75);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 2px 7px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-.footer-sources {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.footer-source-item {
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.62);
-}
-
-.footer-source-dot {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 10px;
-}
-
-.footer-separator {
-  width: 100%;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.footer-bottom-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  text-align: left;
-}
-
-.footer-copyright {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 0.01em;
-}
-
-.footer-disclaimer {
-  font-size: 11px;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.44);
-  max-width: 980px;
-}
-
-@media (max-width: 640px) {
-  .footer-top-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-/* ==========================================================================
-   Global Outline Reset — Remove outlines from all containers, buttons, elements, dialogs
-   ========================================================================== */
-*,
-*::before,
-*::after,
-html,
-body,
-div,
-section,
-article,
-aside,
-main,
-header,
-footer,
-nav,
-dialog,
-button,
-input,
-select,
-textarea,
-a,
-svg,
-[tabindex],
-[role="button"],
-[role="dialog"],
-.container,
-.modal-box,
-.modal-dialog,
-.modal-overlay,
-.modal-inner,
-.card,
-.game-card,
-.specs-sidebar,
-.carousel-container,
-.carousel-slide,
-.carousel-arrow,
-.modal-close-btn,
-.gdp-back-btn,
-.tab-btn,
-.preset-chip,
-.btn-primary,
-.segmented-btn {
-  outline: none !important;
-  outline-width: 0 !important;
-  outline-style: none !important;
-  outline-color: transparent !important;
-  outline-offset: 0 !important;
-  -webkit-tap-highlight-color: transparent !important;
-}
-
-*:focus,
-*:focus-visible,
-*:focus-within,
-*:active,
-*:hover,
-button:focus,
-button:focus-visible,
-button:active,
-input:focus,
-input:focus-visible,
-input:active,
-select:focus,
-select:focus-visible,
-select:active,
-textarea:focus,
-textarea:focus-visible,
-textarea:active,
-dialog:focus,
-dialog:focus-visible,
-dialog:active,
-[role="dialog"]:focus,
-[role="dialog"]:focus-visible,
-[role="button"]:focus,
-[role="button"]:focus-visible,
-[tabindex]:focus,
-[tabindex]:focus-visible,
-.container:focus,
-.container:focus-visible,
-.card:focus,
-.card:focus-visible,
-.modal-dialog:focus,
-.modal-dialog:focus-visible,
-.modal-box:focus,
-.modal-box:focus-visible,
-.modal-overlay:focus,
-.modal-overlay:focus-visible,
-.modal-inner:focus,
-.modal-inner:focus-visible,
-.profile-popout:focus,
-.profile-popout:focus-visible,
-.profile-popout-wrapper:focus,
-.profile-popout-wrapper:focus-visible,
-.specs-sidebar:focus,
-.specs-sidebar:focus-visible,
-.game-card:focus,
-.game-card:focus-visible {
-  outline: none !important;
-  outline-width: 0 !important;
-  outline-style: none !important;
-  outline-color: transparent !important;
-  outline-offset: 0 !important;
-  box-shadow: none !important;
-}
-
-button::-moz-focus-inner,
-input::-moz-focus-inner,
-[type="button"]::-moz-focus-inner,
-[type="reset"]::-moz-focus-inner,
-[type="submit"]::-moz-focus-inner {
-  border: 0 !important;
-  outline: none !important;
-}
-
-/* ==========================================================================
-   Global Rounding Overrides — Pills & Buttons Only
-   ========================================================================== */
-button,
-input[type="button"],
-input[type="submit"],
-input[type="reset"],
-.btn-primary,
-.btn-save-template,
-.btn-reset-specs,
-.btn-steam,
-.btn-header-add,
-.btn-profile-settings,
-.btn-clear-data,
-.brand-pill,
-.preset-chip,
-.segmented-btn,
-.reqs-tab-btn,
-.tab-btn,
-.popout-seg-btn,
-.carousel-cta-btn,
-.carousel-arrow,
-.carousel-dot,
-.carousel-fav-btn,
-.yt-open-direct-btn,
-.gdp-back-btn,
-.gdp-fav-pill-btn,
-.gdp-delete-pill-btn,
-.card-delete-toggle,
-.favorite-toggle,
-.save-rig-input,
-.btn-save-confirm,
-.btn-save-cancel,
-.saved-rig-remove-btn,
-.popout-close-btn,
-.modal-close-btn,
-.steam-import-tab-btn,
-.spec-select,
-.upscaling-select,
-.sort-select,
-.header-add-pill-btn,
-.topbar-add-game-pill,
-.add-pill-kbd,
-.arc-command-bar,
-.arc-command-kbd,
-.arc-settings-btn,
-.arc-topbar-btn,
-.arc-home-btn,
-.arc-reset-btn,
-.arc-mobile-toggle-btn,
-.arc-mobile-search-btn,
-.search-input,
-.search-large-input,
-.search-clear-btn,
-.search-suggestion-pill,
-.category-chip,
-.filter-chip,
-.bottleneck-pill,
-.pill-gpu,
-.pill-cpu,
-.pill-balanced,
-.proton-pill,
-.footer-pill-tag,
-.igdb-store-badge,
-.rt-info-btn,
-.pt-info-btn,
-.stat-pill-badge,
-.carousel-stat-pill,
-.tag-pill,
-.badge,
-kbd {
-  border-radius: 999px !important;
-}
-
-/* Featured Carousel Container — unified, bug-free rounding */
-.game-carousel {
-  border-radius: 16px !important;
-  overflow: hidden !important;
-}
-
-.carousel-slide-backdrop,
-.carousel-slide-inner,
-.carousel-slide,
-.carousel-track,
-.carousel-container {
-  border-radius: inherit !important;
-  overflow: hidden !important;
-}
-
-/* Box Art in Carousel — brought back from pill to subtle authentic radius */
-.carousel-poster-card,
-.carousel-poster-img,
-.carousel-poster-skeleton {
-  border-radius: var(--radius-sm) !important; /* 6px */
-  overflow: hidden !important;
-}
-
-.carousel-fps-clean {
-  border-radius: 0 !important;
-}
-
-/* Containers, popouts, and modals — smoothly rounded */
-.gdp-section,
-.hltb-card,
-.detail-stat-card,
-.res-bar-track,
-.proton-box,
-.reqs-box,
-.rig-check-banner,
-.save-rig-inline-form,
-.saved-rig-card,
-.saved-rig-specs-pill,
-.profile-popout,
-.settings-popout-compact,
-#settings-popout,
-.yt-benchmark-card,
-.yt-embed-stage,
-.yt-iframe-box,
-.gdp-badges,
-.spec-badge,
-.rt-capability-badge,
-.steam-import-modal-inner,
-.modal-inner,
-.modal-box,
-.modal-dialog,
-.steamgrid-modal-inner,
-.search-modal-inner,
-.system-status-bar,
-.container {
-  border-radius: 20px !important;
-}
-
-/* Sidebar containers — strictly NOT rounded (flush square edges) */
-.arc-sidebar,
-.specs-sidebar {
-  border-radius: 0 !important;
-}
-
-/* Library Game Cards — smoothly rounded */
-.game-card {
-  border-radius: 18px !important;
-  overflow: hidden !important;
-}
-
-.game-card .card-poster-wrap,
-.game-card .card-poster,
-.game-card img {
-  border-top-left-radius: 17px !important;
-  border-top-right-radius: 17px !important;
-  border-bottom-left-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  overflow: hidden;
-}
-
-.gdp-thumb-wrap,
-.gdp-thumb {
-  border-radius: 12px !important;
-}
-
-/* ==========================================================================
-   IGDB Live Store Badge
-   ========================================================================== */
-.igdb-store-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px 4px 10px;
-  border-radius: 999px !important;
-  border: none !important;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 11px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  white-space: nowrap;
-  line-height: 1;
-}
-
-.igdb-store-badge:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border: none !important;
-  color: #ffffff;
-}
-
-/* ==========================================================================
-   IGDB Live Description / Summary Paragraph
-   ========================================================================== */
-.gdp-igdb-summary {
-  margin-top: 10px;
-  font-size: 12.5px;
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.65);
-  max-width: 540px;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* ==========================================================================
-   Save Rig at bottom — sidebar footer style
-   ========================================================================== */
-.specs-sidebar-footer {
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* ==========================================================================
-   Skeleton Loading Shimmer Design System
-   ========================================================================== */
-@keyframes skeletonShimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .skeleton-loading {
-  background: linear-gradient(90deg,
-      rgba(255, 255, 255, 0.04) 0%,
-      rgba(255, 255, 255, 0.12) 50%,
-      rgba(255, 255, 255, 0.04) 100%) !important;
-  background-size: 200% 100% !important;
-  animation: skeletonShimmer 1.5s infinite linear !important;
+  background: linear-gradient(110deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 [data-theme="catppuccin-mocha"] .skeleton-loading {
-  background: linear-gradient(90deg,
-      rgba(203, 166, 247, 0.06) 0%,
-      rgba(203, 166, 247, 0.18) 50%,
-      rgba(203, 166, 247, 0.06) 100%) !important;
-  background-size: 200% 100% !important;
+  background: linear-gradient(110deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* ==========================================================================
@@ -6626,46 +6114,529 @@ kbd {
   color: #cdd6f4 !important;
 }
 
-[data-theme="catppuccin-mocha"] .search-suggestion-pill {
-  background: rgba(49, 50, 68, 0.45) !important;
-  border-color: rgba(203, 166, 247, 0.2) !important;
-  color: #cdd6f4 !important;
+.card-delete-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50% !important;
+  background: rgba(14, 18, 28, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.7);
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="catppuccin-mocha"] .search-input {
-  background: rgba(30, 30, 46, 0.65) !important;
+.game-card:hover .card-delete-toggle,
+.card-delete-toggle:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.card-delete-toggle:hover {
+  background: rgba(239, 68, 68, 0.9);
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: #ffffff;
+}
+
+.gdp-delete-btn {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.gdp-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.28) !important;
+  color: #ff6b6b !important;
+  transform: translateX(2px);
+}
+
+.gdp-delete-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px !important;
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gdp-delete-pill-btn:hover {
+  background: rgba(239, 68, 68, 0.35);
+  border: none !important;
+  outline: none !important;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Game Card Deletion Animation
+   -------------------------------------------------------------------------- */
+.game-card.card-deleting {
+  pointer-events: none !important;
+  animation: card-delete-anim 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  z-index: 10 !important;
+}
+
+@keyframes card-delete-anim {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px);
+  }
+  30% {
+    opacity: 0.85;
+    transform: scale(0.96) translateY(-4px);
+    filter: blur(0.5px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.72) translateY(22px);
+    filter: blur(8px);
+  }
+}/* ==========================================================================
+   Command Palette Search Modal (Professional UI/UX)
+   ========================================================================== */
+.palette-overlay {
+  align-items: flex-start !important;
+  padding-top: 12vh;
+}
+
+.search-palette-box {
+  width: 100%;
+  max-width: 680px;
+  background: rgba(16, 18, 27, 0.7) !important;
+  backdrop-filter: blur(40px) saturate(1.8) brightness(1.2);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-palette-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.search-palette-icon {
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 14px;
+}
+
+.search-palette-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 500;
+  height: 64px;
+  outline: none;
+  font-family: inherit;
+}
+
+.search-palette-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.search-palette-clear-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-palette-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.search-palette-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.search-palette-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px 50px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.search-palette-empty-icon {
+  color: rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
+}
+
+.search-palette-empty h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.search-palette-empty p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 24px;
+  max-width: 300px;
+}
+
+.search-palette-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 500px;
+}
+
+.search-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 16px;
+}
+
+[data-theme="catppuccin-mocha"] .search-palette-box {
+  background: rgba(30, 30, 46, 0.7) !important;
   border-color: rgba(203, 166, 247, 0.25) !important;
-  color: #cdd6f4 !important;
+}
+.profile-popout *,
+.settings-popout-compact * {
+  border: none !important;
+  outline: none !important;
+}
+.profile-popout .popout-seg-btn.active {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-[data-theme="catppuccin-mocha"] .search-input:focus {
-  border-color: #cba6f7 !important;
-  box-shadow: 0 0 0 3px rgba(203, 166, 247, 0.2) !important;
+
+/* ==========================================================================
+   Inner Popup Container Glassmorphism
+   ========================================================================== */
+.detail-stat-card,
+.hltb-card,
+.reqs-box,
+.proton-box,
+.detail-fps-banner,
+.gdp-fps-banner,
+.res-bars-grid,
+.detail-tips-box {
+    background: rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: blur(12px) saturate(1.2) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(1.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 /* ==========================================================================
-   Preferences Dialog — No Borders in Any Containers or Buttons
+   Rounding Overrides
    ========================================================================== */
-#settings-popout,
-.profile-popout,
-.settings-popout-compact,
-.profile-popout *,
-.settings-popout-compact *,
-.popout-arrow,
-.popout-arrow::before,
-.popout-arrow::after {
-  border: none !important;
-  border-top: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  outline: none !important;
+[data-rounding="rectangle"] button,
+[data-rounding="rectangle"] .arc-command-bar,
+[data-rounding="rectangle"] .preset-chip,
+[data-rounding="rectangle"] .segmented-btn,
+[data-rounding="rectangle"] .saved-rig-card,
+[data-rounding="rectangle"] .brand-pill,
+[data-rounding="rectangle"] .game-card,
+[data-rounding="rectangle"] .carousel-container,
+[data-rounding="rectangle"] .carousel-slide-backdrop,
+[data-rounding="rectangle"] .spec-select,
+[data-rounding="rectangle"] .rt-info-tooltip,
+[data-rounding="rectangle"] .pt-info-tooltip,
+[data-rounding="rectangle"] .btn-primary,
+[data-rounding="rectangle"] .btn-secondary,
+[data-rounding="rectangle"] .btn-save-template,
+[data-rounding="rectangle"] .btn-save-confirm,
+[data-rounding="rectangle"] .btn-save-cancel,
+[data-rounding="rectangle"] .save-rig-input,
+[data-rounding="rectangle"] .arc-settings-btn,
+[data-rounding="rectangle"] .popout-seg-btn,
+[data-rounding="rectangle"] .switch-container,
+[data-rounding="rectangle"] .system-status-bar,
+[data-rounding="rectangle"] .search-input-wrap,
+[data-rounding="rectangle"] .search-input,
+[data-rounding="rectangle"] .search-palette-input,
+[data-rounding="rectangle"] .modal-box,
+[data-rounding="rectangle"] .detail-stat-card,
+[data-rounding="rectangle"] .hltb-card,
+[data-rounding="rectangle"] .reqs-box,
+[data-rounding="rectangle"] .proton-box,
+[data-rounding="rectangle"] .detail-fps-banner,
+[data-rounding="rectangle"] .gdp-fps-banner,
+[data-rounding="rectangle"] .res-bars-grid,
+[data-rounding="rectangle"] .detail-tips-box,
+[data-rounding="rectangle"] .search-suggestion-pill,
+[data-rounding="rectangle"] .profile-popout,
+[data-rounding="rectangle"] .settings-popout-compact,
+[data-rounding="rectangle"] .search-palette-box,
+[data-rounding="rectangle"] .carousel-stat-pill,
+[data-rounding="rectangle"] .carousel-fav-btn,
+[data-rounding="rectangle"] .carousel-poster-card,
+[data-rounding="rectangle"] .game-detail-tags,
+[data-rounding="rectangle"] .theme-card-option,
+[data-rounding="rectangle"] .gdp-back-btn,
+[data-rounding="rectangle"] .gdp-fav-pill-btn,
+[data-rounding="rectangle"] .gdp-delete-pill-btn {
+  border-radius: 8px !important;
 }
 
+[data-rounding="rectangle"] .switch-slider::before {
+  border-radius: 6px !important;
+}
+
+[data-rounding="rectangle"] .game-card-hover-actions,
+[data-rounding="rectangle"] .search-result-card {
+  border-radius: 8px !important;
+}
+
+[data-rounding="rectangle"] .tab-btn,
+[data-rounding="rectangle"] .game-tag,
+[data-rounding="rectangle"] .spec-badge {
+  border-radius: 6px !important;
+}
+
+[data-rounding="rectangle"] .component-square-box {
+  border-radius: 8px !important;
+}
+.game-card .card-poster-wrap {
+  border-radius: inherit;
+}
+.game-card .cover-art-container {
+  border-radius: inherit;
+}
+
+/* ==========================================================================
+   Splash Screen
+   ========================================================================== */
+.splash-screen-container {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 5, 10, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  gap: 16px;
+  transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+}
+
+.splash-fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* ==========================================================================
+   Ripple Effect
+   ========================================================================== */
+.ripple-active::after {
+  content: '';
+  position: absolute;
+  top: var(--ripple-y, 50%);
+  left: var(--ripple-x, 50%);
+  width: var(--ripple-size, 100px);
+  height: var(--ripple-size, 100px);
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 1;
+  pointer-events: none;
+  animation: ripple-anim 0.6s linear forwards;
+}
+
+@keyframes ripple-anim {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+button, .preset-chip, .game-card, .tab-btn, .segmented-btn, .saved-rig-card, .btn-primary, .btn-secondary {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.app-footer {
+  margin-top: auto;
+  background: rgba(15, 17, 26, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 40px 24px;
+  width: 100%;
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.footer-top-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 320px;
+}
+
+.footer-brand-title {
+  font-family: 'Chelsea Market', cursive;
+  font-size: 24px;
+  color: #fff;
+  margin: 0;
+}
+
+.footer-brand-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+}
+
+.footer-links-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.footer-links-group-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.footer-link {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-link:hover {
+  color: #ffffff;
+}
+
+.footer-separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  width: 100%;
+}
+
+.footer-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-disclaimer {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+
+/* ==========================================================================
+   Dropdown Glassmorphism
+   ========================================================================== */
+.spec-select,
+.sort-select {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.spec-select:hover,
+.sort-select:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.spec-select:focus,
+.sort-select:focus {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ==========================================================================
+   Preferences Dialog — Solid Black Popout
+   ========================================================================== */
 #settings-popout,
+#quickbuilds-popout,
 .profile-popout,
 .settings-popout-compact {
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8) !important;
+  background: #000000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+#settings-popout .popout-header,
+#settings-popout .popout-section,
+#settings-popout .popout-segmented-grid,
+#settings-popout .mini-toggle-row,
+#settings-popout .api-diag-card,
+#settings-popout .btn-clear-data,
+#quickbuilds-popout .popout-header,
+#quickbuilds-popout .popout-section,
+#quickbuilds-popout .popout-segmented-grid,
+#quickbuilds-popout .mini-toggle-row,
+#quickbuilds-popout .api-diag-card,
+#quickbuilds-popout .btn-clear-data {
+  background: #000000 !important;
 }
 
 .profile-popout .popout-seg-btn.active {

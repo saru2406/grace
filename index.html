@@ -8,9 +8,40 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chelsea+Market&family=Chakra+Petch:wght@600;700&family=Cinzel:wght@600;700;900&family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=Playfair+Display:wght@700;900&family=Rye&family=Silkscreen:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    body { background-color: #04050a; margin: 0; }
+    .initial-splash {
+      position: fixed; inset: 0; z-index: 999999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: rgba(4, 5, 10, 0.4); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); gap: 16px;
+    }
+    .initial-splash-brand {
+      font-family: 'Chelsea Market', cursive, system-ui;
+      font-size: 42px; color: #fff; letter-spacing: 1px; margin: 0;
+    }
+    .initial-spinner {
+      animation: mat-rotate 2s linear infinite; width: 28px; height: 28px;
+    }
+    .initial-spinner circle {
+      stroke: #ffffff; stroke-linecap: round; animation: mat-dash 1.5s ease-in-out infinite;
+    }
+    @keyframes mat-rotate { 100% { transform: rotate(360deg); } }
+    @keyframes mat-dash {
+      0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+      50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+      100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+    }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+  <div id="root">
+    <div class="initial-splash">
+      <h1 class="initial-splash-brand">Grace</h1>
+      <svg class="initial-spinner" viewBox="0 0 50 50">
+        <circle cx="25" cy="25" r="20" fill="none" stroke-width="6" />
+      </svg>
+    </div>
+  </div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

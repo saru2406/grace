@@ -392,10 +392,11 @@ export function SpecsSidebar({
       {/* Ray Tracing */}
       <div className={`spec-group ${showRtInfo ? 'has-rt-popup-open' : ''}`} style={showRtInfo ? { position: 'relative', zIndex: 1000 } : undefined}>
         <div className={`rt-toggle-wrapper ${!supportsRt ? 'rt-disabled-wrapper' : ''} ${showRtInfo ? 'popup-active' : ''}`} style={showRtInfo ? { position: 'relative', zIndex: 1000 } : undefined}>
-          <div
+          <label
             className={`switch-label ${!supportsRt ? 'disabled' : ''}`}
             onClick={(e) => {
               if (!supportsRt) {
+                e.preventDefault();
                 setShowRtInfo(prev => !prev);
               }
             }}
@@ -456,17 +457,18 @@ export function SpecsSidebar({
               />
               <span className="switch-slider"></span>
             </div>
-          </div>
+          </label>
         </div>
       </div>
 
       {/* Path Tracing */}
       <div className={`spec-group ${showPtInfo ? 'has-pt-popup-open' : ''}`} style={showPtInfo ? { position: 'relative', zIndex: 999 } : undefined}>
         <div className={`pt-toggle-wrapper ${!supportsPt ? 'pt-disabled-wrapper' : ''} ${showPtInfo ? 'popup-active' : ''}`} style={showPtInfo ? { position: 'relative', zIndex: 999 } : undefined}>
-          <div
+          <label
             className={`switch-label ${!supportsPt ? 'disabled' : ''}`}
             onClick={(e) => {
               if (!supportsPt) {
+                e.preventDefault();
                 setShowPtInfo(prev => !prev);
               }
             }}
@@ -527,7 +529,7 @@ export function SpecsSidebar({
               />
               <span className="switch-slider"></span>
             </div>
-          </div>
+          </label>
         </div>
       </div>
 

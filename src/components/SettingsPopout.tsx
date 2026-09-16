@@ -129,6 +129,26 @@ export function SettingsPopout({
                 </button>
               </div>
             </div>
+
+            <div className="mini-grid-row">
+              <span className="mini-grid-label">UI Rounding</span>
+              <div className="popout-segmented-grid two-up">
+                <button
+                  type="button"
+                  className={`popout-seg-btn ${userSettings.rounding !== 'pill' ? 'active' : ''}`}
+                  onClick={() => onUpdateSetting && onUpdateSetting('rounding', 'rectangle')}
+                >
+                  Rectangle
+                </button>
+                <button
+                  type="button"
+                  className={`popout-seg-btn ${userSettings.rounding === 'pill' ? 'active' : ''}`}
+                  onClick={() => onUpdateSetting && onUpdateSetting('rounding', 'pill')}
+                >
+                  Pill
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

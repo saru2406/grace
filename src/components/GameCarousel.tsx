@@ -150,9 +150,7 @@ export function GameCarousel({
       <div key={activeGame.id + '-' + slideDir} className={`carousel-content ${slideDir === 'next' ? 'carousel-slide-anim-next' : 'carousel-slide-anim-prev'}`}>
         {/* Left: Text Info */}
         <div className="carousel-left">
-          <div className="carousel-meta-row">
-            <span className="carousel-badge-featured">TRENDING</span>
-          </div>
+          <div className="carousel-meta-row" />
           {activeGame.logoUrl ? (
             <div className="carousel-logo-wrap">
               <img

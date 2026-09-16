@@ -13,6 +13,7 @@ import { SystemStatusBar } from './components/SystemStatusBar.jsx';
 import { GameCarousel } from './components/GameCarousel.jsx';
 import { GamesGrid } from './components/GamesGrid.jsx';
 import { Footer } from './components/Footer.jsx';
+import { SplashScreen } from './components/SplashScreen.jsx';
 import { GameDetailPageSkeleton } from './components/SkeletonLoader.jsx';
 
 // Code-split heavy modals and detail page for instant initial load
@@ -31,7 +32,8 @@ const DEFAULT_USER_SETTINGS = {
   targetFps: 60,
   fpsDetail: 'detailed',
   showBottlenecks: true,
-  ambientBlur: true
+  ambientBlur: true,
+  rounding: 'rectangle'
 };
 
 function isMobileUserAgent() {
@@ -45,7 +47,73 @@ function isSmallViewport() {
 }
 
 export function App() {
+  const [appLoading, setAppLoading] = useState(true);
+  const [isSplashFading, setIsSplashFading] = useState(false);
   const [isMobile, setIsMobile] = useState(() => isMobileUserAgent() || isSmallViewport());
+
+  useEffect(() => {
+    // Artificial delay to show splash screen and let everything load smoothly
+    const fadeTimer = setTimeout(() => {
+      setIsSplashFading(true);
+    }, 1200);
+    const removeTimer = setTimeout(() => {
+      setAppLoading(false);
+    }, 1500); // Wait for fade out animation
+    
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    const createRipple = (event: MouseEvent) => {
+      const el = (event.target as HTMLElement).closest('button, .preset-chip, .game-card, .tab-btn, .segmented-btn, .saved-rig-card, .btn-primary, .btn-secondary') as HTMLElement;
+      if (!el) return;
+
+      const rect = el.getBoundingClientRect();
+      const size = Math.max(el.clientWidth, el.clientHeight) * 2.5;
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      el.style.setProperty('--ripple-x', `${x}px`);
+      el.style.setProperty('--ripple-y', `${y}px`);
+      el.style.setProperty('--ripple-size', `${size}px`);
+
+      if (el.dataset.rippleTimeout) {
+        clearTimeout(Number(el.dataset.rippleTimeout));
+      }
+
+      let origPosition = el.dataset.origPosition;
+      if (!origPosition) {
+        origPosition = window.getComputedStyle(el).position;
+        el.dataset.origPosition = origPosition;
+      }
+
+      if (origPosition === 'static') {
+        el.style.position = 'relative';
+      }
+
+      el.classList.remove('ripple-active');
+      void el.offsetWidth; // Force reflow
+      el.classList.add('ripple-active');
+      
+      // Cleanup class after animation finishes
+      const timeoutId = window.setTimeout(() => {
+        el.classList.remove('ripple-active');
+        if (el.dataset.origPosition === 'static') {
+          el.style.position = '';
+        }
+        delete el.dataset.rippleTimeout;
+        delete el.dataset.origPosition;
+      }, 600);
+      
+      el.dataset.rippleTimeout = timeoutId.toString();
+    };
+
+    document.addEventListener('mousedown', createRipple);
+    return () => document.removeEventListener('mousedown', createRipple);
+  }, []);
 
   useEffect(() => {
     const updateMobileState = () => {
@@ -93,14 +161,14 @@ export function App() {
   const [detailWideBg, setDetailWideBg] = useState('');
   const [activeDetailGame, setActiveDetailGame] = useState(null);
 
-  // Dynamic theme attribute on root: Catppuccin Mocha for Homepage when selected, dark default otherwise
   useEffect(() => {
     if (userSettings.theme === 'catppuccin-mocha' && !activeDetailGame) {
       document.documentElement.setAttribute('data-theme', 'catppuccin-mocha');
     } else {
       document.documentElement.setAttribute('data-theme', 'dark');
     }
-  }, [userSettings.theme, activeDetailGame]);
+    document.documentElement.setAttribute('data-rounding', userSettings.rounding || 'rectangle');
+  }, [userSettings.theme, userSettings.rounding, activeDetailGame]);
 
 
   // Hardware Specs State
@@ -586,6 +654,7 @@ export function App() {
 
   return (
     <>
+      {appLoading && <SplashScreen isFadingOut={isSplashFading} />}
       <AmbientBackdrop bgUrl={currentAmbientBg} isActive={isAmbientActive} />
 
       <div className={`app-shell ${isMobile ? 'mobile-device' : ''}`}>

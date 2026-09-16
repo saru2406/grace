@@ -65,8 +65,6 @@ export function GpuVisual({ gpu }) {
           }
         }}
       />
-      <span className={`component-brand-tag ${brandClass}`}>{brand}</span>
-      <span className="component-wiki-badge" title="Source: Wikipedia / Wikimedia">W</span>
     </div>
   );
 }
@@ -127,8 +125,6 @@ export function CpuVisual({ cpu }) {
           }
         }}
       />
-      <span className={`component-brand-tag ${brandClass}`}>{brand}</span>
-      <span className="component-wiki-badge" title="Source: Wikipedia / Wikimedia">W</span>
     </div>
   );
 }
@@ -156,7 +152,6 @@ export function RamVisual({ ram }) {
         onLoad={() => setLoaded(true)}
         onError={() => setLoaded(true)}
       />
-      <span className="component-brand-tag brand-ram">{ram}GB</span>
     </div>
   );
 }

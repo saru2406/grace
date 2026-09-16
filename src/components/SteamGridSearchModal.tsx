@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ImageOff, X } from 'lucide-react';
+import { ImageOff, X, Search, Gamepad2 } from 'lucide-react';
 import { searchGames, getGameGrid } from '../services/steamGrid.js';
 
 export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery = '' }) {
@@ -57,93 +57,92 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
   return (
     <div
       id="steamgrid-search-modal"
-      className="modal-overlay open"
+      className="modal-overlay open palette-overlay"
       onClick={(e) => {
         if (e.target.classList.contains('modal-overlay')) onClose();
       }}
     >
-      <div className="modal-box modal-search">
-        <button
-          id="close-steamgrid-modal"
-          className="modal-close-btn"
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X size={16} />
-        </button>
-
-        <div className="modal-header">
-          <h2 className="modal-title">Add Any PC Game</h2>
-          <p className="modal-subtitle">Search and add titles directly from the Steam &amp; SteamGridDB catalog.</p>
-        </div>
-
-        <div className="search-bar-wrap" style={{ position: 'relative' }}>
+      <div className="modal-box search-palette-box">
+        <div className="search-palette-input-wrap">
+          <Search className="search-palette-icon" size={22} />
           <input
             type="text"
             id="steamgrid-live-input"
-            className="search-large-input"
-            placeholder="Search game title (e.g. Cyberpunk, Witcher, Helldivers, Silent Hill)..."
+            className="search-palette-input"
+            placeholder="Search for any PC game..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             ref={inputRef}
+            autoComplete="off"
+            spellCheck="false"
           />
           {query && (
             <button
               type="button"
-              className="search-clear-btn"
+              className="search-palette-clear-btn"
               onClick={() => setQuery('')}
-              style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }}
               aria-label="Clear input"
             >
-              <X size={14} />
+              <X size={18} />
             </button>
           )}
         </div>
 
-        <div id="steamgrid-search-results" className="search-results-grid">
-          {loading && Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="search-result-card skeleton-card-placeholder" aria-hidden="true">
-              <div style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.06)' }} className="skeleton-loading" />
-              <div className="search-result-title" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div className="skeleton-loading" style={{ height: '14px', width: '80%', borderRadius: '4px' }} />
-                <div className="skeleton-loading" style={{ height: '10px', width: '40%', borderRadius: '3px' }} />
-              </div>
+        <div className="search-palette-content">
+          {loading && (
+            <div className="search-palette-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="search-result-card skeleton-card-placeholder" aria-hidden="true">
+                  <div style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.06)' }} className="skeleton-loading" />
+                  <div className="search-result-title" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div className="skeleton-loading" style={{ height: '14px', width: '80%', borderRadius: '4px' }} />
+                    <div className="skeleton-loading" style={{ height: '10px', width: '40%', borderRadius: '3px' }} />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+
           {!loading && query.trim().length < 1 && (
-            <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '24px 16px' }}>
-              <p style={{ color: 'var(--ctp-subtext1)', marginBottom: '14px', fontSize: '13px' }}>
-                Start typing to search the global PC games database, or pick a popular title:
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', maxWidth: '640px', margin: '0 auto' }}>
-                {['Cyberpunk 2077', 'Resident Evil 4', 'Counter-Strike 2', 'Grand Theft Auto V', 'Elden Ring', 'Minecraft', 'The Witcher 3', 'Helldivers 2', 'Black Myth: Wukong', 'Space Marine 2'].map(s => (
+            <div className="search-palette-empty">
+              <Gamepad2 size={48} className="search-palette-empty-icon" />
+              <h3>Find Your Game</h3>
+              <p>Type a game name to search the global PC games database.</p>
+              
+              <div className="search-palette-suggestions">
+                {['Cyberpunk 2077', 'Helldivers 2', 'Elden Ring', 'Black Myth: Wukong', 'Space Marine 2'].map(s => (
                   <button
                     key={s}
                     type="button"
                     className="search-suggestion-pill"
                     onClick={() => setQuery(s)}
                   >
-                    + {s}
+                    {s}
                   </button>
                 ))}
               </div>
             </div>
           )}
+
           {!loading && query.trim().length >= 1 && results.length === 0 && (
-            <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '24px 16px' }}>
-              <p style={{ color: 'var(--ctp-subtext1)', marginBottom: '10px' }}>
-                No games found matching "{query}". Try checking the spelling or use another keyword.
-              </p>
+            <div className="search-palette-empty">
+              <Search size={48} className="search-palette-empty-icon" />
+              <h3>No Results</h3>
+              <p>We couldn't find any games matching "{query}".</p>
             </div>
           )}
-          {!loading && results.slice(0, 16).map((item) => (
-            <SearchResultCard
-              key={item.id}
-              item={item}
-              onSelect={() => onAddGame(item)}
-            />
-          ))}
+
+          {!loading && results.length > 0 && (
+            <div className="search-palette-grid">
+              {results.slice(0, 16).map((item) => (
+                <SearchResultCard
+                  key={item.id}
+                  item={item}
+                  onSelect={() => onAddGame(item)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
