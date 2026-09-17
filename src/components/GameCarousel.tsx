@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowRight, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { GAME_METADATA } from "../data/gameMetadata.js";
 import { getGameWideCover, getGameHero } from "../services/steamGrid.js";
 import { getSystemPeriod, getGameTrendingScore } from "../services/systemTrending.js";
 import { DEFAULT_PLACEHOLDER_COVER } from "../services/gameAssets.js";
 import { calculateFps } from "../services/fpsEngine.js";
+import { triggerHeartBurst } from "../utils/heartBurst.js";
 
 export function GameCarousel({
   games,
@@ -166,20 +167,6 @@ export function GameCarousel({
             <h2 className="carousel-title">{activeGame.title}</h2>
           )}
           <p className="carousel-desc">{activeGame.description}</p>
-          <div className="carousel-stats-strip">
-            <div className="carousel-stat-pill"><span className="carousel-stat-lbl">METASCORE</span><span className="carousel-stat-num">{metadata.metacritic}</span></div>
-            {metadata.steamRating && (
-              <div className="carousel-stat-pill">
-                <span className="carousel-stat-lbl">STEAM</span>
-                <span className="carousel-stat-num" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                  <Star size={11} fill="currentColor" />
-                  {metadata.steamRating}
-                </span>
-              </div>
-            )}
-            <div className={"carousel-stat-pill" + (isBorked ? " stat-borked" : "")}><span className="carousel-stat-lbl">PROTON</span><span className="carousel-stat-num">{protonTier}</span></div>
-            {metadata.hltb?.main > 0 && <div className="carousel-stat-pill"><span className="carousel-stat-lbl">CAMPAIGN</span><span className="carousel-stat-num">{metadata.hltb.main}h</span></div>}
-          </div>
           <div className="carousel-action-row">
             <button type="button" className="carousel-cta-btn" onClick={() => onSelectGame(activeGame)}>
               <ArrowRight size={15} strokeWidth={2.5} />
@@ -191,11 +178,12 @@ export function GameCarousel({
                 className={`carousel-fav-btn ${favoriteIds.includes(activeGame.id) ? "active" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  triggerHeartBurst(e.currentTarget);
                   onToggleFavorite(activeGame.id);
                 }}
                 title={favoriteIds.includes(activeGame.id) ? `Remove ${activeGame.title} from favourites` : `Add ${activeGame.title} to favourites`}
               >
-                <Star size={14} fill={favoriteIds.includes(activeGame.id) ? "currentColor" : "none"} strokeWidth={favoriteIds.includes(activeGame.id) ? 2.5 : 2} />
+                <Heart className="fav-icon" size={14} fill={favoriteIds.includes(activeGame.id) ? "currentColor" : "none"} strokeWidth={favoriteIds.includes(activeGame.id) ? 2.5 : 2} />
                 <span>{favoriteIds.includes(activeGame.id) ? "Favourited" : "Favourite"}</span>
               </button>
             )}
@@ -269,11 +257,12 @@ export function GameCarousel({
                 className={`favorite-toggle ${favoriteIds.includes(activeGame.id) ? "active" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  triggerHeartBurst(e.currentTarget);
                   onToggleFavorite(activeGame.id);
                 }}
                 title={favoriteIds.includes(activeGame.id) ? `Remove ${activeGame.title} from favourites` : `Add ${activeGame.title} to favourites`}
               >
-                <Star
+                <Heart
                   size={14}
                   className="fav-icon"
                   fill={favoriteIds.includes(activeGame.id) ? "currentColor" : "none"}

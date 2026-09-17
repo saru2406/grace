@@ -4,6 +4,7 @@ export interface DetectedHardware {
   // Raw readings
   rawResolution: string;
   rawGpu: string;
+  gpuDetectionReliable: boolean;
   rawCpu: string;
   rawRam: string;
   
@@ -45,7 +46,7 @@ function detectResolution(): { raw: string; matched: '1080p' | '1440p' | '4k' } 
 /**
  * Extracts GPU model from WebGL unmasked renderer and matches with GPUS list.
  */
-function detectGpu(): { raw: string; matched: typeof GPUS[0] } {
+function detectGpu(): { raw: string; matched: typeof GPUS[0]; reliable: boolean } {
   let renderer = '';
   let vendor = '';
 
@@ -79,6 +80,26 @@ function detectGpu(): { raw: string; matched: typeof GPUS[0] } {
 
   const raw = cleanRenderer || 'Standard Display Adapter';
   const lowerRaw = (raw + ' ' + vendor).toLowerCase();
+
+  // Browsers may hide the physical adapter behind a software renderer.
+  // Such a string cannot be mapped to a real GPU without guessing.
+  const isSoftwareRenderer = /swiftshader|llvmpipe|software renderer|microsoft basic render|mesa offscreen|generic graphics|standard display/i.test(lowerRaw);
+
+  // Prefer an exact model token before the weighted fallback matcher. This
+  // avoids similar cards winning just because they share a series number.
+  if (!isSoftwareRenderer) {
+    const exactMatches = GPUS.filter((gpu) => {
+      const model = gpu.name
+        .replace(/\([^)]*\)/g, '')
+        .replace(/\b(?:nvidia|geforce|amd|radeon|intel|graphics)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return model.length > 2 && lowerRaw.includes(model.toLowerCase());
+    });
+    if (exactMatches.length > 0) {
+      return { raw, matched: exactMatches[0], reliable: true };
+    }
+  }
 
   // Find best GPU match
   let bestMatch: typeof GPUS[0] = GPUS[0];
@@ -146,7 +167,7 @@ function detectGpu(): { raw: string; matched: typeof GPUS[0] } {
     }
   }
 
-  return { raw, matched: bestMatch };
+  return { raw, matched: bestMatch, reliable: !isSoftwareRenderer && highestScore >= 40 };
 }
 
 /**
@@ -245,6 +266,7 @@ export async function detectSystemHardware(onProgress?: (step: string) => void):
   return {
     rawResolution: res.raw,
     rawGpu: gpu.raw,
+    gpuDetectionReliable: gpu.reliable,
     rawCpu: cpu.raw,
     rawRam: ram.raw,
     matchedResolution: res.matched,

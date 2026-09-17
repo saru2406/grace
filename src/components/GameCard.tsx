@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Star, Trash2 } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 import { DEFAULT_PLACEHOLDER_COVER } from '../services/gameAssets.js';
+import { triggerHeartBurst } from '../utils/heartBurst.js';
 
 export function GameCard({
   item,
@@ -99,10 +100,11 @@ export function GameCard({
             title={isFavorite ? `Remove from favourites` : `Add to favourites`}
             onClick={(e) => {
               e.stopPropagation();
+              triggerHeartBurst(e.currentTarget);
               onToggleFavorite(game.id);
             }}
           >
-            <Star
+            <Heart
               size={14}
               className="fav-icon"
               fill={isFavorite ? "currentColor" : "none"}

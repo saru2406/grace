@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  ChevronLeft, Star, Trash2, Clock, Monitor, Cpu, HardDrive, MemoryStick,
+  ChevronLeft, Heart, Star, Trash2, Clock, Monitor, Cpu, HardDrive, MemoryStick,
   Gauge, Zap, Activity, Layers, AlertTriangle, CheckCircle, XCircle, Info, Shield, ExternalLink
 } from "lucide-react";
 import { calculateFps, calculateResolutionComparison } from "../services/fpsEngine.js";
@@ -8,6 +8,7 @@ import { getGameHero, getGameWideCover, getGameLogo } from "../services/steamGri
 import { getGameMetadata, getGameReleaseInfo } from "../data/gameMetadata.js";
 import { DEFAULT_PLACEHOLDER_COVER } from "../services/gameAssets.js";
 import { enrichSingleGame } from "../services/igdb.js";
+import { triggerHeartBurst } from "../utils/heartBurst.js";
 
 export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscaling, rayTracing, pathTracing, isFavorite, onToggleFavorite, onDeleteGame, onBack, onWideArtChange, onSelectResolution }) {
   const [heroUrl, setHeroUrl] = useState("");
@@ -143,10 +144,13 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
           <button
             type="button"
             className={`gdp-fav-pill-btn ${isFavorite ? "active" : ""}`}
-            onClick={onToggleFavorite}
+            onClick={(e) => {
+              triggerHeartBurst(e.currentTarget);
+              onToggleFavorite();
+            }}
             title={isFavorite ? `Remove ${game.title} from favourites` : `Add ${game.title} to favourites`}
           >
-            <Star size={13} fill={isFavorite ? "currentColor" : "none"} strokeWidth={isFavorite ? 2.5 : 2} />
+            <Heart className="fav-icon" size={13} fill={isFavorite ? "currentColor" : "none"} strokeWidth={isFavorite ? 2.5 : 2} />
             <span>{isFavorite ? "Favourited" : "Favourite"}</span>
           </button>
         )}

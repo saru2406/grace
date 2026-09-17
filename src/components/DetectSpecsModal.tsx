@@ -172,6 +172,11 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
                     );
                   })}
                 </select>
+                {detected && !detected.gpuDetectionReliable && (
+                  <p className="detect-field-hint">
+                    Your browser hid the physical adapter ({detected.rawGpu}). Please verify this selection manually.
+                  </p>
+                )}
               </div>
 
               {/* Processor (CPU) */}
