@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ImageOff, X, Search, Gamepad2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { ImageOff, X, Search, Gamepad2, Loader2 } from 'lucide-react';
 import { searchGames, getGameGrid } from '../services/steamGrid.js';
 
 export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery = '' }) {
@@ -54,15 +55,19 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
       id="steamgrid-search-modal"
-      className="modal-overlay open palette-overlay"
-      onClick={(e) => {
-        if (e.target.classList.contains('modal-overlay')) onClose();
-      }}
+      className="search-palette-backdrop"
+      onClick={onClose}
     >
-      <div className="modal-box search-palette-box">
+      <div
+        className="search-palette-box"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="search-palette-inner">
         <div className="search-palette-input-wrap">
           <Search className="search-palette-icon" size={22} />
           <input
@@ -144,8 +149,10 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
             </div>
           )}
         </div>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -153,6 +160,17 @@ function SearchResultCard({ item, onSelect }) {
   const initialThumb = item.thumb || item.url || item.coverUrl || null;
   const [thumb, setThumb] = useState(initialThumb);
   const [isLoading, setIsLoading] = useState(!initialThumb);
+  const [isActivating, setIsActivating] = useState(false);
+
+  const handleSelect = async () => {
+    if (isActivating) return;
+    setIsActivating(true);
+    try {
+      await onSelect();
+    } finally {
+      setIsActivating(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -184,14 +202,14 @@ function SearchResultCard({ item, onSelect }) {
 
   return (
     <div
-      className="search-result-card"
+      className={`search-result-card ${isActivating ? 'activating' : ''}`}
       tabIndex={0}
       role="button"
-      onClick={onSelect}
+      onClick={handleSelect}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onSelect();
+          handleSelect();
         }
       }}
       title={`Click to add ${item.name} to your library`}
@@ -214,9 +232,25 @@ function SearchResultCard({ item, onSelect }) {
           />
         )}
       </div>
-      <div className="search-result-title" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <div className="search-result-title" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
-        {releaseYear && <span style={{ fontSize: '10px', color: 'var(--ctp-subtext0)' }}>{releaseYear}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+          {releaseYear && <span style={{ fontSize: '10px', color: 'var(--ctp-subtext0)' }}>{releaseYear}</span>}
+          {Array.isArray(item.types) && item.types.length > 0 && (
+            <span style={{
+              fontSize: '9px',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              color: 'rgba(255, 255, 255, 0.65)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              padding: '1px 5px',
+              borderRadius: '4px',
+              textTransform: 'uppercase'
+            }}>
+              {item.types.slice(0, 2).map(t => t === 'egs' ? 'Epic' : t).join(' • ')}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

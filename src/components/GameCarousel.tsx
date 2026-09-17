@@ -14,7 +14,8 @@ export function GameCarousel({
   onSelectGame,
   onActiveGameChange,
   onToggleFavorite,
-  favoriteIds = []
+  favoriteIds = [],
+  transitioningGameId = null
 }) {
   const systemPeriod = React.useMemo(() => getSystemPeriod(), []);
 
@@ -136,9 +137,9 @@ export function GameCarousel({
             onLoad={() => setLoadedWideArtUrl(wideArtUrl)}
             onError={(e) => {
               setLoadedWideArtUrl(wideArtUrl);
-              if (activeGame?.coverUrl && e.target.src !== activeGame.coverUrl) {
-                e.target.onerror = null;
-                e.target.src = activeGame.coverUrl;
+              if (activeGame?.coverUrl && e.currentTarget.src !== activeGame.coverUrl) {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = activeGame.coverUrl;
               }
             }}
           />
@@ -250,9 +251,10 @@ export function GameCarousel({
           {/* Portrait box art card */}
           <div
             className="carousel-poster-card"
+            style={{ viewTransitionName: transitioningGameId === activeGame?.id ? 'game-cover' : 'none' }}
             role="button"
             tabIndex={0}
-            aria-label={`View details for ${activeGame.title}`}
+            aria-label={`View details for ${activeGame?.title}`}
             onClick={() => onSelectGame(activeGame)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -295,8 +297,8 @@ export function GameCarousel({
               onLoad={() => setLoadedBoxGameId(activeGame.id)}
               onError={(e) => {
                 setLoadedBoxGameId(activeGame.id);
-                e.target.onerror = null;
-                e.target.src = DEFAULT_PLACEHOLDER_COVER;
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = DEFAULT_PLACEHOLDER_COVER;
               }}
             />
             <div className="carousel-poster-hover-hint">View Details</div>

@@ -14,7 +14,8 @@ export function GameCard({
   isFavorite = false,
   fpsDetail = 'detailed',
   showBottlenecks = true,
-  targetFps = 60
+  targetFps = 60,
+  transitioningGameId = null
 }) {
   const [loaded, setLoaded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,7 +69,10 @@ export function GameCard({
         }
       }}
     >
-      <div className={`card-poster-wrap ${!loaded ? 'skeleton-loading' : ''}`}>
+      <div 
+        className={`card-poster-wrap ${!loaded ? 'skeleton-loading' : ''}`}
+        style={{ viewTransitionName: transitioningGameId === game.id ? 'game-cover' : 'none' }}
+      >
         <img
           className="card-poster"
           src={game.coverUrl || DEFAULT_PLACEHOLDER_COVER}
@@ -83,8 +87,8 @@ export function GameCard({
           onLoad={() => setLoaded(true)}
           onError={(e) => {
             setLoaded(true);
-            e.target.onerror = null;
-            e.target.src = DEFAULT_PLACEHOLDER_COVER;
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = DEFAULT_PLACEHOLDER_COVER;
           }}
         />
         <div className="card-top-actions">

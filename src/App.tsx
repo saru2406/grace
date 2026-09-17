@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, useDeferredValue } from 'react';
+import { flushSync } from 'react-dom';
 import { PanelLeft, Plus } from 'lucide-react';
 import { GPUS, CPUS, SYSTEM_PRESETS } from './data/hardware.js';
 import { DEFAULT_GAMES } from './data/games.js';
@@ -58,7 +59,7 @@ export function App() {
     }, 1200);
     const removeTimer = setTimeout(() => {
       setAppLoading(false);
-    }, 1500); // Wait for fade out animation
+    }, 2500); // Wait for 1.2s fade out animation
     
     return () => {
       clearTimeout(fadeTimer);
@@ -160,6 +161,8 @@ export function App() {
   );
   const [detailWideBg, setDetailWideBg] = useState('');
   const [activeDetailGame, setActiveDetailGame] = useState(null);
+  const [transitioningGameId, setTransitioningGameId] = useState(null);
+
 
   useEffect(() => {
     if (userSettings.theme === 'catppuccin-mocha' && !activeDetailGame) {
@@ -619,20 +622,46 @@ export function App() {
       (game.steamAppId
         ? `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${game.steamAppId}/library_hero.jpg`
         : game.coverUrl);
-    setDetailWideBg(initialWide || game.coverUrl || '');
-    setActiveDetailGame(game);
-    // Scroll viewport immediately to top state for the game detail view
-    window.scrollTo({ top: 0, behavior: 'instant' });
+
+    if (document.startViewTransition) {
+      flushSync(() => {
+        setTransitioningGameId(game.id);
+      });
+      document.startViewTransition(() => {
+        flushSync(() => {
+          setDetailWideBg(initialWide || game.coverUrl || '');
+          setActiveDetailGame(game);
+        });
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }).finished.finally(() => {
+        setTransitioningGameId(null);
+      });
+    } else {
+      setDetailWideBg(initialWide || game.coverUrl || '');
+      setActiveDetailGame(game);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }, []);
 
   const handleBackToLibrary = useCallback(() => {
-    setActiveDetailGame(null);
-    setDetailWideBg('');
     const savedY = libraryScrollPosRef.current || 0;
-    // Restore exact scroll position on the next animation frame after library DOM renders
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: savedY, behavior: 'instant' });
-    });
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        flushSync(() => {
+          setActiveDetailGame(null);
+          setDetailWideBg('');
+        });
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: savedY, behavior: 'instant' });
+        });
+      });
+    } else {
+      setActiveDetailGame(null);
+      setDetailWideBg('');
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: savedY, behavior: 'instant' });
+      });
+    }
   }, []);
 
   const handleResetAllData = useCallback(() => {
@@ -710,6 +739,19 @@ export function App() {
           onSetCpuBrandFilter={setCpuBrandFilter}
           onResetSpecs={handleResetSpecs}
           onApplyPreset={handleApplyPreset}
+          onApplyDetectedSpecs={(detected) => {
+            setSpecs(prev => ({
+              ...prev,
+              resolution: detected.resolution,
+              gpu: detected.gpu,
+              cpu: detected.cpu,
+              ram: detected.ram,
+              rayTracing: (detected.gpu && detected.gpu.rtScore > 0) ? prev.rayTracing : false,
+              pathTracing: (detected.gpu && detected.gpu.rtScore >= 60) ? prev.pathTracing : false
+            }));
+            if (detected.gpu) setGpuBrandFilter('all');
+            if (detected.cpu) setCpuBrandFilter('all');
+          }}
           savedRigTemplates={savedRigTemplates}
           onSaveRigTemplate={handleSaveRigTemplate}
           onDeleteRigTemplate={handleDeleteRigTemplate}
@@ -763,6 +805,7 @@ export function App() {
                   onDeleteGame={handleDeleteGame}
                   onBack={handleBackToLibrary}
                   onWideArtChange={handleWideArtChange}
+                  onSelectResolution={(res) => setSpecs(prev => ({ ...prev, resolution: res }))}
                 />
               </React.Suspense>
             ) : (
@@ -775,6 +818,7 @@ export function App() {
                   onSelectGame={handleSelectGame}
                   onToggleFavorite={handleToggleFavorite}
                   favoriteIds={favoriteGameIds}
+                  transitioningGameId={transitioningGameId}
                   onActiveGameChange={(game, artUrl) => {
                     const bg = artUrl || game?.heroUrl || game?.wideCoverUrl || game?.coverUrl;
                     if (bg) setCarouselBg(bg);
@@ -798,6 +842,7 @@ export function App() {
                   onSelectGame={handleSelectGame}
                   onToggleFavorite={handleToggleFavorite}
                   onDeleteGame={handleDeleteGame}
+                  transitioningGameId={transitioningGameId}
                   favoriteIds={favoriteGameIds}
                   onOpenSearchModal={(q) => {
                     setSteamGridSearchInitialQuery(q || '');

@@ -67,15 +67,60 @@ function searchLocalCatalog(query) {
   }));
 }
 
+export const OFFICIAL_PC_STORES = new Set([
+  'steam',
+  'gog',
+  'egs',
+  'origin',
+  'ea',
+  'uplay',
+  'ubisoft',
+  'bnet',
+  'battlenet',
+  'xbox',
+  'microsoft'
+]);
+
 /**
- * Search games by query term
+ * Validates that a game is an official PC release available on legitimate PC stores
+ * (Steam, GOG, Epic Games Store, EA, Ubisoft, Battle.net, Xbox/PC Game Pass)
+ * and eliminates console-only titles (PS1/2/3/4/5, Xbox 360, GameCube, N64, Switch eShop only, etc.)
+ */
+export function isOfficialPcGame(item) {
+  if (!item) return false;
+
+  // Curated catalog or explicit Steam App ID
+  if (item.steamAppId) return true;
+
+  // Check official PC store types from SteamGridDB
+  if (Array.isArray(item.types) && item.types.length > 0) {
+    return item.types.some(t => OFFICIAL_PC_STORES.has(String(t).toLowerCase()));
+  }
+
+  return false;
+}
+
+function isValidSteamStoreApp(item) {
+  if (!item || !item.name) return false;
+  const name = item.name.toLowerCase();
+  const excluded = [
+    'soundtrack', 'artbook', 'season pass', 'expansion pack',
+    'deluxe upgrade', 'dlc', 'costume', 'character pack', 'edition upgrade',
+    'dedicated server'
+  ];
+  if (excluded.some(kw => name.includes(kw))) return false;
+  return true;
+}
+
+/**
+ * Search games by query term (Official PC store releases only)
  */
 export async function searchGames(query) {
   if (!query || query.trim().length < 1) return [];
   const rawQ = query.trim().toLowerCase();
   const endpoint = `/search/autocomplete/${encodeURIComponent(query.trim())}`;
   const response = await fetchSteamGrid(endpoint);
-  let results = (response && response.success && Array.isArray(response.data)) ? response.data : [];
+  let rawResults = (response && response.success && Array.isArray(response.data)) ? response.data : [];
 
   // Alias lookup to assist global search for common shorthand like "re", "re9", "mc", "cs"
   const aliases = {
@@ -113,17 +158,20 @@ export async function searchGames(query) {
       const aliasEndpoint = `/search/autocomplete/${encodeURIComponent(aliases[rawQ])}`;
       const aliasRes = await fetchSteamGrid(aliasEndpoint);
       if (aliasRes && aliasRes.success && Array.isArray(aliasRes.data)) {
-        const seen = new Set(results.map(r => r.id));
+        const seen = new Set(rawResults.map(r => r.id));
         const aliasItems = aliasRes.data.filter(r => !seen.has(r.id));
-        results = [...aliasItems, ...results];
+        rawResults = [...aliasItems, ...rawResults];
       }
     } catch (err) {
       console.warn('Alias search fallback error:', err);
     }
   }
 
-  // Fallback 1: Steam store API via serverless / local proxy
-  if (results.length === 0) {
+  // Filter out any entries that are not official PC releases in official stores (Steam, GOG, Epic, etc.)
+  let results = rawResults.filter(isOfficialPcGame);
+
+  // If fewer than 4 verified PC results, query official Steam Store to find verified PC games
+  if (results.length < 4) {
     const searchTerm = aliases[rawQ] || query.trim();
     try {
       const storeRes = await fetch(`/api/steam-store-search?term=${encodeURIComponent(searchTerm)}`);
@@ -132,15 +180,24 @@ export async function searchGames(query) {
         if (contentType.includes('application/json')) {
           const storeData = await storeRes.json();
           if (storeData && Array.isArray(storeData.items) && storeData.items.length > 0) {
-            results = storeData.items.map(item => ({
-              id: item.id,
-              steamAppId: item.id,
-              name: item.name,
-              thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
-              url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
-              heroUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_hero.jpg`,
-              wideCoverUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`
-            }));
+            const seenNames = new Set(results.map(r => r.name.toLowerCase()));
+            for (const item of storeData.items) {
+              if (!isValidSteamStoreApp(item)) continue;
+              const nLower = item.name.toLowerCase();
+              if (!seenNames.has(nLower)) {
+                seenNames.add(nLower);
+                results.push({
+                  id: item.id,
+                  steamAppId: item.id,
+                  name: item.name,
+                  types: ['steam'],
+                  thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+                  url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+                  heroUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_hero.jpg`,
+                  wideCoverUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`
+                });
+              }
+            }
           }
         }
       }
@@ -148,8 +205,8 @@ export async function searchGames(query) {
       console.warn('Steam store search proxy failed:', e);
     }
 
-    // Fallback 2: Direct Steam store search via public CORS proxy (in case /api function is unreachable)
-    if (results.length === 0) {
+    // Direct Steam store search via public CORS proxy fallback
+    if (results.length < 4) {
       try {
         const directUrl = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(searchTerm)}&l=english&cc=US`;
         const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`;
@@ -157,15 +214,24 @@ export async function searchGames(query) {
         if (corsRes.ok) {
           const storeData = await corsRes.json();
           if (storeData && Array.isArray(storeData.items) && storeData.items.length > 0) {
-            results = storeData.items.map(item => ({
-              id: item.id,
-              steamAppId: item.id,
-              name: item.name,
-              thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
-              url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
-              heroUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_hero.jpg`,
-              wideCoverUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`
-            }));
+            const seenNames = new Set(results.map(r => r.name.toLowerCase()));
+            for (const item of storeData.items) {
+              if (!isValidSteamStoreApp(item)) continue;
+              const nLower = item.name.toLowerCase();
+              if (!seenNames.has(nLower)) {
+                seenNames.add(nLower);
+                results.push({
+                  id: item.id,
+                  steamAppId: item.id,
+                  name: item.name,
+                  types: ['steam'],
+                  thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+                  url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900.jpg`,
+                  heroUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_hero.jpg`,
+                  wideCoverUrl: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`
+                });
+              }
+            }
           }
         }
       } catch (corsErr) {
@@ -173,7 +239,7 @@ export async function searchGames(query) {
       }
     }
 
-    // Fallback 3: Local Curated Games Catalog (Always available even completely offline)
+    // Local Curated Games Catalog fallback (all games are verified PC games)
     if (results.length === 0) {
       const localMatches = searchLocalCatalog(searchTerm);
       if (localMatches.length > 0) {

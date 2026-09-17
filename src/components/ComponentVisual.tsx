@@ -60,8 +60,8 @@ export function GpuVisual({ gpu }) {
         onLoad={() => setLoaded(true)}
         onError={(e) => {
           setLoaded(true);
-          if (e.target.src !== fallbackImg) {
-            e.target.src = fallbackImg;
+          if (e.currentTarget.src !== fallbackImg) {
+            e.currentTarget.src = fallbackImg;
           }
         }}
       />
@@ -120,8 +120,8 @@ export function CpuVisual({ cpu }) {
         onLoad={() => setLoaded(true)}
         onError={(e) => {
           setLoaded(true);
-          if (e.target.src !== fallbackImg) {
-            e.target.src = fallbackImg;
+          if (e.currentTarget.src !== fallbackImg) {
+            e.currentTarget.src = fallbackImg;
           }
         }}
       />

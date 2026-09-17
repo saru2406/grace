@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Zap, X } from 'lucide-react';
 import { SYSTEM_PRESETS } from '../data/hardware.js';
 
@@ -10,6 +11,7 @@ export function QuickBuildsPopout({
   onApplyPreset
 }) {
   const popoutRef = useRef(null);
+  const [anchor, setAnchor] = useState({ top: 24, left: 24 });
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -38,11 +40,34 @@ export function QuickBuildsPopout({
     };
   }, [isOpen, onClose]);
 
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const place = () => {
+      const btn = document.getElementById('open-quickbuilds-btn');
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      setAnchor({ top: Math.max(12, r.top - 8), left: r.right + 14 });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  return (
-    <div id="quickbuilds-popout" className="profile-popout settings-popout-compact" ref={popoutRef}>
-      <div className="popout-arrow"></div>
+  return createPortal(
+    <div className="profile-popout-layer">
+    <div
+      id="quickbuilds-popout"
+      className="profile-popout settings-popout-compact"
+      ref={popoutRef}
+      style={{ top: anchor.top, left: anchor.left }}
+    >
+      <div className="profile-popout-inner">
       <div className="popout-scroll-container">
         <div className="popout-header">
           <div className="popout-header-main">
@@ -86,6 +111,9 @@ export function QuickBuildsPopout({
           </div>
         </div>
       </div>
+      </div>
     </div>
+    </div>,
+    document.body
   );
 }

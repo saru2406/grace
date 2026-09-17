@@ -6,12 +6,14 @@ import {
   Cpu,
   X,
   Save,
-  Info
+  Info,
+  MonitorCheck
 } from 'lucide-react';
 import { GPUS, CPUS, RAM_OPTIONS, SYSTEM_PRESETS } from '../data/hardware.js';
 import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual.jsx';
 import { SettingsPopout } from './SettingsPopout.jsx';
 import { QuickBuildsPopout } from './QuickBuildsPopout.jsx';
+import { DetectSpecsModal } from './DetectSpecsModal.jsx';
 
 export function ArcSidebar({
   // Navigation & Header props
@@ -50,6 +52,7 @@ export function ArcSidebar({
   onSetCpuBrandFilter,
   onResetSpecs,
   onApplyPreset,
+  onApplyDetectedSpecs,
   onSaveRigTemplate,
   onDeleteRigTemplate,
 
@@ -66,6 +69,7 @@ export function ArcSidebar({
   const [showRtInfo, setShowRtInfo] = useState(false);
   const [showPtInfo, setShowPtInfo] = useState(false);
   const [isQuickBuildsOpen, setIsQuickBuildsOpen] = useState(false);
+  const [isDetectModalOpen, setIsDetectModalOpen] = useState(false);
   const saveInputRef = useRef(null);
 
   const canSave = Boolean(gpu && cpu && ram);
@@ -314,6 +318,27 @@ export function ArcSidebar({
               cpu={cpu}
               onApplyPreset={onApplyPreset}
             />
+          </div>
+
+          <div className="profile-popout-wrapper" style={{ width: '100%' }}>
+            <button
+              id="open-detect-specs-btn"
+              className="arc-settings-btn"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isPopoutOpen) onClosePopout();
+                setIsQuickBuildsOpen(false);
+                setIsDetectModalOpen(true);
+              }}
+              title="Detect My PC Specs"
+              aria-label="Detect My PC Specs"
+            >
+              <MonitorCheck size={15} strokeWidth={2} />
+              <span className="arc-settings-btn-text">
+                Detect My PC Specs
+              </span>
+            </button>
           </div>
         </div>
 
@@ -787,6 +812,23 @@ export function ArcSidebar({
           )}
         </div>
       </aside>
+
+      {isDetectModalOpen && (
+        <DetectSpecsModal
+          isOpen={isDetectModalOpen}
+          onClose={() => setIsDetectModalOpen(false)}
+          onApply={(specs) => {
+            if (onApplyDetectedSpecs) {
+              onApplyDetectedSpecs(specs);
+            } else {
+              onSelectResolution(specs.resolution);
+              onSelectGpu(specs.gpu);
+              onSelectCpu(specs.cpu);
+              onSelectRam(specs.ram);
+            }
+          }}
+        />
+      )}
     </>
   );
 }

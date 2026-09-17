@@ -9,7 +9,7 @@ import { getGameMetadata, getGameReleaseInfo } from "../data/gameMetadata.js";
 import { DEFAULT_PLACEHOLDER_COVER } from "../services/gameAssets.js";
 import { enrichSingleGame } from "../services/igdb.js";
 
-export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscaling, rayTracing, pathTracing, isFavorite, onToggleFavorite, onDeleteGame, onBack, onWideArtChange }) {
+export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscaling, rayTracing, pathTracing, isFavorite, onToggleFavorite, onDeleteGame, onBack, onWideArtChange, onSelectResolution }) {
   const [heroUrl, setHeroUrl] = useState("");
   const [heroLoaded, setHeroLoaded] = useState(false);
   const [thumbLoaded, setThumbLoaded] = useState(false);
@@ -122,7 +122,11 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
   const isBorked = metadata.proton.tier === "Borked" || metadata.proton.tier === "Unsupported";
   const protonColor = "rgba(255, 255, 255, 0.4)";
 
-  const resLabels = { "1080p": "1080p Full HD", "1440p": "1440p Quad HD", "4k": "4K Ultra HD" };
+  const resMeta: Record<string, { label: string; name: string; dims: string }> = {
+    "1080p": { label: "1080p", name: "Full HD", dims: "1920 × 1080" },
+    "1440p": { label: "1440p", name: "Quad HD", dims: "2560 × 1440" },
+    "4k": { label: "4K", name: "Ultra HD", dims: "3840 × 2160" }
+  };
 
 
   return (
@@ -179,7 +183,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
             }}
             onLoad={() => setHeroLoaded(true)}
             onError={(e) => {
-              e.target.onerror = null;
+              e.currentTarget.onerror = null;
               if (heroUrl && game.coverUrl && heroUrl !== game.coverUrl) {
                 setHeroUrl(game.coverUrl);
               } else {
@@ -191,7 +195,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
         <div className="gdp-hero-overlay" />
 
         <div className="gdp-hero-content">
-          <div className="gdp-thumb-wrap">
+          <div className="gdp-thumb-wrap" style={{ viewTransitionName: 'game-cover' }}>
             {!thumbLoaded && <div className="gdp-thumb-skeleton" />}
             <img
               className={`gdp-thumb ${thumbLoaded ? "loaded" : ""}`}
@@ -205,8 +209,8 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
               }}
               onLoad={() => setThumbLoaded(true)}
               onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = DEFAULT_PLACEHOLDER_COVER;
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = DEFAULT_PLACEHOLDER_COVER;
                 setThumbLoaded(true);
               }}
             />
@@ -285,15 +289,27 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
                 <span className="score-lbl">{igdbData?.metacriticRating ? 'METACRITIC' : 'METASCORE'}</span>
               </div>
               {steamRatingDisplay && (
-                <div className="steam-rating-badge">
+                <a
+                  href={game.steamAppId ? `https://store.steampowered.com/app/${game.steamAppId}#app_reviews_hash` : `https://store.steampowered.com/search/?term=${encodeURIComponent(game.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="steam-rating-badge"
+                  title="View Steam Reviews"
+                >
                   <Star size={12} />
                   <span>{steamRatingDisplay}</span>
-                </div>
+                </a>
               )}
-              <div className={`proton-badge ${isBorked ? "proton-borked" : ""}`} style={{ borderColor: protonColor }}>
+              <a
+                href={game.steamAppId ? `https://www.protondb.com/app/${game.steamAppId}` : `https://www.protondb.com/search?q=${encodeURIComponent(game.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`proton-badge ${isBorked ? "proton-borked" : ""}`}
+                title="View ProtonDB Reports"
+              >
                 <span className="proton-dot" style={{ backgroundColor: protonColor }} />
                 <span>Proton: <strong>{isBorked ? "Unsupported" : metadata.proton.tier}</strong></span>
-              </div>
+              </a>
               {/* Store links from IGDB */}
               {igdbData?.websites?.filter(w => [13,16,17].includes(w.category)).map((site, i) => {
                 const labels = { 13: 'Steam', 16: 'Epic', 17: 'GOG' };
@@ -325,7 +341,6 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
             <div className="gdp-section-title-row">
               <Gauge size={15} />
               <span>Estimated FPS</span>
-              <span className="rig-preset-badge">{resolution.toUpperCase()} &bull; {preset.toUpperCase()}</span>
             </div>
             <div className="detail-fps-value-group" style={{ marginBottom: 12 }}>
               <span className="detail-fps-num" style={{ color: fpsColor }}>{isConfigured ? fpsData.avgFps : "—"}</span>
@@ -347,63 +362,110 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
             </div>
           </section>
 
-          {/* Resolution Scaling */}
-          <section className="gdp-section">
+          {/* FPS Graph */}
+          <section className="gdp-section gdp-fps-graph-section">
             <div className="gdp-section-title-row">
               <Layers size={15} />
-              <span>Resolution Scaling</span>
+              <span>FPS Graph</span>
             </div>
-            <div className="res-bars-grid">
-              {Array.isArray(resComparison) && resComparison.map(item => {
-                const isNumeric = isConfigured && typeof item.avgFps === "number";
-                const pct = isNumeric ? Math.min(100, (item.avgFps / 165) * 100) : 0;
-                const isCurrentRes = item.resolution === resolution;
-                return (
-                  <div key={item.resolution} className={`res-bar-row ${isCurrentRes ? "active-res-row" : ""}`}>
-                    <div className="res-bar-header">
-                      <span className="res-bar-label">
-                        {resLabels[item.resolution] || item.resolution}
-                        {isCurrentRes && <span className="active-res-badge">ACTIVE</span>}
-                      </span>
-                      <span className="res-bar-val">{isNumeric ? `${item.avgFps} FPS` : "—"}</span>
+
+            <div className="fps-graph-wrapper">
+              <div className="fps-graph-rows">
+                {Array.isArray(resComparison) && resComparison.map(item => {
+                  const isNumeric = isConfigured && typeof item.avgFps === "number";
+                  const pct = isNumeric ? Math.max(4, Math.min(100, (item.avgFps / 165) * 100)) : 0;
+                  const isCurrentRes = item.resolution === resolution;
+                  const is60 = isNumeric && item.avgFps >= 60;
+                  const is120 = isNumeric && item.avgFps >= 120;
+                  const isSub30 = isNumeric && item.avgFps < 30;
+                  const meta = resMeta[item.resolution] || { label: item.resolution, name: item.resolution, dims: "" };
+                  
+                  return (
+                    <div
+                      key={item.resolution}
+                      className={`fps-graph-row ${isCurrentRes ? "active-row" : ""}`}
+                      onClick={() => onSelectResolution && onSelectResolution(item.resolution)}
+                      title={onSelectResolution ? `Click to switch to ${meta.name}` : undefined}
+                      role={onSelectResolution ? "button" : undefined}
+                    >
+                      <div className="fps-graph-row-header">
+                        <div className="fps-graph-res-group">
+                          <span className="fps-graph-res-badge">{meta.label}</span>
+                          <span className="fps-graph-res-name">{meta.name}</span>
+                        </div>
+
+                        <div className="fps-graph-stat-group">
+                          {isNumeric && typeof item.low1PercentFps === "number" && (
+                            <span className="fps-graph-low1">1% low: {item.low1PercentFps}</span>
+                          )}
+                          <div className="fps-graph-num-wrap">
+                            <span className={`fps-graph-val-big ${isSub30 ? 'fps-val-sub30' : is60 ? 'fps-val-smooth' : ''}`}>
+                              {isNumeric ? item.avgFps : "—"}
+                            </span>
+                            <span className="fps-graph-val-unit">FPS</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="fps-graph-track-container">
+                        <div className="fps-graph-track">
+                          {isNumeric && (
+                            <div
+                              className={`fps-graph-fill ${isCurrentRes ? 'fill-active' : ''} ${is120 ? 'fill-ultra' : is60 ? 'fill-smooth' : isSub30 ? 'fill-low' : 'fill-playable'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="res-bar-track">
-                      <div className="res-bar-fill" style={{
-                        width: `${pct}%`,
-                        background: (item.avgFps || 0) >= 60 ? "linear-gradient(90deg,#64748b 0%,#ffffff 100%)" : "linear-gradient(90deg,#334155 0%,#94a3b8 100%)"
-                      }} />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </section>
 
           {/* Linux / Proton */}
-          <section className="gdp-section">
+          <section className="gdp-section gdp-proton-section">
             <div className="gdp-section-title-row">
               <Shield size={15} />
-              <span>Linux &amp; Steam Deck</span>
-              <span className="proton-pill" style={{ borderColor: protonColor, color: "var(--ctp-text)", background: "rgba(255,255,255,0.07)", marginLeft: "auto" }}>
+              <span>Steam Deck &amp; Linux</span>
+              <span className="proton-pill" style={{ color: "var(--ctp-text)", background: "rgba(255,255,255,0.08)", marginLeft: "auto" }}>
                 {isBorked ? "UNSUPPORTED" : metadata.proton.tier.toUpperCase()}
               </span>
             </div>
-            <div className={`proton-box ${isBorked ? "proton-box-borked" : ""}`}>
-              <div className="proton-grid">
-                <div className="proton-item">
-                  <span className="req-key">Anti-Cheat / DRM</span>
-                  <span className="req-val">{metadata.proton.antiCheat || "Standard / None"}</span>
-                </div>
-                <div className="proton-item">
-                  <span className="req-key">Online Multiplayer</span>
-                  <span className="req-val">
-                    {metadata.proton.worksOnline ? "Functional under Linux/Proton" : "Blocked by Anti-Cheat on Linux"}
-                  </span>
-                </div>
+            <div className="proton-clean-card">
+              <p className="proton-summary-text">
+                {isBorked
+                  ? "Currently unsupported on Linux and Steam Deck."
+                  : metadata.proton.status || "Runs smoothly via Proton on Steam Deck and Linux."}
+              </p>
+              <div className="proton-badges-row">
+                <span className={`proton-pill-tag ${isBorked ? "pill-warn" : "pill-good"}`}>
+                  Steam Deck: {isBorked ? "Unsupported" : "Playable"}
+                </span>
+                <span className={`proton-pill-tag ${metadata.proton.worksOnline ? "pill-good" : "pill-warn"}`}>
+                  Online: {metadata.proton.worksOnline ? "Working" : "Windows Only"}
+                </span>
               </div>
-              <div className="proton-verdict-note">
-                <span className="proton-note-icon">{isBorked ? <XCircle size={14} color="var(--ctp-subtext0)" /> : <Info size={14} />}</span>
-                <span className="proton-note-text">{metadata.proton.status}</span>
+              <div className="proton-action-buttons">
+                <a
+                  href={game.steamAppId ? `https://www.protondb.com/app/${game.steamAppId}` : `https://www.protondb.com/search?q=${encodeURIComponent(game.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="gdp-action-btn proton-btn"
+                >
+                  <ExternalLink size={12} />
+                  <span>ProtonDB Reports</span>
+                </a>
+                <a
+                  href={game.steamAppId ? `https://store.steampowered.com/app/${game.steamAppId}#app_reviews_hash` : `https://store.steampowered.com/search/?term=${encodeURIComponent(game.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="gdp-action-btn reviews-btn"
+                >
+                  <Star size={12} />
+                  <span>Steam Reviews</span>
+                </a>
               </div>
             </div>
           </section>

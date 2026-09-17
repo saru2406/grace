@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Sliders, X, RotateCcw, ArrowRight } from 'lucide-react';
 import { runAllApiDiagnostics } from '../services/apiDiagnostics.js';
 
@@ -14,6 +15,7 @@ export function SettingsPopout({
   const popoutRef = useRef(null);
   const [apiResults, setApiResults] = useState([]);
   const [isCheckingApis, setIsCheckingApis] = useState(false);
+  const [anchor, setAnchor] = useState({ top: 24, left: 24 });
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -42,6 +44,23 @@ export function SettingsPopout({
     };
   }, [isOpen, onClose]);
 
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const place = () => {
+      const btn = document.getElementById('open-settings-btn');
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      setAnchor({ top: Math.max(12, r.top - 8), left: r.right + 14 });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const fpsDetail = userSettings.fpsDetail || 'detailed';
@@ -60,9 +79,15 @@ export function SettingsPopout({
     }
   };
 
-  return (
-    <div id="settings-popout" className="profile-popout settings-popout-compact" ref={popoutRef}>
-      <div className="popout-arrow"></div>
+  return createPortal(
+    <div className="profile-popout-layer">
+    <div
+      id="settings-popout"
+      className="profile-popout settings-popout-compact"
+      ref={popoutRef}
+      style={{ top: anchor.top, left: anchor.left }}
+    >
+      <div className="profile-popout-inner">
       <div className="popout-scroll-container">
         <div className="popout-header">
           <div className="popout-header-main">
@@ -247,6 +272,9 @@ export function SettingsPopout({
           </button>
         </div>
       </div>
+      </div>
     </div>
+    </div>,
+    document.body
   );
 }
