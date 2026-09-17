@@ -1,7 +1,18 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Sliders, X, RotateCcw, ArrowRight } from 'lucide-react';
+import { X, RotateCcw, ArrowRight } from 'lucide-react';
 import { runAllApiDiagnostics } from '../services/apiDiagnostics.js';
+
+interface SettingsPopoutProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userSettings?: any;
+  onUpdateSetting?: (key: string, value: any) => void;
+  profileName?: string;
+  onProfileNameChange?: (val: string) => void;
+  onResetData?: () => void;
+  specs?: any;
+}
 
 export function SettingsPopout({
   isOpen,
@@ -11,61 +22,26 @@ export function SettingsPopout({
   profileName,
   onProfileNameChange,
   onResetData
-}) {
-  const popoutRef = useRef(null);
-  const [apiResults, setApiResults] = useState([]);
+}: SettingsPopoutProps) {
+  const [apiResults, setApiResults] = useState<any[]>([]);
   const [isCheckingApis, setIsCheckingApis] = useState(false);
-  const [anchor, setAnchor] = useState({ top: 24, left: 24 });
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (isOpen && popoutRef.current && !popoutRef.current.contains(e.target)) {
-        const toggleBtn = document.getElementById('open-settings-btn');
-        if (!toggleBtn || !toggleBtn.contains(e.target)) {
-          onClose();
-        }
-      }
-    }
-
-    function handleKeyDown(e) {
-      if (e.key === 'Escape' && isOpen) {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         onClose();
       }
-    }
-
-    if (isOpen) {
-      document.addEventListener('click', handleClickOutside);
-      window.addEventListener('keydown', handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-      window.removeEventListener('keydown', handleKeyDown);
     };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-    const place = () => {
-      const btn = document.getElementById('open-settings-btn');
-      if (!btn) return;
-      const r = btn.getBoundingClientRect();
-      setAnchor({ top: Math.max(12, r.top - 8), left: r.right + 14 });
-    };
-    place();
-    window.addEventListener('resize', place);
-    window.addEventListener('scroll', place, true);
-    return () => {
-      window.removeEventListener('resize', place);
-      window.removeEventListener('scroll', place, true);
-    };
-  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const fpsDetail = userSettings.fpsDetail || 'detailed';
-  const showBottlenecks = userSettings.showBottlenecks !== false;
-  const ambientBlur = userSettings.ambientBlur !== false;
+  const fpsDetail = userSettings?.fpsDetail || 'detailed';
+  const showBottlenecks = userSettings?.showBottlenecks !== false;
+  const ambientBlur = userSettings?.ambientBlur !== false;
 
   const handleCheckApiStatus = async () => {
     setIsCheckingApis(true);
@@ -80,200 +56,212 @@ export function SettingsPopout({
   };
 
   return createPortal(
-    <div className="profile-popout-layer">
-    <div
-      id="settings-popout"
-      className="profile-popout settings-popout-compact"
-      ref={popoutRef}
-      style={{ top: anchor.top, left: anchor.left }}
-    >
-      <div className="profile-popout-inner">
-      <div className="popout-scroll-container">
-        <div className="popout-header">
-          <div className="popout-header-main">
-            <div className="popout-header-icon">
-              <Sliders size={14} />
+    <div className="detect-modal-backdrop" onClick={onClose}>
+      <div
+        className="detect-modal-dialog"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="detect-modal-dialog-inner">
+          {/* Modal Header */}
+          <div className="detect-modal-header">
+            <div className="detect-header-title-group">
+              <h2 className="detect-modal-title">Preferences</h2>
+              <p className="detect-modal-subtitle">Customize benchmark display and interface settings</p>
             </div>
-            <div className="popout-header-text">
-              <div className="popout-title">Preferences</div>
-            </div>
-          </div>
-          <button
-            id="close-settings-popout"
-            className="popout-close-btn"
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <X size={14} />
-          </button>
-        </div>
-
-        <div className="popout-section">
-          <div className="popout-section-header">
-            <span className="popout-section-title">Quick settings</span>
-          </div>
-
-          <div className="mini-grid">
-            <div className="mini-grid-row">
-              <span className="mini-grid-label">Card FPS display</span>
-              <div className="popout-segmented-grid two-up">
-                <button
-                  type="button"
-                  className={`popout-seg-btn ${fpsDetail === 'detailed' ? 'active' : ''}`}
-                  onClick={() => onUpdateSetting && onUpdateSetting('fpsDetail', 'detailed')}
-                >
-                  AVG + 1% Lows
-                </button>
-                <button
-                  type="button"
-                  className={`popout-seg-btn ${fpsDetail === 'simple' ? 'active' : ''}`}
-                  onClick={() => onUpdateSetting && onUpdateSetting('fpsDetail', 'simple')}
-                >
-                  AVG Only
-                </button>
-              </div>
-            </div>
-
-            <div className="mini-grid-row">
-              <span className="mini-grid-label">Homepage theme</span>
-              <div className="popout-segmented-grid two-up">
-                <button
-                  type="button"
-                  className={`popout-seg-btn ${userSettings.theme !== 'catppuccin-mocha' ? 'active' : ''}`}
-                  onClick={() => onUpdateSetting && onUpdateSetting('theme', 'default')}
-                >
-                  Default
-                </button>
-                <button
-                  type="button"
-                  className={`popout-seg-btn ${userSettings.theme === 'catppuccin-mocha' ? 'active' : ''}`}
-                  onClick={() => onUpdateSetting && onUpdateSetting('theme', 'catppuccin-mocha')}
-                >
-                  Mocha
-                </button>
-              </div>
-            </div>
-
-            <div className="mini-grid-row">
-              <span className="mini-grid-label">UI Rounding</span>
-              <div className="popout-segmented-grid two-up">
-                <button
-                  type="button"
-                  className={`popout-seg-btn ${userSettings.rounding !== 'pill' ? 'active' : ''}`}
-                  onClick={() => onUpdateSetting && onUpdateSetting('rounding', 'rectangle')}
-                >
-                  Rectangle
-                </button>
-                <button
-                  type="button"
-                  className={`popout-seg-btn ${userSettings.rounding === 'pill' ? 'active' : ''}`}
-                  onClick={() => onUpdateSetting && onUpdateSetting('rounding', 'pill')}
-                >
-                  Pill
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="popout-section compact-toggles">
-          <div className="mini-toggle-row" onClick={() => onUpdateSetting && onUpdateSetting('showBottlenecks', !showBottlenecks)}>
-            <div className="popout-toggle-info">
-              <span className="popout-toggle-label">Bottleneck badges</span>
-              <span className="popout-toggle-sub">GPU/CPU bound tags</span>
-            </div>
-            <div className={`popout-switch-track ${showBottlenecks ? 'on' : 'off'}`}>
-              <span className="popout-switch-thumb" />
-            </div>
-          </div>
-
-          <div className="mini-toggle-row" onClick={() => onUpdateSetting && onUpdateSetting('ambientBlur', !ambientBlur)}>
-            <div className="popout-toggle-info">
-              <span className="popout-toggle-label">Ambient blur</span>
-              <span className="popout-toggle-sub">{ambientBlur ? 'Dynamic backdrop' : 'AMOLED black'}</span>
-            </div>
-            <div className={`popout-switch-track ${ambientBlur ? 'on' : 'off'}`}>
-              <span className="popout-switch-thumb" />
-            </div>
-          </div>
-        </div>
-
-        <div className="popout-section compact-form">
-          <span className="popout-section-title">Profile</span>
-          <label className="profile-name-field" htmlFor="profile-name-input">
-            <input
-              id="profile-name-input"
-              className="profile-name-input"
-              type="text"
-              value={profileName || ''}
-              onChange={(e) => onProfileNameChange(e.target.value)}
-              placeholder="Enter gamer tag"
-              maxLength={32}
-            />
-          </label>
-        </div>
-
-        <div className="popout-section compact-footer">
-          <div className="mini-grid-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
             <button
-              id="check-api-status-btn"
-              className="btn-clear-data"
+              id="close-settings-popout"
+              className="detect-modal-close"
               type="button"
-              onClick={handleCheckApiStatus}
-              disabled={isCheckingApis}
-              style={{ justifyContent: 'center' }}
+              onClick={onClose}
+              aria-label="Close dialog"
             >
-              <ArrowRight size={12} />
-              <span>{isCheckingApis ? 'Checking API status...' : 'Test API status'}</span>
+              <X size={16} />
             </button>
+          </div>
 
-            {apiResults.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
-                {apiResults.map((result) => (
-                  <div
-                    key={result.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '8px',
-                      padding: '6px 8px',
-                      borderRadius: '8px',
-                      background: 'rgba(255,255,255,0.03)',
-                      fontSize: '11px'
-                    }}
+          {/* Modal Body */}
+          <div className="detect-modal-body">
+            <div className="detect-form-fields">
+              {/* Card FPS display */}
+              <div className="detect-field">
+                <label className="detect-field-label">
+                  <span>Card FPS display</span>
+                </label>
+                <div className="detect-segmented-res">
+                  <button
+                    type="button"
+                    className={`detect-res-btn ${fpsDetail === 'detailed' ? 'active' : ''}`}
+                    onClick={() => onUpdateSetting && onUpdateSetting('fpsDetail', 'detailed')}
                   >
-                    <span style={{ color: 'rgba(255,255,255,0.8)' }}>{result.name}</span>
-                    <span
+                    AVG + 1% Lows
+                  </button>
+                  <button
+                    type="button"
+                    className={`detect-res-btn ${fpsDetail === 'simple' ? 'active' : ''}`}
+                    onClick={() => onUpdateSetting && onUpdateSetting('fpsDetail', 'simple')}
+                  >
+                    AVG Only
+                  </button>
+                </div>
+              </div>
+
+              {/* Homepage theme */}
+              <div className="detect-field">
+                <label className="detect-field-label">
+                  <span>Homepage theme</span>
+                </label>
+                <div className="detect-segmented-res">
+                  <button
+                    type="button"
+                    className={`detect-res-btn ${userSettings?.theme !== 'catppuccin-mocha' ? 'active' : ''}`}
+                    onClick={() => onUpdateSetting && onUpdateSetting('theme', 'default')}
+                  >
+                    Default
+                  </button>
+                  <button
+                    type="button"
+                    className={`detect-res-btn ${userSettings?.theme === 'catppuccin-mocha' ? 'active' : ''}`}
+                    onClick={() => onUpdateSetting && onUpdateSetting('theme', 'catppuccin-mocha')}
+                  >
+                    Mocha
+                  </button>
+                </div>
+              </div>
+
+              {/* UI Rounding */}
+              <div className="detect-field">
+                <label className="detect-field-label">
+                  <span>UI Rounding</span>
+                </label>
+                <div className="detect-segmented-res">
+                  <button
+                    type="button"
+                    className={`detect-res-btn ${userSettings?.rounding !== 'pill' ? 'active' : ''}`}
+                    onClick={() => onUpdateSetting && onUpdateSetting('rounding', 'rectangle')}
+                  >
+                    Rectangle
+                  </button>
+                  <button
+                    type="button"
+                    className={`detect-res-btn ${userSettings?.rounding === 'pill' ? 'active' : ''}`}
+                    onClick={() => onUpdateSetting && onUpdateSetting('rounding', 'pill')}
+                  >
+                    Pill
+                  </button>
+                </div>
+              </div>
+
+              {/* Toggles */}
+              <div
+                className="detect-toggle-row"
+                onClick={() => onUpdateSetting && onUpdateSetting('showBottlenecks', !showBottlenecks)}
+              >
+                <div className="detect-toggle-info">
+                  <span className="detect-toggle-title">Bottleneck badges</span>
+                  <span className="detect-toggle-desc">GPU/CPU bound tags</span>
+                </div>
+                <div className={`popout-switch-track ${showBottlenecks ? 'on' : 'off'}`}>
+                  <span className="popout-switch-thumb" />
+                </div>
+              </div>
+
+              <div
+                className="detect-toggle-row"
+                onClick={() => onUpdateSetting && onUpdateSetting('ambientBlur', !ambientBlur)}
+              >
+                <div className="detect-toggle-info">
+                  <span className="detect-toggle-title">Ambient blur</span>
+                  <span className="detect-toggle-desc">{ambientBlur ? 'Dynamic backdrop' : 'AMOLED black'}</span>
+                </div>
+                <div className={`popout-switch-track ${ambientBlur ? 'on' : 'off'}`}>
+                  <span className="popout-switch-thumb" />
+                </div>
+              </div>
+
+              {/* Profile */}
+              <div className="detect-field">
+                <label className="detect-field-label" htmlFor="profile-name-input">
+                  <span>Profile Tag</span>
+                </label>
+                <input
+                  id="profile-name-input"
+                  className="detect-spec-select"
+                  type="text"
+                  value={profileName || ''}
+                  onChange={(e) => onProfileNameChange && onProfileNameChange(e.target.value)}
+                  placeholder="Enter gamer tag"
+                  maxLength={32}
+                />
+              </div>
+
+              {/* API Diagnostics Results */}
+              {apiResults.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {apiResults.map((result) => (
+                    <div
+                      key={result.id}
                       style={{
-                        color: result.ok ? '#7ef0b1' : '#ffb4b4',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em'
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        borderRadius: '9px',
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        fontSize: '12px'
                       }}
                     >
-                      {result.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <span style={{ color: 'rgba(255,255,255,0.8)' }}>{result.name}</span>
+                      <span
+                        style={{
+                          color: result.ok ? '#7ef0b1' : '#ffb4b4',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          fontSize: '11px'
+                        }}
+                      >
+                        {result.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <button
-            id="clear-all-data-btn"
-            className="btn-clear-data"
-            type="button"
-            onClick={onResetData}
-          >
-            <RotateCcw size={12} />
-            <span>Reset saved data</span>
-          </button>
+          {/* Modal Footer Actions */}
+          <div className="detect-modal-footer">
+            <div className="detect-footer-left">
+              <button
+                id="clear-all-data-btn"
+                type="button"
+                className="detect-rescan-btn"
+                onClick={onResetData}
+                title="Reset saved data"
+              >
+                <RotateCcw size={13} />
+                <span>Reset saved data</span>
+              </button>
+            </div>
+            <div className="detect-footer-right">
+              <button
+                id="check-api-status-btn"
+                type="button"
+                className="detect-btn-discard"
+                onClick={handleCheckApiStatus}
+                disabled={isCheckingApis}
+              >
+                <ArrowRight size={13} />
+                <span>{isCheckingApis ? 'Testing...' : 'Test API status'}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      </div>
-    </div>
     </div>,
     document.body
   );

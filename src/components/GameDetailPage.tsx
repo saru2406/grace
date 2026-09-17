@@ -365,7 +365,7 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
           {/* FPS Graph */}
           <section className="gdp-section gdp-fps-graph-section">
             <div className="gdp-section-title-row">
-              <Layers size={15} />
+              <Activity size={15} />
               <span>FPS Graph</span>
             </div>
 

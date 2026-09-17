@@ -7035,11 +7035,16 @@ select:active, .spec-select:active, .sort-select:active {
 }
 
 .fps-graph-wrapper {
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   position: relative;
   padding-top: 4px;
+}
+
+.fps-graph-wrapper * {
+  font-family: 'Inter', sans-serif !important;
 }
 
 .fps-graph-rows {
@@ -7817,5 +7822,41 @@ select option:checked,
 .detect-btn-discard:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.detect-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.detect-toggle-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.detect-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detect-toggle-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.detect-toggle-desc {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
 }
 

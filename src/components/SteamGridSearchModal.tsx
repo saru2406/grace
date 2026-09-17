@@ -58,7 +58,7 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
   return createPortal(
     <div
       id="steamgrid-search-modal"
-      className="search-palette-backdrop"
+      className="detect-modal-backdrop"
       onClick={onClose}
     >
       <div
