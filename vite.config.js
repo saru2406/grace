@@ -307,6 +307,125 @@ export default defineConfig(({ mode }) => {
             }
           });
         });
+
+        // SteamGridDB Proxy Middleware with robust timeout and graceful fallback
+        server.middlewares.use('/api/steamgriddb', async (req, res) => {
+          if (req.method === 'OPTIONS') {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          try {
+            const parsedUrl = new URL(req.url || '/', 'http://localhost:3000');
+            const subPath = parsedUrl.pathname.replace(/^\//, '') + parsedUrl.search;
+            const isAutocomplete = subPath.startsWith('search/autocomplete');
+            const hasKey = Boolean(steamGridApiKey && steamGridApiKey.trim());
+
+            // SteamGridDB requires authentication for all endpoints except search/autocomplete.
+            // If no key is set, return empty results gracefully without triggering network hang-ups.
+            if (!hasKey && !isAutocomplete) {
+              res.setHeader('Content-Type', 'application/json');
+              res.statusCode = 200;
+              res.end(JSON.stringify({
+                success: false,
+                data: [],
+                message: 'STEAMGRID_API_KEY is not configured.'
+              }));
+              return;
+            }
+
+            const targetUrl = `https://www.steamgriddb.com/api/v2/${subPath}`;
+            const headers = {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+              'Accept': 'application/json'
+            };
+            if (hasKey) {
+              headers['Authorization'] = `Bearer ${steamGridApiKey.trim()}`;
+            }
+
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 6000);
+
+            try {
+              const fetchRes = await fetch(targetUrl, {
+                method: req.method,
+                headers,
+                signal: controller.signal
+              });
+              clearTimeout(timer);
+
+              res.statusCode = fetchRes.status;
+              res.setHeader('Content-Type', fetchRes.headers.get('content-type') || 'application/json');
+              const body = await fetchRes.text();
+              res.end(body);
+            } catch (fetchErr) {
+              clearTimeout(timer);
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({
+                success: false,
+                data: [],
+                error: fetchErr.message || 'SteamGridDB request failed'
+              }));
+            }
+          } catch (err) {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({
+              success: false,
+              data: [],
+              error: err.message || 'SteamGridDB middleware error'
+            }));
+          }
+        });
+
+        // Steam Store Proxy Middleware with timeout & error handling
+        server.middlewares.use('/api/steamstore', async (req, res) => {
+          if (req.method === 'OPTIONS') {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          try {
+            const parsedUrl = new URL(req.url || '/', 'http://localhost:3000');
+            const subPath = parsedUrl.pathname.replace(/^\//, '') + parsedUrl.search;
+            const targetUrl = `https://store.steampowered.com/api/${subPath}`;
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 6000);
+
+            try {
+              const fetchRes = await fetch(targetUrl, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                  'Accept': 'application/json'
+                },
+                signal: controller.signal
+              });
+              clearTimeout(timer);
+
+              res.statusCode = fetchRes.status;
+              res.setHeader('Content-Type', fetchRes.headers.get('content-type') || 'application/json');
+              const body = await fetchRes.text();
+              res.end(body);
+            } catch (fetchErr) {
+              clearTimeout(timer);
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: fetchErr.message || 'Steam store request failed' }));
+            }
+          } catch (err) {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err.message || 'Steam store middleware error' }));
+          }
+        });
       }
     }
   ],
@@ -314,20 +433,7 @@ export default defineConfig(({ mode }) => {
     host: '0.0.0.0',
     port: 3000,
     allowedHosts: true,
-    open: false,
-    proxy: {
-      '/api/steamgriddb': {
-        target: 'https://www.steamgriddb.com/api/v2',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/steamgriddb/, ''),
-        headers: steamGridProxyHeaders
-      },
-      '/api/steamstore': {
-        target: 'https://store.steampowered.com/api',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/steamstore/, '')
-      }
-    }
+    open: false
   }
 };
 });

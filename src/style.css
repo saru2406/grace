@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Chelsea+Market&family=Cascadia+Code:ital,wght@0,200..700;1,200..700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cascadia+Code:ital,wght@0,200..700;1,200..700&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ==========================================================================
    Themes (Default: AMOLED Pure Black & Catppuccin Mocha for Homepage)
@@ -129,7 +129,7 @@
   font-family: 'Chelsea Market';
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
   src: local('Chelsea Market'), local('ChelseaMarket-Regular'),
     url('/fonts/ChelseaMarket-Regular.ttf') format('truetype'),
     url('https://fonts.gstatic.com/s/chelseamarket/v14/BCawqZsHqfr89WNP_IApC8tzKBhl.ttf') format('truetype');
@@ -7902,6 +7902,7 @@ select:active, .spec-select:active, .sort-select:active {
 .initial-splash-brand {
   font-family: 'Chelsea Market', cursive, system-ui;
   font-size: 42px;
+  font-weight: 400;
   color: #ffffff;
   letter-spacing: 1px;
   margin: 0;

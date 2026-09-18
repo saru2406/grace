@@ -5,10 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Grace - PC Gaming Performance & Bottleneck Calculator</title>
   <meta name="description" content="Estimate FPS across PC games based on your hardware. Real-time SteamGridDB integration, AMOLED and Game Blur themes, and Cloudflare Pages support.">
+  <link rel="preload" href="/fonts/ChelseaMarket-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chelsea+Market&family=Chakra+Petch:wght@600;700&family=Cinzel:wght@600;700;900&family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=Playfair+Display:wght@700;900&family=Rye&family=Silkscreen:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Cinzel:wght@600;700;900&family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=Playfair+Display:wght@700;900&family=Rye&family=Silkscreen:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: 'Chelsea Market';
+      font-style: normal;
+      font-weight: 400;
+      font-display: block;
+      src: local('Chelsea Market'), local('ChelseaMarket-Regular'),
+        url('/fonts/ChelseaMarket-Regular.ttf') format('truetype'),
+        url('https://fonts.gstatic.com/s/chelseamarket/v14/BCawqZsHqfr89WNP_IApC8tzKBhl.ttf') format('truetype');
+    }
     html, body { background-color: #000000; margin: 0; }
     .initial-splash {
       position: fixed; inset: 0; z-index: 999999;
@@ -20,7 +30,14 @@
     }
     .initial-splash-brand {
       font-family: 'Chelsea Market', cursive, system-ui;
-      font-size: 42px; color: #fff; letter-spacing: 1px; margin: 0; text-align: center; line-height: 1;
+      font-size: 42px;
+      font-weight: 400;
+      color: #fff;
+      letter-spacing: 1px;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      line-height: 1;
     }
     .initial-spinner {
       animation: mat-rotate 2s linear infinite; width: 28px; height: 28px; display: block; margin: 0 auto;

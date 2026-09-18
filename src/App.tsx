@@ -54,17 +54,31 @@ export function App() {
   const [isMobile, setIsMobile] = useState(() => isMobileUserAgent() || isSmallViewport());
 
   useEffect(() => {
-    // Artificial delay to show splash screen and let everything load smoothly
-    const fadeTimer = setTimeout(() => {
+    let isCancelled = false;
+    let removeTimer: number | undefined;
+
+    const startFadeOut = () => {
+      if (isCancelled) return;
       setIsSplashFading(true);
-    }, 1200);
-    const removeTimer = setTimeout(() => {
-      setAppLoading(false);
-    }, 2500); // Wait for 1.2s fade out animation
-    
+      removeTimer = window.setTimeout(() => {
+        if (!isCancelled) setAppLoading(false);
+      }, 1200); // Wait for 1.2s fade out animation
+    };
+
+    const fontPromise = (typeof document !== 'undefined' && document.fonts)
+      ? document.fonts.ready
+      : Promise.resolve();
+
+    Promise.all([
+      fontPromise,
+      new Promise(resolve => setTimeout(resolve, 1000))
+    ]).then(() => {
+      startFadeOut();
+    });
+
     return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
+      isCancelled = true;
+      if (removeTimer) clearTimeout(removeTimer);
     };
   }, []);
 
