@@ -184,7 +184,7 @@ export default defineConfig(({ mode }) => {
 
         server.middlewares.use('/api/steam-store-search', async (req, res) => {
           try {
-            const parsedUrl = new URL(req.url, 'http://localhost:5173');
+            const parsedUrl = new URL(req.url, 'http://localhost:3000');
             const term = parsedUrl.searchParams.get('term') || '';
             if (!term.trim()) {
               res.setHeader('Content-Type', 'application/json');
@@ -311,7 +311,9 @@ export default defineConfig(({ mode }) => {
     }
   ],
   server: {
-    port: 5173,
+    host: '0.0.0.0',
+    port: 3000,
+    allowedHosts: true,
     open: false,
     proxy: {
       '/api/steamgriddb': {

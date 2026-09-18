@@ -4,10 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "node ./node_modules/vite/bin/vite.js build",
-    "preview": "node ./node_modules/vite/bin/vite.js preview",
-    "postinstall": "node -e \"try{const fs=require('fs');fs.chmodSync('./node_modules/.bin/vite',0o755);}catch(e){}\""
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 3000"
   },
   "allowScripts": {
     "esbuild": true

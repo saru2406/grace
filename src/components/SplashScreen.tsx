@@ -1,13 +1,13 @@
 import React from 'react';
+import { MaterialSpinner } from './MaterialSpinner';
 
 export function SplashScreen({ isFadingOut }) {
   return (
     <div className={`splash-screen-container ${isFadingOut ? 'splash-fade-out' : ''}`}>
+      <div className="splash-ambient-blur" aria-hidden="true" />
       <div className="splash-content">
         <h1 className="initial-splash-brand">Grace</h1>
-        <svg className="initial-spinner" viewBox="0 0 50 50">
-          <circle className="path" cx="25" cy="25" r="20" fill="none" strokeWidth="6" />
-        </svg>
+        <MaterialSpinner size={32} strokeWidth={5} color="#ffffff" className="initial-spinner" />
       </div>
     </div>
   );

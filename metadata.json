@@ -1,0 +1,8 @@
+{
+  "name": "Grace - PC Gaming Performance & Bottleneck Calculator",
+  "description": "Estimate FPS across PC games based on your hardware. Real-time SteamGridDB integration, AMOLED and Game Blur themes, and Cloudflare Pages support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -14,6 +14,7 @@ import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual.jsx';
 import { SettingsPopout } from './SettingsPopout.jsx';
 import { QuickBuildsPopout } from './QuickBuildsPopout.jsx';
 import { DetectSpecsModal } from './DetectSpecsModal.jsx';
+import { CustomDropdown } from './CustomDropdown';
 
 export function ArcSidebar({
   // Navigation & Header props
@@ -58,18 +59,100 @@ export function ArcSidebar({
 
   // Sidebar state
   isMobileOpen = false,
-  onCloseMobile
+  onCloseMobile,
+
+  // External modal triggers for mobile bottom nav
+  isQuickBuildsOpen: isQuickBuildsOpenProp,
+  onOpenQuickBuilds,
+  onCloseQuickBuilds,
+  isDetectModalOpen: isDetectModalOpenProp,
+  onOpenDetectModal,
+  onCloseDetectModal
 }) {
   const gpuBrands = gpuBrandFilter === 'all' ? ['NVIDIA', 'AMD', 'Intel'] : [gpuBrandFilter];
   const cpuBrands = cpuBrandFilter === 'all' ? ['AMD', 'Intel'] : [cpuBrandFilter];
+
+  const gpuGroups = useMemo(() => {
+    return gpuBrands
+      .map(brand => {
+        const brandGpus = GPUS.filter(g => g.brand === brand);
+        if (brandGpus.length === 0) return null;
+        return {
+          label: `${brand} Graphics Cards`,
+          options: brandGpus.map(g => ({
+            value: g.id,
+            label: `${g.name} (${g.vram}GB)`
+          }))
+        };
+      })
+      .filter(Boolean) as { label: string; options: { value: string; label: string }[] }[];
+  }, [gpuBrands]);
+
+  const cpuGroups = useMemo(() => {
+    return cpuBrands
+      .map(brand => {
+        const brandCpus = CPUS.filter(c => c.brand === brand);
+        if (brandCpus.length === 0) return null;
+        return {
+          label: `${brand} Processors`,
+          options: brandCpus.map(c => ({
+            value: c.id,
+            label: c.name
+          }))
+        };
+      })
+      .filter(Boolean) as { label: string; options: { value: string; label: string }[] }[];
+  }, [cpuBrands]);
+
+  const ramOptions = useMemo(() => {
+    return RAM_OPTIONS.map(opt => ({
+      value: opt.value,
+      label: opt.label,
+      sublabel: opt.desc
+    }));
+  }, []);
+
+  const upscalingOptions = useMemo(() => [
+    { value: 'none', label: 'Native (Disabled)' },
+    { value: 'quality', label: 'Quality (+20% FPS)' },
+    { value: 'balanced', label: 'Balanced (+35% FPS)' },
+    { value: 'performance', label: 'Performance (+50% FPS)' },
+    { value: 'ultra-performance', label: 'Ultra Performance (+70% FPS)' }
+  ], []);
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveName, setSaveName] = useState('');
   const [saveToast, setSaveToast] = useState('');
   const [showRtInfo, setShowRtInfo] = useState(false);
   const [showPtInfo, setShowPtInfo] = useState(false);
-  const [isQuickBuildsOpen, setIsQuickBuildsOpen] = useState(false);
-  const [isDetectModalOpen, setIsDetectModalOpen] = useState(false);
+  const [internalQuickBuildsOpen, setInternalQuickBuildsOpen] = useState(false);
+  const isQuickBuildsOpen = isQuickBuildsOpenProp !== undefined ? isQuickBuildsOpenProp : internalQuickBuildsOpen;
+  const setIsQuickBuildsOpen = (val) => {
+    if (typeof val === 'function') {
+      const next = val(isQuickBuildsOpen);
+      if (next) {
+        onOpenQuickBuilds ? onOpenQuickBuilds() : setInternalQuickBuildsOpen(true);
+      } else {
+        onCloseQuickBuilds ? onCloseQuickBuilds() : setInternalQuickBuildsOpen(false);
+      }
+    } else {
+      if (val) {
+        onOpenQuickBuilds ? onOpenQuickBuilds() : setInternalQuickBuildsOpen(true);
+      } else {
+        onCloseQuickBuilds ? onCloseQuickBuilds() : setInternalQuickBuildsOpen(false);
+      }
+    }
+  };
+
+  const [internalDetectModalOpen, setInternalDetectModalOpen] = useState(false);
+  const isDetectModalOpen = isDetectModalOpenProp !== undefined ? isDetectModalOpenProp : internalDetectModalOpen;
+  const setIsDetectModalOpen = (val) => {
+    if (val) {
+      onOpenDetectModal ? onOpenDetectModal() : setInternalDetectModalOpen(true);
+    } else {
+      onCloseDetectModal ? onCloseDetectModal() : setInternalDetectModalOpen(false);
+    }
+  };
   const saveInputRef = useRef(null);
 
   const canSave = Boolean(gpu && cpu && ram);
@@ -201,8 +284,13 @@ export function ArcSidebar({
 
       <aside
         className={`arc-sidebar ${isMobileOpen ? 'mobile-open' : ''} ${isResizing ? 'resizing' : ''}`}
-        style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px`, maxWidth: `${sidebarWidth}px` }}
+        style={isMobileOpen ? undefined : { width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px`, maxWidth: `${sidebarWidth}px` }}
       >
+        {/* Mobile top pill grab handle */}
+        <div className="mobile-drawer-handle-bar" aria-hidden="true">
+          <div className="mobile-drawer-handle" />
+        </div>
+
         {/* Resize Handle for Desktop */}
         <div
           className="arc-resize-handle"
@@ -219,7 +307,7 @@ export function ArcSidebar({
             1. ARC TOP WINDOW BAR (App Title, Home)
             ============================================================ */}
         <div className="arc-topbar">
-          <div className="arc-brand" onClick={() => onGoHome && onGoHome()} style={{ cursor: onGoHome ? 'pointer' : 'default' }}>
+          <div className="arc-brand" onClick={() => { onGoHome && onGoHome(); if (onCloseMobile) onCloseMobile(); }} style={{ cursor: onGoHome ? 'pointer' : 'default' }}>
             <span className="arc-brand-title" style={{ fontFamily: "'Chelsea Market', cursive" }}>Grace</span>
           </div>
 
@@ -228,11 +316,25 @@ export function ArcSidebar({
               <button
                 type="button"
                 className="arc-topbar-btn arc-home-btn"
-                onClick={onGoHome}
+                onClick={() => {
+                  onGoHome();
+                  if (onCloseMobile) onCloseMobile();
+                }}
                 title="Go to Home / Library"
                 aria-label="Go to Home / Library"
               >
                 <Home size={15} />
+              </button>
+            )}
+            {onCloseMobile && (
+              <button
+                type="button"
+                className="arc-topbar-btn arc-mobile-close-btn"
+                onClick={onCloseMobile}
+                title="Close drawer"
+                aria-label="Close drawer"
+              >
+                <X size={16} />
               </button>
             )}
           </div>
@@ -389,30 +491,18 @@ export function ArcSidebar({
                   ))}
                 </div>
 
-                <select
+                <CustomDropdown
                   id="gpu-select"
                   className="spec-select"
                   value={gpu ? gpu.id : ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
+                  placeholder="Select GPU"
+                  searchable={true}
+                  groups={gpuGroups}
+                  onChange={(val) => {
                     onSelectGpu(val ? (GPUS.find(g => g.id === val) || null) : null);
                   }}
-                >
-                  <option value="">Select GPU</option>
-                  {gpuBrands.map(brand => {
-                    const brandGpus = GPUS.filter(g => g.brand === brand);
-                    if (brandGpus.length === 0) return null;
-                    return (
-                      <optgroup key={brand} label={`${brand} Graphics Cards`}>
-                        {brandGpus.map(g => (
-                          <option key={g.id} value={g.id}>
-                            {g.name} ({g.vram}GB)
-                          </option>
-                        ))}
-                      </optgroup>
-                    );
-                  })}
-                </select>
+                  ariaLabel="Select Graphics Card"
+                />
               </div>
 
               <div className="component-square-box" id="gpu-visual-preview">
@@ -444,30 +534,18 @@ export function ArcSidebar({
                   ))}
                 </div>
 
-                <select
+                <CustomDropdown
                   id="cpu-select"
                   className="spec-select"
                   value={cpu ? cpu.id : ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
+                  placeholder="Select CPU"
+                  searchable={true}
+                  groups={cpuGroups}
+                  onChange={(val) => {
                     onSelectCpu(val ? (CPUS.find(c => c.id === val) || null) : null);
                   }}
-                >
-                  <option value="">Select CPU</option>
-                  {cpuBrands.map(brand => {
-                    const brandCpus = CPUS.filter(c => c.brand === brand);
-                    if (brandCpus.length === 0) return null;
-                    return (
-                      <optgroup key={brand} label={`${brand} Processors`}>
-                        {brandCpus.map(c => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    );
-                  })}
-                </select>
+                  ariaLabel="Select Processor"
+                />
               </div>
 
               <div className="component-square-box" id="cpu-visual-preview">
@@ -485,22 +563,18 @@ export function ArcSidebar({
 
             <div className="spec-row-with-preview">
               <div className="spec-inputs-col">
-                <select
+                <CustomDropdown
                   id="ram-select"
                   className="spec-select"
                   value={ram || ''}
-                  onChange={(e) => {
-                    const val = e.target.value ? Number(e.target.value) : null;
-                    onSelectRam(val);
+                  placeholder="Select RAM"
+                  searchable={false}
+                  options={ramOptions}
+                  onChange={(val) => {
+                    onSelectRam(val ? Number(val) : null);
                   }}
-                >
-                  <option value="">Select RAM</option>
-                  {RAM_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  ariaLabel="Select RAM"
+                />
               </div>
 
               <div className="component-square-box" id="ram-visual-preview">
@@ -550,18 +624,15 @@ export function ArcSidebar({
             <label className="spec-label" htmlFor="upscaling-select">
               <span>Upscaling (DLSS / FSR / XeSS)</span>
             </label>
-            <select
+            <CustomDropdown
               id="upscaling-select"
               className="spec-select"
               value={upscaling}
-              onChange={(e) => onSelectUpscaling(e.target.value)}
-            >
-              <option value="none">Native (Disabled)</option>
-              <option value="quality">Quality (+20% FPS)</option>
-              <option value="balanced">Balanced (+35% FPS)</option>
-              <option value="performance">Performance (+50% FPS)</option>
-              <option value="ultra-performance">Ultra Performance (+70% FPS)</option>
-            </select>
+              searchable={false}
+              options={upscalingOptions}
+              onChange={(val) => onSelectUpscaling(val)}
+              ariaLabel="Select Upscaling Mode"
+            />
           </div>
 
           {/* Ray Tracing */}
@@ -811,6 +882,18 @@ export function ArcSidebar({
             <div className="save-rig-toast-msg">{saveToast}</div>
           )}
         </div>
+
+        {onCloseMobile && (
+          <div className="mobile-sidebar-footer">
+            <button
+              type="button"
+              className="mobile-apply-btn"
+              onClick={onCloseMobile}
+            >
+              Apply & View Games
+            </button>
+          </div>
+        )}
       </aside>
 
       {isDetectModalOpen && (

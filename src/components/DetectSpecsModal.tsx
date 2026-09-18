@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { GPUS, CPUS, RAM_OPTIONS } from '../data/hardware.js';
 import { detectSystemHardware, DetectedHardware } from '../utils/hardwareDetector.js';
+import { CustomDropdown } from './CustomDropdown';
+import { MaterialSpinner } from './MaterialSpinner';
 
 interface DetectSpecsModalProps {
   isOpen: boolean;
@@ -86,6 +88,32 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
     onClose();
   };
 
+  const gpuGroups = React.useMemo(() => {
+    return ['NVIDIA', 'AMD', 'Intel'].map((brand) => {
+      const brandGpus = GPUS.filter((g) => g.brand === brand);
+      return {
+        label: `${brand} Graphics Cards`,
+        options: brandGpus.map((g) => ({
+          value: g.id,
+          label: `${g.name} (${g.vram}GB)`
+        }))
+      };
+    });
+  }, []);
+
+  const cpuGroups = React.useMemo(() => {
+    return ['AMD', 'Intel'].map((brand) => {
+      const brandCpus = CPUS.filter((c) => c.brand === brand);
+      return {
+        label: `${brand} Processors`,
+        options: brandCpus.map((c) => ({
+          value: c.id,
+          label: c.name
+        }))
+      };
+    });
+  }, []);
+
   return createPortal(
     <div className="detect-modal-backdrop" onClick={onClose}>
       <div
@@ -121,9 +149,7 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
         <div className="detect-modal-body">
           {isDetecting ? (
             <div className="detect-loading-view">
-              <svg className="initial-spinner" viewBox="0 0 50 50">
-                <circle cx="25" cy="25" r="20" fill="none" strokeWidth="6" />
-              </svg>
+              <MaterialSpinner size={32} strokeWidth={5} />
               <span className="detect-loading-text">{progressText}</span>
             </div>
           ) : detected ? (
@@ -154,24 +180,15 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
                   <CircuitBoard size={14} strokeWidth={2} className="detect-field-icon" />
                   <span>Graphics Card</span>
                 </label>
-                <select
+                <CustomDropdown
                   className="detect-spec-select"
                   value={selectedGpuId}
-                  onChange={(e) => setSelectedGpuId(e.target.value)}
-                >
-                  {['NVIDIA', 'AMD', 'Intel'].map((brand) => {
-                    const brandGpus = GPUS.filter((g) => g.brand === brand);
-                    return (
-                      <optgroup key={brand} label={`${brand} Graphics Cards`}>
-                        {brandGpus.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.name} ({g.vram}GB)
-                          </option>
-                        ))}
-                      </optgroup>
-                    );
-                  })}
-                </select>
+                  placeholder="Select GPU"
+                  searchable={true}
+                  groups={gpuGroups}
+                  onChange={(val) => setSelectedGpuId(val)}
+                  ariaLabel="Select Graphics Card"
+                />
                 {detected && !detected.gpuDetectionReliable && (
                   <p className="detect-field-hint">
                     Your browser hid the physical adapter ({detected.rawGpu}). Please verify this selection manually.
@@ -185,24 +202,15 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
                   <Cpu size={14} strokeWidth={2} className="detect-field-icon" />
                   <span>Processor</span>
                 </label>
-                <select
+                <CustomDropdown
                   className="detect-spec-select"
                   value={selectedCpuId}
-                  onChange={(e) => setSelectedCpuId(e.target.value)}
-                >
-                  {['AMD', 'Intel'].map((brand) => {
-                    const brandCpus = CPUS.filter((c) => c.brand === brand);
-                    return (
-                      <optgroup key={brand} label={`${brand} Processors`}>
-                        {brandCpus.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    );
-                  })}
-                </select>
+                  placeholder="Select CPU"
+                  searchable={true}
+                  groups={cpuGroups}
+                  onChange={(val) => setSelectedCpuId(val)}
+                  ariaLabel="Select Processor"
+                />
               </div>
 
               {/* Memory (RAM) */}

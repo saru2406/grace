@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, useDeferredValue } from 'react';
 import { flushSync } from 'react-dom';
-import { PanelLeft, Plus } from 'lucide-react';
+import { PanelLeft, Plus, Search, Cpu } from 'lucide-react';
 import { GPUS, CPUS, SYSTEM_PRESETS } from './data/hardware.js';
 import { DEFAULT_GAMES } from './data/games.js';
 import { calculateFps } from './services/fpsEngine.js';
@@ -16,6 +16,7 @@ import { GamesGrid } from './components/GamesGrid.jsx';
 import { Footer } from './components/Footer.jsx';
 import { SplashScreen } from './components/SplashScreen.jsx';
 import { GameDetailPageSkeleton } from './components/SkeletonLoader.jsx';
+import { MobileBottomNav } from './components/MobileBottomNav.jsx';
 
 // Code-split heavy modals and detail page for instant initial load
 const GameDetailPage = React.lazy(() => import('./components/GameDetailPage.jsx').then(m => ({ default: m.GameDetailPage })));
@@ -154,6 +155,8 @@ export function App() {
 
   // Arc Sidebar mobile drawer state
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isQuickBuildsOpen, setIsQuickBuildsOpen] = useState(false);
+  const [isDetectModalOpen, setIsDetectModalOpen] = useState(false);
 
   // Background artwork sync: driven by current active carousel slide on home, and game wide art on full game page
   const [carouselBg, setCarouselBg] = useState(
@@ -681,6 +684,44 @@ export function App() {
     : carouselBg;
   const isAmbientActive = Boolean(userSettings.ambientBlur && currentAmbientBg);
 
+  const activeMobileTab = isMobileSidebarOpen
+    ? 'rig'
+    : isQuickBuildsOpen
+    ? 'builds'
+    : isPopoutOpen
+    ? 'settings'
+    : isSteamGridSearchOpen
+    ? 'search'
+    : 'library';
+
+  const handleSelectMobileTab = useCallback((tab) => {
+    if (tab === 'library') {
+      if (activeDetailGame) handleBackToLibrary();
+      setIsMobileSidebarOpen(false);
+      setIsQuickBuildsOpen(false);
+      setIsPopoutOpen(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (tab === 'rig') {
+      setIsQuickBuildsOpen(false);
+      setIsPopoutOpen(false);
+      setIsMobileSidebarOpen(prev => !prev);
+    } else if (tab === 'builds') {
+      setIsMobileSidebarOpen(false);
+      setIsPopoutOpen(false);
+      setIsQuickBuildsOpen(prev => !prev);
+    } else if (tab === 'search') {
+      setIsMobileSidebarOpen(false);
+      setIsQuickBuildsOpen(false);
+      setIsPopoutOpen(false);
+      setSteamGridSearchInitialQuery('');
+      setIsSteamGridSearchOpen(true);
+    } else if (tab === 'settings') {
+      setIsMobileSidebarOpen(false);
+      setIsQuickBuildsOpen(false);
+      setIsPopoutOpen(prev => !prev);
+    }
+  }, [activeDetailGame, handleBackToLibrary]);
+
   return (
     <>
       {appLoading && <SplashScreen isFadingOut={isSplashFading} />}
@@ -757,34 +798,76 @@ export function App() {
           onDeleteRigTemplate={handleDeleteRigTemplate}
           isMobileOpen={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
+          isQuickBuildsOpen={isQuickBuildsOpen}
+          onOpenQuickBuilds={() => setIsQuickBuildsOpen(true)}
+          onCloseQuickBuilds={() => setIsQuickBuildsOpen(false)}
+          isDetectModalOpen={isDetectModalOpen}
+          onOpenDetectModal={() => setIsDetectModalOpen(true)}
+          onCloseDetectModal={() => setIsDetectModalOpen(false)}
         />
 
         {/* Main Content Viewport */}
         <div className="main-viewport">
-          {/* Mobile floating top bar */}
+          {/* Mobile floating top app bar */}
           <div className="arc-mobile-header">
             <button
               type="button"
               className="arc-mobile-toggle-btn"
-              onClick={() => setIsMobileSidebarOpen(true)}
-              aria-label="Open sidebar"
-            >
-              <PanelLeft size={18} />
-              <span>Rig & Menu</span>
-            </button>
-            <span className="arc-mobile-brand">Grace</span>
-            <button
-              type="button"
-              className="arc-mobile-search-btn"
               onClick={() => {
-                setSteamGridSearchInitialQuery('');
-                setIsSteamGridSearchOpen(true);
+                setIsQuickBuildsOpen(false);
+                setIsPopoutOpen(false);
+                setIsMobileSidebarOpen(true);
               }}
-              title="Add game"
-              aria-label="Add game"
+              aria-label="Open hardware rig configuration"
             >
-              <Plus size={16} />
+              <Cpu size={15} />
+              <div className="arc-mobile-rig-summary">
+                <span className="arc-mobile-rig-title">
+                  {specs.gpu
+                    ? specs.gpu.name.replace('NVIDIA GeForce ', '').replace('AMD Radeon ', '').replace('Intel Arc ', '')
+                    : 'Setup Rig'}
+                </span>
+                <span className="arc-mobile-rig-res">{specs.resolution.toUpperCase()}</span>
+              </div>
             </button>
+
+            <div
+              className="arc-mobile-brand-wrap"
+              onClick={() => {
+                if (activeDetailGame) handleBackToLibrary();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              <span className="arc-mobile-brand" style={{ fontFamily: "'Chelsea Market', cursive" }}>Grace</span>
+              <span className="arc-mobile-badge-chip">FPS</span>
+            </div>
+
+            <div className="arc-mobile-actions">
+              <button
+                type="button"
+                className="arc-mobile-action-btn"
+                onClick={() => {
+                  setSteamGridSearchInitialQuery('');
+                  setIsSteamGridSearchOpen(true);
+                }}
+                title="Search games"
+                aria-label="Search games"
+              >
+                <Search size={15} />
+              </button>
+              <button
+                type="button"
+                className="arc-mobile-action-btn arc-mobile-action-btn-primary"
+                onClick={() => {
+                  setSteamGridSearchInitialQuery('');
+                  setIsSteamGridSearchOpen(true);
+                }}
+                title="Add game"
+                aria-label="Add game"
+              >
+                <Plus size={15} />
+              </button>
+            </div>
           </div>
 
           <main className="main-content">
@@ -859,6 +942,13 @@ export function App() {
           <Footer />
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <MobileBottomNav
+        activeTab={activeMobileTab}
+        onSelectTab={handleSelectMobileTab}
+        isRigConfigured={isConfigured}
+      />
 
       {isSteamGridSearchOpen && (
         <React.Suspense fallback={null}>

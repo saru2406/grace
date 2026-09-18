@@ -188,33 +188,29 @@ function runMicroCpuBenchmark(): number {
 /**
  * Detects CPU concurrency and estimates CPU tier and closest model.
  */
-function detectCpu(): { raw: string; matched: typeof CPUS[0] } {
+function detectCpu(isLaptop = false): { raw: string; matched: typeof CPUS[0] } {
   const concurrency = navigator.hardwareConcurrency || 8;
   const duration = runMicroCpuBenchmark();
 
-  const isFast = duration < 30; // Very fast modern core
+  const isFast = duration < 32; // Fast modern core
 
   const raw = `${concurrency} Logical Cores / Threads (Benchmark: ${duration.toFixed(0)}ms)`;
 
-  // Match based on concurrency and speed
+  // Match based on concurrency, speed, and platform
   let targetId = 'r5-7600x';
 
   if (concurrency >= 24) {
-    targetId = isFast ? 'i9-14900k' : 'r9-7950x3d';
+    targetId = isLaptop ? 'i9-14900hx' : (isFast ? 'i9-14900k' : 'r9-7950x3d');
   } else if (concurrency >= 16) {
-    if (isFast) {
-      targetId = 'r7-7800x3d';
+    if (isLaptop) {
+      targetId = isFast ? 'i7-13700hx' : 'i5-13450hx';
     } else {
-      targetId = 'r7-5700x3d';
+      targetId = isFast ? 'r7-7800x3d' : 'r7-5700x3d';
     }
   } else if (concurrency >= 12) {
-    if (isFast) {
-      targetId = 'r5-7600x';
-    } else {
-      targetId = 'i5-12400f';
-    }
+    targetId = isLaptop ? 'i5-12500h' : (isFast ? 'r5-7600x' : 'i5-12400f');
   } else if (concurrency >= 8) {
-    targetId = isFast ? 'i5-12400f' : 'i7-8700k';
+    targetId = isLaptop ? 'i5-12450h' : (isFast ? 'i5-12400f' : 'i7-8700k');
   } else {
     targetId = 'i5-8400';
   }
@@ -257,7 +253,8 @@ export async function detectSystemHardware(onProgress?: (step: string) => void):
 
   if (onProgress) onProgress('Checking processor cores...');
   await new Promise(resolve => setTimeout(resolve, 120));
-  const cpu = detectCpu();
+  const isLaptop = gpu.matched.id.includes('laptop') || gpu.matched.tier.toLowerCase().includes('laptop');
+  const cpu = detectCpu(isLaptop);
 
   if (onProgress) onProgress('Finalizing specifications...');
   await new Promise(resolve => setTimeout(resolve, 80));

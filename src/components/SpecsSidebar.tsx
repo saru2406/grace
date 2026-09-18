@@ -2,6 +2,7 @@ import React from 'react';
 import { Info } from 'lucide-react';
 import { GPUS, CPUS, RAM_OPTIONS, SYSTEM_PRESETS } from '../data/hardware.js';
 import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual.jsx';
+import { CustomDropdown } from './CustomDropdown';
 
 export function SpecsSidebar({
   gpu,
@@ -32,6 +33,54 @@ export function SpecsSidebar({
 }) {
   const gpuBrands = gpuBrandFilter === 'all' ? ['NVIDIA', 'AMD', 'Intel'] : [gpuBrandFilter];
   const cpuBrands = cpuBrandFilter === 'all' ? ['AMD', 'Intel'] : [cpuBrandFilter];
+
+  const gpuGroups = React.useMemo(() => {
+    return gpuBrands
+      .map(brand => {
+        const brandGpus = GPUS.filter(g => g.brand === brand);
+        if (brandGpus.length === 0) return null;
+        return {
+          label: `${brand} Graphics Cards`,
+          options: brandGpus.map(g => ({
+            value: g.id,
+            label: `${g.name} (${g.vram}GB)`
+          }))
+        };
+      })
+      .filter(Boolean) as { label: string; options: { value: string; label: string }[] }[];
+  }, [gpuBrands]);
+
+  const cpuGroups = React.useMemo(() => {
+    return cpuBrands
+      .map(brand => {
+        const brandCpus = CPUS.filter(c => c.brand === brand);
+        if (brandCpus.length === 0) return null;
+        return {
+          label: `${brand} Processors`,
+          options: brandCpus.map(c => ({
+            value: c.id,
+            label: c.name
+          }))
+        };
+      })
+      .filter(Boolean) as { label: string; options: { value: string; label: string }[] }[];
+  }, [cpuBrands]);
+
+  const ramOptions = React.useMemo(() => {
+    return RAM_OPTIONS.map(opt => ({
+      value: opt.value,
+      label: opt.label,
+      sublabel: opt.desc
+    }));
+  }, []);
+
+  const upscalingOptions = React.useMemo(() => [
+    { value: 'none', label: 'Native (Disabled)' },
+    { value: 'quality', label: 'Quality (+20% FPS)' },
+    { value: 'balanced', label: 'Balanced (+35% FPS)' },
+    { value: 'performance', label: 'Performance (+50% FPS)' },
+    { value: 'ultra-performance', label: 'Ultra Performance (+70% FPS)' }
+  ], []);
 
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveName, setSaveName] = React.useState('');
@@ -214,30 +263,18 @@ export function SpecsSidebar({
               ))}
             </div>
 
-            <select
+            <CustomDropdown
               id="gpu-select"
               className="spec-select"
               value={gpu ? gpu.id : ''}
-              onChange={(e) => {
-                const val = e.target.value;
+              placeholder="Select GPU"
+              searchable={true}
+              groups={gpuGroups}
+              onChange={(val) => {
                 onSelectGpu(val ? (GPUS.find(g => g.id === val) || null) : null);
               }}
-            >
-              <option value="">Select GPU</option>
-              {gpuBrands.map(brand => {
-                const brandGpus = GPUS.filter(g => g.brand === brand);
-                if (brandGpus.length === 0) return null;
-                return (
-                  <optgroup key={brand} label={`${brand} Graphics Cards`}>
-                    {brandGpus.map(g => (
-                      <option key={g.id} value={g.id}>
-                        {g.name} ({g.vram}GB)
-                      </option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
+              ariaLabel="Select Graphics Card"
+            />
           </div>
 
           <div className="component-square-box" id="gpu-visual-preview">
@@ -269,30 +306,18 @@ export function SpecsSidebar({
               ))}
             </div>
 
-            <select
+            <CustomDropdown
               id="cpu-select"
               className="spec-select"
               value={cpu ? cpu.id : ''}
-              onChange={(e) => {
-                const val = e.target.value;
+              placeholder="Select CPU"
+              searchable={true}
+              groups={cpuGroups}
+              onChange={(val) => {
                 onSelectCpu(val ? (CPUS.find(c => c.id === val) || null) : null);
               }}
-            >
-              <option value="">Select CPU</option>
-              {cpuBrands.map(brand => {
-                const brandCpus = CPUS.filter(c => c.brand === brand);
-                if (brandCpus.length === 0) return null;
-                return (
-                  <optgroup key={brand} label={`${brand} Processors`}>
-                    {brandCpus.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
+              ariaLabel="Select Processor"
+            />
           </div>
 
           <div className="component-square-box" id="cpu-visual-preview">
@@ -310,22 +335,18 @@ export function SpecsSidebar({
 
         <div className="spec-row-with-preview">
           <div className="spec-inputs-col">
-            <select
+            <CustomDropdown
               id="ram-select"
               className="spec-select"
               value={ram || ''}
-              onChange={(e) => {
-                const val = e.target.value ? Number(e.target.value) : null;
-                onSelectRam(val);
+              placeholder="Select RAM"
+              searchable={false}
+              options={ramOptions}
+              onChange={(val) => {
+                onSelectRam(val ? Number(val) : null);
               }}
-            >
-              <option value="">Select RAM</option>
-              {RAM_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              ariaLabel="Select RAM"
+            />
           </div>
 
           <div className="component-square-box" id="ram-visual-preview">
@@ -375,18 +396,15 @@ export function SpecsSidebar({
         <label className="spec-label" htmlFor="upscaling-select">
           <span>Upscaling (DLSS / FSR / XeSS)</span>
         </label>
-        <select
+        <CustomDropdown
           id="upscaling-select"
           className="spec-select"
           value={upscaling}
-          onChange={(e) => onSelectUpscaling(e.target.value)}
-        >
-          <option value="none">Native (Disabled)</option>
-          <option value="quality">Quality (+20% FPS)</option>
-          <option value="balanced">Balanced (+35% FPS)</option>
-          <option value="performance">Performance (+50% FPS)</option>
-          <option value="ultra-performance">Ultra Performance (+70% FPS)</option>
-        </select>
+          searchable={false}
+          options={upscalingOptions}
+          onChange={(val) => onSelectUpscaling(val)}
+          ariaLabel="Select Upscaling Mode"
+        />
       </div>
 
       {/* Ray Tracing */}

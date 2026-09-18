@@ -2,14 +2,7 @@ import React from 'react';
 
 export function SystemStatusBar({ isConfigured, summary }) {
   if (!isConfigured) {
-    return (
-      <div className="system-status-bar" id="system-status-bar">
-        <div id="status-unconfigured" className="status-msg">
-          <span className="status-indicator-dot"></span>
-          <span>Select hardware to estimate FPS.</span>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const { avgFps, lowFps, bottleneckText, bottleneckColor, smoothCount, totalCount, verdictText, verdictColor } = summary;

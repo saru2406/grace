@@ -1,34 +1,50 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ImageOff, X, Search, Gamepad2, Loader2 } from 'lucide-react';
+import { ImageOff, X, Search, Gamepad2 } from 'lucide-react';
 import { searchGames, getGameGrid } from '../services/steamGrid.js';
+import { MaterialSpinner } from './MaterialSpinner';
 
 export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery = '' }) {
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingGameId, setLoadingGameId] = useState(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
+      setLoadingGameId(null);
       if (initialQuery) {
         setQuery(initialQuery);
       }
       setTimeout(() => {
         if (inputRef.current) inputRef.current.focus();
       }, 50);
+    } else {
+      setLoadingGameId(null);
     }
   }, [isOpen, initialQuery]);
+
+  const handleSelectGame = async (item) => {
+    if (loadingGameId) return;
+    setLoadingGameId(item.id);
+    try {
+      await onAddGame(item);
+    } catch (err) {
+      console.error('Failed to load game:', err);
+      setLoadingGameId(null);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
 
     function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !loadingGameId) onClose();
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, loadingGameId]);
 
   useEffect(() => {
     if (query.trim().length < 1) {
@@ -59,7 +75,9 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
     <div
       id="steamgrid-search-modal"
       className="detect-modal-backdrop"
-      onClick={onClose}
+      onClick={() => {
+        if (!loadingGameId) onClose();
+      }}
     >
       <div
         className="search-palette-box"
@@ -80,8 +98,9 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
             ref={inputRef}
             autoComplete="off"
             spellCheck="false"
+            disabled={Boolean(loadingGameId)}
           />
-          {query && (
+          {query && !loadingGameId && (
             <button
               type="button"
               className="search-palette-clear-btn"
@@ -91,6 +110,18 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
               <X size={18} />
             </button>
           )}
+          <button
+            type="button"
+            className="search-palette-close-btn"
+            onClick={() => {
+              if (!loadingGameId) onClose();
+            }}
+            aria-label="Close search"
+            title="Close"
+            disabled={Boolean(loadingGameId)}
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <div className="search-palette-content">
@@ -121,6 +152,7 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
                     type="button"
                     className="search-suggestion-pill"
                     onClick={() => setQuery(s)}
+                    disabled={Boolean(loadingGameId)}
                   >
                     {s}
                   </button>
@@ -143,7 +175,9 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
                 <SearchResultCard
                   key={item.id}
                   item={item}
-                  onSelect={() => onAddGame(item)}
+                  isSelectedLoading={loadingGameId === item.id}
+                  isDisabledByLoading={Boolean(loadingGameId && loadingGameId !== item.id)}
+                  onSelect={() => handleSelectGame(item)}
                 />
               ))}
             </div>
@@ -156,20 +190,14 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
   );
 }
 
-function SearchResultCard({ item, onSelect }) {
+function SearchResultCard({ item, isSelectedLoading, isDisabledByLoading, onSelect }) {
   const initialThumb = item.thumb || item.url || item.coverUrl || null;
   const [thumb, setThumb] = useState(initialThumb);
   const [isLoading, setIsLoading] = useState(!initialThumb);
-  const [isActivating, setIsActivating] = useState(false);
 
-  const handleSelect = async () => {
-    if (isActivating) return;
-    setIsActivating(true);
-    try {
-      await onSelect();
-    } finally {
-      setIsActivating(false);
-    }
+  const handleSelect = () => {
+    if (isSelectedLoading || isDisabledByLoading) return;
+    onSelect();
   };
 
   useEffect(() => {
@@ -202,19 +230,25 @@ function SearchResultCard({ item, onSelect }) {
 
   return (
     <div
-      className={`search-result-card ${isActivating ? 'activating' : ''}`}
-      tabIndex={0}
+      className={`search-result-card ${isSelectedLoading ? 'is-selected-loading' : ''} ${isDisabledByLoading ? 'is-disabled-by-loading' : ''}`}
+      tabIndex={isDisabledByLoading ? -1 : 0}
       role="button"
       onClick={handleSelect}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if ((e.key === 'Enter' || e.key === ' ') && !isDisabledByLoading) {
           e.preventDefault();
           handleSelect();
         }
       }}
-      title={`Click to add ${item.name} to your library`}
+      title={isSelectedLoading ? `Loading ${item.name}...` : `Click to open ${item.name}`}
+      aria-busy={isSelectedLoading}
     >
       <div style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.06)', position: 'relative', overflow: 'hidden' }}>
+        {isSelectedLoading && (
+          <div className="search-card-loading-overlay" aria-label={`Loading ${item.name}`}>
+            <MaterialSpinner size={38} strokeWidth={4.5} />
+          </div>
+        )}
         {isLoading && <div className="carousel-poster-skeleton skeleton-loading" />}
         {!isLoading && !thumb && (
           <div className="search-result-thumb search-result-thumb-missing" aria-label={`No cover image available for ${item.name}`}>

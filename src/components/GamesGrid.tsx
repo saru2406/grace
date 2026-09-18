@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, X, SearchX, Plus } from 'lucide-react';
 import { GameCard } from './GameCard.jsx';
 import { getSystemPeriod } from '../services/systemTrending.js';
+import { CustomDropdown } from './CustomDropdown';
 
 export function GamesGrid({
   items,
@@ -78,18 +79,21 @@ export function GamesGrid({
             )}
           </div>
 
-          <select
+          <CustomDropdown
             id="sort-select"
             className="sort-select"
             value={sortBy}
-            onChange={(e) => onSortChange(e.target.value)}
-          >
-            <option value="trending">Popularity</option>
-            <option value="fps-desc">FPS: High to Low</option>
-            <option value="fps-asc">FPS: Low to High</option>
-            <option value="title-asc">Title: A-Z</option>
-            <option value="year-desc">Release: Newest</option>
-          </select>
+            searchable={false}
+            options={[
+              { value: 'trending', label: 'Popularity' },
+              { value: 'fps-desc', label: 'FPS: High to Low' },
+              { value: 'fps-asc', label: 'FPS: Low to High' },
+              { value: 'title-asc', label: 'Title: A-Z' },
+              { value: 'year-desc', label: 'Release: Newest' }
+            ]}
+            onChange={(val) => onSortChange(val)}
+            ariaLabel="Sort games by"
+          />
         </div>
       </div>
 

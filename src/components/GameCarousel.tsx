@@ -81,6 +81,8 @@ export function GameCarousel({
   }, [currentIndex, activeGame]);
 
   const [slideDir, setSlideDir] = useState('next');
+  const touchStartXRef = useRef(null);
+  const touchStartYRef = useRef(null);
 
   const nextSlide = useCallback(() => {
     if (!featuredGames || featuredGames.length <= 1) return;
@@ -93,6 +95,33 @@ export function GameCarousel({
     setSlideDir('prev');
     setCurrentIndex(prev => (prev - 1 + featuredGames.length) % featuredGames.length);
   }, [featuredGames]);
+
+  const handleTouchStart = useCallback((e) => {
+    if (e.touches && e.touches.length > 0) {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+      setIsPaused(true);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    setIsPaused(false);
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+      const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+      // Trigger horizontal slide if swipe is primarily horizontal and > 38px
+      if (Math.abs(deltaX) > 38 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (deltaX < 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  }, [nextSlide, prevSlide]);
 
   useEffect(() => {
     if (isPaused || !featuredGames || featuredGames.length <= 1) return;
@@ -118,7 +147,15 @@ export function GameCarousel({
   }, [activeGame, specs]);
 
   return (
-    <div className="game-carousel" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} role="region" aria-label="Featured Games Carousel">
+    <div
+      className="game-carousel"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      role="region"
+      aria-label="Featured Games Carousel"
+    >
 
       {/* Background: Wide landscape art */}
       <div className="carousel-slide-backdrop">
