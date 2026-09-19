@@ -1,4 +1,6 @@
-export function calculateFps(game, gpu, cpu, ram, settings = {}) {
+import { BenchmarkData } from './benchmarkService';
+
+export function calculateFps(game: any, gpu: any, cpu: any, ram: any, settings: any = {}, benchmarkData: BenchmarkData | null = null) {
   // If hardware is not yet selected, return unconfigured state
   if (!gpu || !cpu) {
     return {
@@ -6,243 +8,166 @@ export function calculateFps(game, gpu, cpu, ram, settings = {}) {
       avgFps: null,
       low1PercentFps: null,
       frametimeMs: null,
-      verdict: {
-        tier: 'Select Specs',
-        badgeClass: 'badge-unselected',
-        color: 'var(--ctp-subtext0)',
-        text: 'Awaiting Specs'
-      },
-      bottleneck: {
-        culprit: 'None',
-        percentage: 0,
-        label: 'Awaiting Specs',
-        color: 'var(--ctp-subtext0)',
-        desc: 'Choose your GPU and CPU on the right to estimate framerates.'
-      },
-      requiredVram: 'N/A',
-      gpuVram: 0,
-      isVramBottleneck: false,
-      tips: [
-        'Please select a Graphics Card (GPU) and Processor (CPU) from the right sidebar, or click one of the Quick Builds above to start estimating framerates!'
-      ]
+      verdict: { tier: 'Select Specs', badgeClass: 'badge-unselected', color: 'var(--ctp-subtext0)', text: 'Awaiting Specs' },
+      bottleneck: { culprit: 'None', percentage: 0, label: 'Awaiting Specs', color: 'var(--ctp-subtext0)', desc: 'Choose your GPU and CPU.' },
+      requiredVram: 'N/A', gpuVram: 0, isVramBottleneck: false, tips: ['Please select hardware.']
     };
   }
 
   const { resolution = '1080p', preset = 'high', rayTracing = false, pathTracing = false, upscaling = 'off' } = settings;
 
-  // 1. Resolution Load Multiplier (affects GPU primarily)
-  const resMultipliers = {
-    '1080p': 1.0,
-    '1440p': 0.68,
-    '4k': 0.42
-  };
+  // GPU Architecture Nuances
+  let gpuArchMult = 1.0;
+  if (gpu.name.includes('RTX 40') || gpu.name.includes('RX 7')) gpuArchMult = 1.08; // Better memory compression / cache
+  if (gpu.name.includes('RTX 30') || gpu.name.includes('RX 6')) gpuArchMult = 1.02;
+  
+  // CPU Architecture Nuances (Cache affects lows significantly)
+  let isX3D = cpu.name.includes('X3D');
+  let cpuCacheMult = isX3D ? 1.25 : 1.0; // Massive boost for X3D chips in gaming
+
+  // Base Performance Anchoring
+  let rawGpuFps = 0;
+  let isAnchored = false;
+
+  // 1. Resolution Multipliers
+  const resMultipliers: any = { '1080p': 1.0, '1440p': 0.65, '4k': 0.38 };
   const resMult = resMultipliers[resolution] || 1.0;
 
-  // 2. Graphics Preset Multiplier
-  const presetMultipliers = {
-    'low': 1.38,
-    'medium': 1.15,
-    'high': 1.0,
-    'ultra': 0.82
-  };
+  // 2. Preset Multipliers
+  const presetMultipliers: any = { 'low': 1.45, 'medium': 1.20, 'high': 1.0, 'ultra': 0.80 };
   const presetMult = presetMultipliers[preset] || 1.0;
 
-  // 3. Ray Tracing & Path Tracing Multipliers
-  let rtMult = 1.0;
-  let rtWarning = false;
-  if (rayTracing && (game.supportsRayTracing || game.supportsPathTracing)) {
-    if (gpu.rtScore <= 0) {
-      rtMult = 0.18; // Unsupported or software emulation penalty
-      rtWarning = true;
-    } else {
-      const rtEfficacy = Math.min(1.4, gpu.rtScore / 100);
-      const baseImpact = game.rtImpact || 0.40;
-      const mitigatedImpact = baseImpact * (1.1 - 0.22 * rtEfficacy);
-      rtMult = Math.max(0.25, 1 - mitigatedImpact);
-    }
-  }
-
-  let ptMult = 1.0;
-  let ptWarning = false;
-  if (pathTracing && (game.supportsPathTracing || game.supportsRayTracing)) {
-    if (gpu.rtScore < 60) {
-      ptMult = 0.12; // Massive penalty for unsupported/weak RT hardware on Path Tracing
-      ptWarning = true;
-    } else {
-      const ptEfficacy = Math.min(1.5, gpu.rtScore / 110);
-      const basePtImpact = game.ptImpact || 0.62;
-      const mitigatedPtImpact = basePtImpact * (1.1 - 0.20 * ptEfficacy);
-      ptMult = Math.max(0.20, 1 - mitigatedPtImpact);
-    }
-  }
-
-  // 4. Upscaling Multiplier (DLSS / FSR / XeSS)
-  // Upscaling only accelerates GPU rendering
-  const upscalingMultipliers = {
-    'off': 1.0,
-    'quality': 1.32,
-    'balanced': 1.48,
-    'performance': 1.70
-  };
+  // 3. Upscaling Multipliers (DLSS / FSR)
+  const upscalingMultipliers: any = { 'off': 1.0, 'native': 1.0, 'none': 1.0, 'quality': 1.35, 'balanced': 1.55, 'performance': 1.85 };
   const upscalingMult = upscalingMultipliers[upscaling] || 1.0;
 
-  // 5. Raw GPU Potential FPS
-  const gpuRelative = gpu.score / 100;
-  const rawGpuFps = game.baseFps * gpuRelative * resMult * presetMult * rtMult * ptMult * upscalingMult;
+  // 4. RT / PT Penalties
+  let rtMult = 1.0;
+  let ptMult = 1.0;
+  let rtWarning = false;
+  let ptWarning = false;
 
-  // 6. CPU Ceiling FPS
-  // Resolution does NOT decrease CPU frame limits, but game CPU intensity scales it
+  if (rayTracing && (game.supportsRayTracing || game.supportsPathTracing)) {
+    if (gpu.rtScore <= 0) { rtMult = 0.15; rtWarning = true; } 
+    else { rtMult = Math.max(0.3, 1 - (0.5 * (100 / Math.max(gpu.rtScore, 1)))); }
+    if (gpu.name.includes('RTX 40')) rtMult *= 1.15; // SER overhead reduction
+  }
+  
+  if (pathTracing && (game.supportsPathTracing || game.supportsRayTracing)) {
+    if (gpu.rtScore < 60) { ptMult = 0.10; ptWarning = true; } 
+    else { ptMult = Math.max(0.2, 1 - (0.75 * (100 / Math.max(gpu.rtScore, 1)))); }
+    if (gpu.name.includes('RTX 40')) ptMult *= 1.25; // SER & Frame Gen benefits implicit for PT
+  }
+
+  // CALCULATE RAW GPU FPS
+  if (benchmarkData) {
+    isAnchored = true;
+    // Use real-world anchor as the baseline (RTX 4090 performance)
+    let anchorBase = benchmarkData.native1080p;
+    if (resolution === '1440p') anchorBase = benchmarkData.native1440p;
+    if (resolution === '4k') anchorBase = benchmarkData.native4k;
+    
+    // Apply RT/PT overrides from benchmark if available natively
+    if (pathTracing && benchmarkData.pt4k) {
+      anchorBase = resolution === '4k' ? benchmarkData.pt4k : resolution === '1440p' ? benchmarkData.pt1440p! : benchmarkData.pt1080p!;
+      rtMult = 1.0; ptMult = 1.0; // Already factored in the anchor
+    } else if (rayTracing && benchmarkData.rt4k) {
+      anchorBase = resolution === '4k' ? benchmarkData.rt4k : resolution === '1440p' ? benchmarkData.rt1440p! : benchmarkData.rt1080p!;
+      rtMult = 1.0; // Already factored in the anchor
+    }
+    
+    // Scale from RTX 4090 (assume score 280) to current GPU
+    const relativePerf = (gpu.score * gpuArchMult) / 280; 
+    rawGpuFps = anchorBase * relativePerf * presetMult * rtMult * ptMult * upscalingMult;
+
+  } else {
+    // Fallback heuristic engine
+    const gpuRelative = gpu.score / 100;
+    const gpuScaling = Math.pow(gpuRelative, 1.08) * gpuArchMult;
+    rawGpuFps = game.baseFps * gpuScaling * resMult * presetMult * rtMult * ptMult * upscalingMult;
+  }
+
+  // 5. CPU Ceiling FPS
   const cpuRelative = cpu.score / 100;
-  const baseCpuCap = (cpu.fpsCap || 200) / (game.cpuIntensity || 1.0);
-  const rawCpuFps = baseCpuCap * (0.4 + 0.6 * cpuRelative);
+  const cpuScaling = Math.pow(cpuRelative, 0.90) * cpuCacheMult;
+  
+  // High upscaling loads the CPU more heavily because of higher frame outputs
+  let cpuLoadMult = 1.0;
+  if (upscaling === 'performance') cpuLoadMult = 0.85; // CPU struggles to feed frames at this rate
+  
+  const baseCpuCap = (cpu.fpsCap || 220) / (game.cpuIntensity || 1.0);
+  let rawCpuFps = baseCpuCap * (0.35 + 0.65 * cpuScaling) * cpuLoadMult;
 
-  // 7. VRAM Demand & Penalties
+  // 6. VRAM / RAM Penalties
   let requiredVram = game.vramAt1080p || 6.0;
   if (resolution === '1440p') requiredVram = game.vramAt1440p || 8.5;
   if (resolution === '4k') requiredVram = game.vramAt4k || 12.0;
-  if (preset === 'ultra') requiredVram *= 1.15;
-  if (pathTracing && (game.supportsPathTracing || game.supportsRayTracing)) requiredVram *= 1.40;
-  else if (rayTracing && (game.supportsRayTracing || game.supportsPathTracing)) requiredVram *= 1.20;
+  if (preset === 'ultra') requiredVram *= 1.20;
+  if (pathTracing) requiredVram *= 1.45;
+  else if (rayTracing) requiredVram *= 1.25;
 
-  let vramPenaltyAvg = 1.0;
-  let vramPenalty1Low = 1.0;
-  let isVramBottleneck = false;
+  let vramPenaltyAvg = 1.0, vramPenalty1Low = 1.0, isVramBottleneck = false;
   if (gpu.vram < requiredVram) {
-    const deficit = requiredVram - gpu.vram;
     isVramBottleneck = true;
-    vramPenaltyAvg = Math.max(0.55, 1.0 - deficit * 0.07);
-    vramPenalty1Low = Math.max(0.28, 1.0 - deficit * 0.16); // Severe 1% low drop when paging to system RAM
+    const deficit = requiredVram - gpu.vram;
+    vramPenaltyAvg = Math.max(0.35, Math.pow(0.80, deficit));
+    vramPenalty1Low = Math.max(0.10, Math.pow(0.55, deficit)); // Extreme stuttering
   }
 
-  // 8. RAM Penalties
-  let ramPenaltyAvg = 1.0;
-  let ramPenalty1Low = 1.0;
-  let isRamBottleneck = false;
-  if (ram < (game.ramRecommended || 16)) {
+  let ramPenaltyAvg = 1.0, ramPenalty1Low = 1.0, isRamBottleneck = false;
+  const recRam = game.ramRecommended || 16;
+  if (ram < recRam) {
     isRamBottleneck = true;
-    ramPenaltyAvg = 0.88;
-    ramPenalty1Low = 0.68;
-  } else if (ram >= 32) {
-    ramPenaltyAvg = 1.03;
-    ramPenalty1Low = 1.05;
+    ramPenaltyAvg = Math.max(0.60, 1.0 - ((recRam - ram) * 0.05));
+    ramPenalty1Low = Math.max(0.30, 1.0 - ((recRam - ram) * 0.09));
   }
 
-  // 9. Bottleneck Resolution & Effective FPS
-  let bottleneck = {
-    culprit: 'Balanced',
-    percentage: 0,
-    label: 'Balanced Rig',
-    color: 'var(--ctp-green)',
-    desc: 'CPU and GPU are harmoniously paired for this title.'
-  };
-
+  // 7. Bottleneck Resolution & Effective FPS
+  let bottleneck = { culprit: 'Balanced', percentage: 0, label: 'Balanced Rig', color: 'var(--ctp-green)', desc: 'CPU and GPU are harmoniously paired.' };
   let effectiveFps;
+  
   if (rawGpuFps > rawCpuFps * 1.1) {
-    // CPU cannot keep up with GPU
-    effectiveFps = rawCpuFps * 1.02;
-    const pct = Math.min(65, Math.round(((rawGpuFps - rawCpuFps) / rawGpuFps) * 100));
-    bottleneck = {
-      culprit: 'CPU',
-      percentage: pct,
-      label: `CPU Limited (${pct}%)`,
-      color: 'var(--ctp-peach)',
-      desc: `Your GPU has more headroom, but the CPU limits framerate at this resolution.`
-    };
+    effectiveFps = rawCpuFps * 1.03;
+    const pct = Math.min(75, Math.round(((rawGpuFps - rawCpuFps) / rawGpuFps) * 100));
+    bottleneck = { culprit: 'CPU', percentage: pct, label: `CPU Limited (${pct}%)`, color: 'var(--ctp-peach)', desc: `GPU has more headroom, but CPU limits framerate.` };
   } else if (rawCpuFps > rawGpuFps * 1.15) {
-    // GPU is the primary limiter (Standard desirable scenario in gaming)
     effectiveFps = rawGpuFps;
-    const pct = Math.min(85, Math.round(((rawCpuFps - rawGpuFps) / rawCpuFps) * 100));
-    bottleneck = {
-      culprit: 'GPU',
-      percentage: pct,
-      label: `GPU Bound (${pct}%)`,
-      color: 'var(--ctp-blue)',
-      desc: `Graphics card is operating at full potential. Ideal GPU utilization.`
-    };
+    const pct = Math.min(90, Math.round(((rawCpuFps - rawGpuFps) / rawCpuFps) * 100));
+    bottleneck = { culprit: 'GPU', percentage: pct, label: `GPU Bound (${pct}%)`, color: 'var(--ctp-blue)', desc: `Graphics card is operating at full potential.` };
   } else {
-    // Balanced
     effectiveFps = (rawGpuFps + rawCpuFps) / 2;
   }
 
-  // Apply VRAM and RAM penalties
-  effectiveFps = Math.max(12, Math.round(effectiveFps * vramPenaltyAvg * ramPenaltyAvg));
+  // Apply memory limits
+  effectiveFps = Math.max(5, Math.round(effectiveFps * vramPenaltyAvg * ramPenaltyAvg));
 
-  // 10. 1% Low FPS Calculation
-  let lowRatio = 0.74; // Standard frametime variance
-  if (cpu.score >= 140) lowRatio += 0.05; // 3D V-Cache or high IPC improves 1% lows
+  // 8. 1% Lows & Frametime
+  let lowRatio = 0.72;
+  if (isX3D) lowRatio += 0.08; // X3D chips maintain incredibly tight 1% lows
   if (isVramBottleneck) lowRatio *= vramPenalty1Low;
   if (isRamBottleneck) lowRatio *= ramPenalty1Low;
+  if (bottleneck.culprit === 'CPU') lowRatio *= 0.90; // CPU limit causes more stutter than GPU limit
 
-  let low1PercentFps = Math.max(8, Math.round(effectiveFps * lowRatio));
-
-  // 11. Frame Time in Milliseconds
+  const low1PercentFps = Math.max(3, Math.round(effectiveFps * lowRatio));
   const frametimeMs = (1000 / effectiveFps).toFixed(1);
 
-  // 12. Performance Tier Verdict
-  let verdict = {
-    tier: 'Smooth',
-    badgeClass: 'badge-smooth',
-    color: 'var(--ctp-green)',
-    text: '60+ FPS Smooth'
-  };
+  // 9. Verdict
+  let verdict = { tier: 'Smooth', badgeClass: 'badge-smooth', color: 'var(--ctp-green)', text: '60+ FPS Smooth' };
+  if (effectiveFps >= 144) verdict = { tier: 'Esports Ready', badgeClass: 'badge-ultra', color: '#ffffff', text: '144+ FPS Esports' };
+  else if (effectiveFps >= 60) verdict = { tier: 'Smooth & Ideal', badgeClass: 'badge-smooth', color: 'var(--ctp-green)', text: '60+ FPS Smooth' };
+  else if (effectiveFps >= 45) verdict = { tier: 'Playable', badgeClass: 'badge-playable', color: 'var(--ctp-yellow)', text: '45-59 FPS Playable' };
+  else if (effectiveFps >= 30) verdict = { tier: 'Console Baseline', badgeClass: 'badge-warning', color: 'var(--ctp-peach)', text: '30-44 FPS Console Pace' };
+  else verdict = { tier: 'Stuttering / Heavy', badgeClass: 'badge-danger', color: 'var(--ctp-red)', text: '<30 FPS Struggling' };
 
-  if (effectiveFps >= 120) {
-    verdict = {
-      tier: 'Ultra High Refresh',
-      badgeClass: 'badge-ultra',
-      color: '#ffffff',
-      text: '120+ FPS Ultra Refresh'
-    };
-  } else if (effectiveFps >= 60) {
-    verdict = {
-      tier: 'Smooth & Ideal',
-      badgeClass: 'badge-smooth',
-      color: 'var(--ctp-green)',
-      text: '60+ FPS Smooth'
-    };
-  } else if (effectiveFps >= 45) {
-    verdict = {
-      tier: 'Playable',
-      badgeClass: 'badge-playable',
-      color: 'var(--ctp-yellow)',
-      text: '45-59 FPS Playable'
-    };
-  } else if (effectiveFps >= 30) {
-    verdict = {
-      tier: 'Console Baseline',
-      badgeClass: 'badge-warning',
-      color: 'var(--ctp-peach)',
-      text: '30-44 FPS Console Pace'
-    };
-  } else {
-    verdict = {
-      tier: 'Stuttering / Heavy',
-      badgeClass: 'badge-danger',
-      color: 'var(--ctp-red)',
-      text: '<30 FPS Struggling'
-    };
-  }
-
-  // 13. Tailored Optimization Advice
+  // 10. Tips
   const tips = [];
-  if (isVramBottleneck) {
-    tips.push(`VRAM Deficit (${gpu.vram}GB vs ${requiredVram.toFixed(1)}GB required): Lower texture quality or resolution to avoid sudden stutters.`);
-  }
-  if (isRamBottleneck) {
-    tips.push(`8GB RAM detected: Upgrading to 16GB or 32GB will dramatically stabilize 1% low frametimes.`);
-  }
-  if (bottleneck.culprit === 'CPU' && resolution === '1080p') {
-    tips.push(`CPU limited: You can increase settings to High/Ultra or enable 1440p with little to no FPS loss.`);
-  }
-  if (bottleneck.culprit === 'GPU' && effectiveFps < 60 && upscaling === 'off') {
-    tips.push(`Turn on DLSS/FSR Quality to boost framerate by up to ~30% with minimal image degradation.`);
-  }
-  if (rayTracing && rtWarning) {
-    tips.push(`GPU lacks dedicated RT cores: Turn off Ray Tracing for a massive FPS recovery.`);
-  }
-  if (pathTracing && ptWarning) {
-    tips.push(`GPU lacks Path Tracing hardware capability: Turn off Path Tracing to restore normal framerates.`);
-  }
+  if (isAnchored) tips.push(`Using real-world internet benchmark data for absolute accuracy.`);
+  if (isVramBottleneck) tips.push(`VRAM Deficit (${gpu.vram}GB vs ${requiredVram.toFixed(1)}GB required): Lower texture quality.`);
+  if (isRamBottleneck) tips.push(`RAM Deficit detected: Upgrading to 16GB/32GB will stabilize frametimes.`);
+  if (bottleneck.culprit === 'CPU' && resolution === '1080p') tips.push(`CPU limited: Increase settings or enable 1440p with little FPS loss.`);
+  if (bottleneck.culprit === 'GPU' && effectiveFps < 60 && upscaling === 'off') tips.push(`Turn on DLSS/FSR Quality to boost framerate by up to ~35%.`);
+  if (rayTracing && rtWarning) tips.push(`GPU lacks dedicated RT cores: Turn off Ray Tracing for a massive FPS recovery.`);
+  if (pathTracing && ptWarning) tips.push(`GPU lacks Path Tracing hardware capability: Turn off Path Tracing to restore normal framerates.`);
 
   return {
     avgFps: effectiveFps,
@@ -253,12 +178,13 @@ export function calculateFps(game, gpu, cpu, ram, settings = {}) {
     requiredVram: requiredVram.toFixed(1),
     gpuVram: gpu.vram,
     isVramBottleneck,
-    tips
+    tips,
+    isAnchored
   };
 }
 
-// Calculate comparison across all 3 resolutions (1080p, 1440p, 4K) for a single game
-export function calculateResolutionComparison(game, gpu, cpu, ram, settings = {}) {
+// Calculate comparison across all 3 resolutions
+export function calculateResolutionComparison(game: any, gpu: any, cpu: any, ram: any, settings: any = {}, benchmarkData: BenchmarkData | null = null) {
   const resolutions = ['1080p', '1440p', '4k'];
   if (!gpu || !cpu) {
     return resolutions.map(res => ({
@@ -271,7 +197,7 @@ export function calculateResolutionComparison(game, gpu, cpu, ram, settings = {}
   }
 
   return resolutions.map(res => {
-    const resResult = calculateFps(game, gpu, cpu, ram, { ...settings, resolution: res });
+    const resResult = calculateFps(game, gpu, cpu, ram, { ...settings, resolution: res }, benchmarkData);
     return {
       resolution: res,
       avgFps: resResult.avgFps,

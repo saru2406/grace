@@ -88,12 +88,13 @@ export function GameDetailModal({
   return (
     <div
       id="game-detail-modal"
-      className="modal-overlay open"
+      className="detect-modal-backdrop open"
+      style={{ zIndex: 9999 }}
       onClick={(e) => {
-        if (e.target.classList.contains('modal-overlay')) onClose();
+        if (e.target instanceof HTMLElement && e.target.classList.contains('detect-modal-backdrop')) onClose();
       }}
     >
-      <div className="modal-box modal-detail">
+      <div className="detect-modal-dialog modal-detail" style={{ maxWidth: '760px', overflowY: 'auto', padding: 0 }}>
         <button
           id="close-detail-modal"
           className="modal-close-btn"

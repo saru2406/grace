@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ImageOff, X, Search, Gamepad2 } from 'lucide-react';
+import { ImageOff, X, Search, Gamepad2, GripHorizontal } from 'lucide-react';
+import { useDraggable } from '../hooks/useDraggable';
 import { searchGames, getGameGrid } from '../services/steamGrid.js';
 import { MaterialSpinner } from './MaterialSpinner';
 
@@ -9,6 +10,9 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingGameId, setLoadingGameId] = useState(null);
+
+  const dialogRef = useRef(null);
+  useDraggable(dialogRef, '.modal-drag-handle', isOpen);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -80,11 +84,15 @@ export function SteamGridSearchModal({ isOpen, onClose, onAddGame, initialQuery 
       }}
     >
       <div
-        className="search-palette-box"
+        className="detect-modal-dialog search-palette-box"
+        ref={dialogRef}
+        style={{ maxWidth: '600px', width: '90%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
+        {/* Header removed */}
+
         <div className="search-palette-inner">
         <div className="search-palette-input-wrap">
           <Search className="search-palette-icon" size={22} />
@@ -289,3 +297,4 @@ function SearchResultCard({ item, isSelectedLoading, isDisabledByLoading, onSele
     </div>
   );
 }
+

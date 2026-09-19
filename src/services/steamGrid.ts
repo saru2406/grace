@@ -1,15 +1,16 @@
 import { DEFAULT_GAMES } from '../data/games.js';
+import { getCachedApi, setCachedApi } from './apiCache.js';
 
 const API_BASE_PROXY = '/api/steamgriddb';
 
-const cache = new Map();
-
 /**
- * Perform a request through the host-side SteamGridDB proxy.
+ * Perform a request through the host-side SteamGridDB proxy with dual-tier persistent cache.
  */
 async function fetchSteamGrid(endpoint) {
-  if (cache.has(endpoint)) {
-    return cache.get(endpoint);
+  const cacheKey = `steamgrid_${endpoint}`;
+  const cached = getCachedApi(cacheKey);
+  if (cached !== null) {
+    return cached;
   }
 
   try {
@@ -21,21 +22,21 @@ async function fetchSteamGrid(endpoint) {
     if (res.ok) {
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
-        cache.set(endpoint, null);
+        setCachedApi(cacheKey, null, 60 * 60 * 1000); // cache negative result for 1 hour
         return null;
       }
       const data = await res.json();
       if (!data || data.success === false) {
-        cache.set(endpoint, null);
+        setCachedApi(cacheKey, null, 60 * 60 * 1000);
         return null;
       }
-      cache.set(endpoint, data);
+      setCachedApi(cacheKey, data);
       return data;
     } else {
-      cache.set(endpoint, null);
+      setCachedApi(cacheKey, null, 30 * 60 * 1000);
     }
   } catch (err) {
-    cache.set(endpoint, null);
+    setCachedApi(cacheKey, null, 30 * 60 * 1000);
   }
 
   return null;
@@ -64,6 +65,7 @@ function searchLocalCatalog(query) {
 
   return matches.map(g => ({
     id: g.steamGridId || g.steamAppId || g.id,
+    steamGridId: g.steamGridId,
     steamAppId: g.steamAppId,
     name: g.title,
     thumb: g.coverUrl,
@@ -258,15 +260,12 @@ export async function searchGames(query) {
   return results;
 }
 
-/**
- * Get grid poster cover (600x900) for a game ID or steamAppId
- */
-export async function getGameGrid(gameId, steamAppId) {
-  const numericId = steamAppId || (typeof gameId === 'number' || /^\d+$/.test(String(gameId)) ? Number(gameId) : null);
+export async function getGameGrid(steamGridId, steamAppId) {
+  const sGridId = (typeof steamGridId === 'number' || /^\d+$/.test(String(steamGridId))) ? Number(steamGridId) : null;
+  const sAppId = (typeof steamAppId === 'number' || /^\d+$/.test(String(steamAppId))) ? Number(steamAppId) : null;
 
-  // If gameId is a specific SteamGridDB game ID (not a numeric Steam App ID)
-  if (gameId && String(gameId) !== String(numericId)) {
-    const endpoint = `/grids/game/${gameId}?dimensions=600x900`;
+  if (sGridId) {
+    const endpoint = `/grids/game/${sGridId}?dimensions=600x900`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const item = response.data[0];
@@ -278,8 +277,8 @@ export async function getGameGrid(gameId, steamAppId) {
     }
   }
 
-  if (numericId) {
-    const endpoint = `/grids/steam/${numericId}?dimensions=600x900`;
+  if (sAppId) {
+    const endpoint = `/grids/steam/${sAppId}?dimensions=600x900`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const item = response.data[0];
@@ -290,22 +289,20 @@ export async function getGameGrid(gameId, steamAppId) {
       };
     }
     return {
-      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/library_600x900.jpg`,
-      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/library_600x900.jpg`
+      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sAppId}/library_600x900.jpg`,
+      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sAppId}/library_600x900.jpg`
     };
   }
 
   return null;
 }
 
-/**
- * Get wide hero banner for a game ID or steamAppId (from SteamGridDB heroes endpoint)
- */
-export async function getGameHero(gameId, steamAppId) {
-  const numericId = steamAppId || (typeof gameId === 'number' || /^\d+$/.test(String(gameId)) ? Number(gameId) : null);
+export async function getGameHero(steamGridId, steamAppId) {
+  const sGridId = (typeof steamGridId === 'number' || /^\d+$/.test(String(steamGridId))) ? Number(steamGridId) : null;
+  const sAppId = (typeof steamAppId === 'number' || /^\d+$/.test(String(steamAppId))) ? Number(steamAppId) : null;
 
-  if (gameId && String(gameId) !== String(numericId)) {
-    const endpoint = `/heroes/game/${gameId}`;
+  if (sGridId) {
+    const endpoint = `/heroes/game/${sGridId}`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const item = response.data[0];
@@ -316,8 +313,8 @@ export async function getGameHero(gameId, steamAppId) {
     }
   }
 
-  if (numericId) {
-    const endpoint = `/heroes/steam/${numericId}`;
+  if (sAppId) {
+    const endpoint = `/heroes/steam/${sAppId}`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const item = response.data[0];
@@ -328,29 +325,29 @@ export async function getGameHero(gameId, steamAppId) {
     }
     // High-resolution Steam library hero fallback
     return {
-      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/header.jpg`,
-      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/library_hero.jpg`
+      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sAppId}/header.jpg`,
+      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sAppId}/library_hero.jpg`
     };
   }
 
   return null;
 }
 
-/**
- * Get wide cover art (landscape capsule or hero) from SteamGridDB or Steam CDN
- */
-export async function getGameWideCover(gameId, steamAppId) {
+export async function getGameWideCover(steamGridId, steamAppId) {
   // 1. Try SteamGridDB hero first
-  const hero = await getGameHero(gameId, steamAppId);
-  if (hero && hero.url) {
+  const hero = await getGameHero(steamGridId, steamAppId);
+  // Only return hero early if it's NOT the fastly steam fallback URL (which might 404).
+  // If it's a real steamgriddb hero, use it immediately.
+  if (hero && hero.url && hero.url.includes('steamgriddb.com')) {
     return hero;
   }
 
-  const numericId = steamAppId || (typeof gameId === 'number' || /^\d+$/.test(String(gameId)) ? Number(gameId) : null);
+  const sGridId = (typeof steamGridId === 'number' || /^\d+$/.test(String(steamGridId))) ? Number(steamGridId) : null;
+  const sAppId = (typeof steamAppId === 'number' || /^\d+$/.test(String(steamAppId))) ? Number(steamAppId) : null;
 
   // 2. Try SteamGridDB wide grids (920x430 or 460x215)
-  if (gameId && String(gameId) !== String(numericId)) {
-    const endpoint = `/grids/game/${gameId}?dimensions=920x430,460x215`;
+  if (sGridId) {
+    const endpoint = `/grids/game/${sGridId}?dimensions=920x430,460x215`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const item = response.data[0];
@@ -361,8 +358,8 @@ export async function getGameWideCover(gameId, steamAppId) {
     }
   }
 
-  if (numericId) {
-    const endpoint = `/grids/steam/${numericId}?dimensions=920x430,460x215`;
+  if (sAppId) {
+    const endpoint = `/grids/steam/${sAppId}?dimensions=920x430,460x215`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const item = response.data[0];
@@ -374,24 +371,26 @@ export async function getGameWideCover(gameId, steamAppId) {
 
     // Official Steam header fallback
     return {
-      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/header.jpg`,
-      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/header.jpg`
+      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sAppId}/header.jpg`,
+      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sAppId}/header.jpg`
     };
   }
 
-  return null;
+  // If SteamGridDB failed entirely, we still return the fallback hero we got initially
+  return hero || null;
 }
 
 /**
  * Get transparent logo from SteamGridDB API or Steam CDN
  * Supports full game title lookup to ensure exact matching for all games.
  */
-export async function getGameLogo(gameId, steamAppId, gameTitle) {
-  const numericId = steamAppId || (typeof gameId === 'number' || /^\d+$/.test(String(gameId)) ? Number(gameId) : null);
+export async function getGameLogo(steamGridId, steamAppId, gameTitle) {
+  const sGridId = (typeof steamGridId === 'number' || /^\d+$/.test(String(steamGridId))) ? Number(steamGridId) : null;
+  const sAppId = (typeof steamAppId === 'number' || /^\d+$/.test(String(steamAppId))) ? Number(steamAppId) : null;
 
-  // 1. Try SteamGridDB by gameId if distinct
-  if (gameId && String(gameId) !== String(numericId)) {
-    const endpoint = `/logos/game/${gameId}`;
+  // 1. Try SteamGridDB by steamGridId
+  if (sGridId) {
+    const endpoint = `/logos/game/${sGridId}`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const official = response.data.find(l => l.style === 'official' && !l.epilepsy) ||
@@ -405,8 +404,8 @@ export async function getGameLogo(gameId, steamAppId, gameTitle) {
   }
 
   // 2. Try SteamGridDB by steamAppId
-  if (numericId) {
-    const endpoint = `/logos/steam/${numericId}`;
+  if (sAppId) {
+    const endpoint = `/logos/steam/${sAppId}`;
     const response = await fetchSteamGrid(endpoint);
     if (response && response.success && response.data?.length > 0) {
       const official = response.data.find(l => l.style === 'official' && !l.epilepsy) ||
@@ -417,11 +416,10 @@ export async function getGameLogo(gameId, steamAppId, gameTitle) {
         url: official.url
       };
     }
-
-    // 3. Official Steam transparent PNG logo fallback
+    // Steam fallback (often transparent, but not always)
     return {
-      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/logo.png`,
-      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${numericId}/logo.png`
+      thumb: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sAppId}/logo.png`,
+      url: `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${sAppId}/logo.png`
     };
   }
 

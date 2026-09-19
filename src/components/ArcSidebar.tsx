@@ -9,12 +9,12 @@ import {
   Info,
   MonitorCheck
 } from 'lucide-react';
-import { GPUS, CPUS, RAM_OPTIONS, SYSTEM_PRESETS } from '../data/hardware.js';
-import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual.jsx';
-import { SettingsPopout } from './SettingsPopout.jsx';
-import { QuickBuildsPopout } from './QuickBuildsPopout.jsx';
-import { DetectSpecsModal } from './DetectSpecsModal.jsx';
+import { GPUS, CPUS, RAM_OPTIONS, SYSTEM_PRESETS } from '../data/hardware';
+import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual';
+import { SettingsPopout } from './SettingsPopout';
 import { CustomDropdown } from './CustomDropdown';
+import { FeatureInfoModal } from './FeatureInfoModal';
+import { DetectSpecsModal } from './DetectSpecsModal';
 
 export function ArcSidebar({
   // Navigation & Header props
@@ -112,12 +112,12 @@ export function ArcSidebar({
     }));
   }, []);
 
-  const upscalingOptions = useMemo(() => [
-    { value: 'none', label: 'Native (Disabled)' },
-    { value: 'quality', label: 'Quality (+20% FPS)' },
-    { value: 'balanced', label: 'Balanced (+35% FPS)' },
-    { value: 'performance', label: 'Performance (+50% FPS)' },
-    { value: 'ultra-performance', label: 'Ultra Performance (+70% FPS)' }
+  const upscalingOptions = React.useMemo(() => [
+    { value: 'none', label: '100% (Native)' },
+    { value: 'quality', label: '67%' },
+    { value: 'balanced', label: '58%' },
+    { value: 'performance', label: '50%' },
+    { value: 'ultra-performance', label: '33%' }
   ], []);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -125,6 +125,7 @@ export function ArcSidebar({
   const [saveToast, setSaveToast] = useState('');
   const [showRtInfo, setShowRtInfo] = useState(false);
   const [showPtInfo, setShowPtInfo] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [internalQuickBuildsOpen, setInternalQuickBuildsOpen] = useState(false);
   const isQuickBuildsOpen = isQuickBuildsOpenProp !== undefined ? isQuickBuildsOpenProp : internalQuickBuildsOpen;
   const setIsQuickBuildsOpen = (val) => {
@@ -303,146 +304,7 @@ export function ArcSidebar({
           <div className="arc-resize-line" />
         </div>
 
-        {/* ============================================================
-            1. ARC TOP WINDOW BAR (App Title, Home)
-            ============================================================ */}
-        <div className="arc-topbar">
-          <div className="arc-brand" onClick={() => { onGoHome && onGoHome(); if (onCloseMobile) onCloseMobile(); }} style={{ cursor: onGoHome ? 'pointer' : 'default' }}>
-            <span className="arc-brand-title" style={{ fontFamily: "'Chelsea Market', cursive" }}>Grace</span>
-          </div>
-
-          <div className="arc-topbar-actions">
-            {onGoHome && (
-              <button
-                type="button"
-                className="arc-topbar-btn arc-home-btn"
-                onClick={() => {
-                  onGoHome();
-                  if (onCloseMobile) onCloseMobile();
-                }}
-                title="Go to Home / Library"
-                aria-label="Go to Home / Library"
-              >
-                <Home size={15} />
-              </button>
-            )}
-            {onCloseMobile && (
-              <button
-                type="button"
-                className="arc-topbar-btn arc-mobile-close-btn"
-                onClick={onCloseMobile}
-                title="Close drawer"
-                aria-label="Close drawer"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* ============================================================
-            2. ARC COMMAND BAR (Add Game... Ctrl+Space)
-            ============================================================ */}
-        <div className="arc-command-section">
-          <button
-            id="open-steamgrid-search-btn"
-            className="arc-command-bar"
-            type="button"
-            onClick={() => onOpenSteamGridSearch && onOpenSteamGridSearch('')}
-            title="Search and add games (Ctrl+Space)"
-          >
-            <div className="arc-command-left">
-              <Plus size={14} strokeWidth={2.2} />
-              <span className="arc-command-text">Add game...</span>
-            </div>
-            <kbd className="arc-command-kbd">Ctrl+Space</kbd>
-          </button>
-        </div>
-
-        {/* ============================================================
-            3. ARC ACTIONS (Preferences & Quick Builds Popouts)
-            ============================================================ */}
-        <div className="arc-actions-row" style={{ flexDirection: 'column', gap: '8px' }}>
-          <div className="profile-popout-wrapper" style={{ width: '100%' }}>
-            <button
-              id="open-settings-btn"
-              className={`arc-settings-btn ${isPopoutOpen ? 'active' : ''}`}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsQuickBuildsOpen(false);
-                onTogglePopout();
-              }}
-              title="Preferences"
-              aria-label="Preferences"
-            >
-              <Settings size={15} strokeWidth={2} />
-              <span className="arc-settings-btn-text">
-                Preferences
-              </span>
-            </button>
-
-            <SettingsPopout
-              isOpen={isPopoutOpen}
-              onClose={onClosePopout}
-              userSettings={userSettings}
-              onUpdateSetting={onUpdateSetting}
-              specs={{ gpu, cpu, ram, resolution, preset, upscaling, rayTracing }}
-              profileName={profileName}
-              onProfileNameChange={onProfileNameChange}
-              onResetData={onResetData}
-            />
-          </div>
-
-          <div className="profile-popout-wrapper" style={{ width: '100%' }}>
-            <button
-              id="open-quickbuilds-btn"
-              className={`arc-settings-btn ${isQuickBuildsOpen ? 'active' : ''}`}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isPopoutOpen) onClosePopout();
-                setIsQuickBuildsOpen(prev => !prev);
-              }}
-              title="Quick Builds"
-              aria-label="Quick Builds"
-            >
-              <Cpu size={15} strokeWidth={2} />
-              <span className="arc-settings-btn-text">
-                Quick Builds
-              </span>
-            </button>
-
-            <QuickBuildsPopout
-              isOpen={isQuickBuildsOpen}
-              onClose={() => setIsQuickBuildsOpen(false)}
-              gpu={gpu}
-              cpu={cpu}
-              onApplyPreset={onApplyPreset}
-            />
-          </div>
-
-          <div className="profile-popout-wrapper" style={{ width: '100%' }}>
-            <button
-              id="open-detect-specs-btn"
-              className="arc-settings-btn"
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isPopoutOpen) onClosePopout();
-                setIsQuickBuildsOpen(false);
-                setIsDetectModalOpen(true);
-              }}
-              title="Detect My PC Specs"
-              aria-label="Detect My PC Specs"
-            >
-              <MonitorCheck size={15} strokeWidth={2} />
-              <span className="arc-settings-btn-text">
-                Detect My PC Specs
-              </span>
-            </button>
-          </div>
-        </div>
+        {/* Main rig configuration sidebar */}
 
         {/* ============================================================
             4. RIG CONFIGURATION SECTION HEADER & RESET
@@ -621,18 +483,27 @@ export function ArcSidebar({
 
           {/* Upscaling */}
           <div className="spec-group">
-            <label className="spec-label" htmlFor="upscaling-select">
+            <label className="spec-label">
               <span>Upscaling (DLSS / FSR / XeSS)</span>
             </label>
-            <CustomDropdown
-              id="upscaling-select"
-              className="spec-select"
-              value={upscaling}
-              searchable={false}
-              options={upscalingOptions}
-              onChange={(val) => onSelectUpscaling(val)}
-              ariaLabel="Select Upscaling Mode"
-            />
+            <div className="segmented-control" id="upscaling-control">
+              {['native', 'quality', 'balanced', 'performance'].map(u => (
+                <button
+                  key={u}
+                  type="button"
+                  className={`segmented-btn ${
+                    upscaling === u ||
+                    ((u === 'native' || u === 'off') && (upscaling === 'none' || upscaling === 'off' || upscaling === 'native'))
+                      ? 'active'
+                      : ''
+                  }`}
+                  data-upscaling={u}
+                  onClick={() => onSelectUpscaling(u)}
+                >
+                  {u === 'native' || u === 'off' ? 'Native' : u.charAt(0).toUpperCase() + u.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Ray Tracing */}
@@ -663,25 +534,6 @@ export function ArcSidebar({
                       >
                         <Info size={13} className="rt-info-icon" />
                       </button>
-                      <div className={`rt-info-tooltip ${showRtInfo ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
-                        <div className="rt-info-tooltip-header">
-                          <Info size={12} className="rt-info-tooltip-icon" />
-                          <span>No Hardware Ray Tracing</span>
-                        </div>
-                        <p className="rt-info-tooltip-msg">
-                          {gpu
-                            ? `${gpu.name} does not support hardware ray tracing.`
-                            : 'Select a graphics card with ray tracing support to enable this toggle.'}
-                        </p>
-                        <a
-                          href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rt-info-tooltip-link"
-                        >
-                          Learn what ray tracing is on Wikipedia ↗
-                        </a>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -735,25 +587,6 @@ export function ArcSidebar({
                       >
                         <Info size={13} className="pt-info-icon" />
                       </button>
-                      <div className={`pt-info-tooltip ${showPtInfo ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
-                        <div className="pt-info-tooltip-header">
-                          <Info size={12} className="pt-info-tooltip-icon" />
-                          <span>No Path Tracing Support</span>
-                        </div>
-                        <p className="pt-info-tooltip-msg">
-                          {gpu
-                            ? `${gpu.name} lacks hardware path tracing acceleration (RTX 3070+ / RTX 40 series recommended).`
-                            : 'Select a high-end graphics card with path tracing support to enable this toggle.'}
-                        </p>
-                        <a
-                          href="https://en.wikipedia.org/wiki/Path_tracing"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="pt-info-tooltip-link"
-                        >
-                          Learn what path tracing is on Wikipedia ↗
-                        </a>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -895,6 +728,25 @@ export function ArcSidebar({
           </div>
         )}
       </aside>
+
+      <FeatureInfoModal
+        isOpen={showRtInfo}
+        onClose={() => setShowRtInfo(false)}
+        title="No Hardware Ray Tracing"
+        message={gpu ? `${gpu.name} does not support hardware ray tracing.` : 'Select a graphics card with ray tracing support to enable this toggle.'}
+        wikiUrl="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
+        wikiText="Learn what ray tracing is on Wikipedia ↗"
+        isPt={false}
+      />
+      <FeatureInfoModal
+        isOpen={showPtInfo}
+        onClose={() => setShowPtInfo(false)}
+        title="No Path Tracing Support"
+        message={gpu ? `${gpu.name} lacks hardware path tracing acceleration (RTX 3070+ / RTX 40 series recommended).` : 'Select a high-end graphics card with path tracing support to enable this toggle.'}
+        wikiUrl="https://en.wikipedia.org/wiki/Path_tracing"
+        wikiText="Learn what path tracing is on Wikipedia ↗"
+        isPt={true}
+      />
 
       {isDetectModalOpen && (
         <DetectSpecsModal

@@ -1,0 +1,221 @@
+/* Custom Feedback Form Styles - Luxury Glassmorphic Design */
+.feedback-custom-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-right: 4px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+}
+
+.form-group label .required {
+  color: var(--ctp-red, #f38ba8);
+}
+
+.form-group label .optional {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--ctp-blue, #89b4fa);
+  box-shadow: 0 0 0 3px rgba(137, 180, 250, 0.2);
+}
+
+textarea.glass-input {
+  resize: vertical;
+  min-height: 75px;
+  line-height: 1.5;
+}
+
+/* CustomDropdown integration in Feedback Modal */
+.feedback-dropdown {
+  width: 100%;
+}
+
+.feedback-dropdown.custom-dropdown-trigger,
+.feedback-dropdown .spec-select-trigger,
+.feedback-dropdown button.trigger {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.feedback-dropdown.custom-dropdown-trigger:hover,
+.feedback-dropdown .spec-select-trigger:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.feedback-dropdown.custom-dropdown-trigger:focus,
+.feedback-dropdown.custom-dropdown-trigger.open,
+.feedback-dropdown .spec-select-trigger:focus,
+.feedback-dropdown .spec-select-trigger.open {
+  border-color: var(--ctp-blue, #89b4fa);
+  box-shadow: 0 0 0 3px rgba(137, 180, 250, 0.2);
+}
+
+/* Star Rating */
+.star-rating-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.2);
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.star-btn:hover {
+  transform: scale(1.2);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.star-btn.active {
+  color: #f9e2af; /* Catppuccin yellow */
+  filter: drop-shadow(0 0 10px rgba(249, 226, 175, 0.5));
+}
+
+.star-btn.active:hover {
+  transform: scale(1.2);
+}
+
+/* Glassmorphic Feedback Action Buttons */
+.feedback-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 9px 20px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feedback-btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.feedback-btn-cancel:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.feedback-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(137, 180, 250, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(137, 180, 250, 0.4);
+  box-shadow: 0 4px 18px rgba(137, 180, 250, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 9px 22px;
+  min-width: 140px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feedback-btn-submit:hover:not(:disabled) {
+  background: rgba(137, 180, 250, 0.3);
+  border-color: rgba(137, 180, 250, 0.65);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(137, 180, 250, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.feedback-btn-submit:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.feedback-btn-submit:disabled,
+.feedback-btn-cancel:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.error-message {
+  background: rgba(243, 139, 168, 0.1);
+  border: 1px solid rgba(243, 139, 168, 0.2);
+  color: #f38ba8;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

@@ -3,17 +3,18 @@
  * Requests are proxied through the host/server so credentials stay off the client bundle.
  */
 
+import { getCachedApi, setCachedApi } from './apiCache.js';
+
 const IGDB_PROXY_BASE = '/api/igdb';
 
-const igdbCache = new Map();
-
 /**
- * Core fetch helper for IGDB API
+ * Core fetch helper for IGDB API with dual-tier persistent cache.
  */
 async function fetchIGDB(endpoint, body) {
-  const cacheKey = `${endpoint}::${body}`;
-  if (igdbCache.has(cacheKey)) {
-    return igdbCache.get(cacheKey);
+  const cacheKey = `igdb_${endpoint}_${body}`;
+  const cached = getCachedApi(cacheKey);
+  if (cached !== null) {
+    return cached;
   }
 
   try {
@@ -32,7 +33,7 @@ async function fetchIGDB(endpoint, body) {
     }
 
     const data = await res.json();
-    igdbCache.set(cacheKey, data);
+    setCachedApi(cacheKey, data);
     return data;
   } catch (err) {
     console.warn('IGDB fetch error:', err);

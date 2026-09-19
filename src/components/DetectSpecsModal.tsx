@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Monitor,
@@ -7,12 +7,14 @@ import {
   MemoryStick,
   X,
   Check,
-  RefreshCw
+  RefreshCw,
+  GripHorizontal
 } from 'lucide-react';
-import { GPUS, CPUS, RAM_OPTIONS } from '../data/hardware.js';
-import { detectSystemHardware, DetectedHardware } from '../utils/hardwareDetector.js';
+import { GPUS, CPUS, RAM_OPTIONS } from '../data/hardware';
+import { detectSystemHardware, DetectedHardware } from '../utils/hardwareDetector';
 import { CustomDropdown } from './CustomDropdown';
 import { MaterialSpinner } from './MaterialSpinner';
+import { useDraggable } from '../hooks/useDraggable';
 
 interface DetectSpecsModalProps {
   isOpen: boolean;
@@ -26,14 +28,17 @@ interface DetectSpecsModalProps {
 }
 
 export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDraggable(dialogRef, '.modal-drag-handle', isOpen);
+
   const [isDetecting, setIsDetecting] = useState(true);
   const [progressText, setProgressText] = useState('Detecting hardware specs...');
   const [detected, setDetected] = useState<DetectedHardware | null>(null);
 
   // Editable selections before confirmation
   const [selectedResolution, setSelectedResolution] = useState<'1080p' | '1440p' | '4k'>('1080p');
-  const [selectedGpuId, setSelectedGpuId] = useState<string>('');
-  const [selectedCpuId, setSelectedCpuId] = useState<string>('');
+  const [selectedGpuId, setSelectedGpuId] = useState<string>(GPUS[0]?.id || 'rtx-4060');
+  const [selectedCpuId, setSelectedCpuId] = useState<string>(CPUS[0]?.id || 'r7-7800x3d');
   const [selectedRam, setSelectedRam] = useState<number>(16);
 
   const runDetection = useCallback(async () => {
@@ -44,12 +49,20 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
         setProgressText(step);
       });
       setDetected(data);
-      setSelectedResolution(data.matchedResolution);
-      setSelectedGpuId(data.matchedGpu.id);
-      setSelectedCpuId(data.matchedCpu.id);
-      setSelectedRam(data.matchedRam);
+      const res = data?.matchedResolution || '1080p';
+      const gpu = data?.matchedGpu || GPUS[0];
+      const cpu = data?.matchedCpu || CPUS[0];
+      const ram = data?.matchedRam || 16;
+      setSelectedResolution(res);
+      setSelectedGpuId(gpu.id);
+      setSelectedCpuId(cpu.id);
+      setSelectedRam(ram);
     } catch (err) {
       console.error('Failed to detect hardware:', err);
+      setSelectedResolution('1080p');
+      setSelectedGpuId(GPUS[0]?.id || 'rtx-4060');
+      setSelectedCpuId(CPUS[0]?.id || 'r7-7800x3d');
+      setSelectedRam(16);
     } finally {
       setIsDetecting(false);
     }
@@ -72,21 +85,6 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  const handleConfirm = () => {
-    const matchedGpu = GPUS.find(g => g.id === selectedGpuId) || detected?.matchedGpu || GPUS[0];
-    const matchedCpu = CPUS.find(c => c.id === selectedCpuId) || detected?.matchedCpu || CPUS[0];
-
-    onApply({
-      resolution: selectedResolution,
-      gpu: matchedGpu,
-      cpu: matchedCpu,
-      ram: selectedRam
-    });
-    onClose();
-  };
 
   const gpuGroups = React.useMemo(() => {
     return ['NVIDIA', 'AMD', 'Intel'].map((brand) => {
@@ -114,10 +112,26 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
     });
   }, []);
 
+  if (!isOpen) return null;
+
+  const handleConfirm = () => {
+    const matchedGpu = GPUS.find(g => g.id === selectedGpuId) || detected?.matchedGpu || GPUS[0];
+    const matchedCpu = CPUS.find(c => c.id === selectedCpuId) || detected?.matchedCpu || CPUS[0];
+
+    onApply({
+      resolution: selectedResolution,
+      gpu: matchedGpu,
+      cpu: matchedCpu,
+      ram: selectedRam
+    });
+    onClose();
+  };
+
   return createPortal(
     <div className="detect-modal-backdrop" onClick={onClose}>
       <div
         className="detect-modal-dialog"
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -135,14 +149,20 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
                 : 'Review detected specifications before inputting them to your rig.'}
             </p>
           </div>
-          <button
-            className="detect-modal-close"
-            onClick={onClose}
-            aria-label="Close dialog"
-            type="button"
-          >
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="modal-drag-handle" title="Drag to move" style={{ padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', borderRadius: '4px' }}>
+              <GripHorizontal size={16} />
+            </div>
+            <button
+              className="detect-modal-close"
+              onClick={onClose}
+              aria-label="Close dialog"
+              type="button"
+              style={{ position: 'relative' }}
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -270,7 +290,7 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
               type="button"
               className="detect-btn-apply"
               onClick={handleConfirm}
-              disabled={isDetecting || !detected}
+              disabled={isDetecting}
             >
               <Check size={15} />
               <span>Yes, Input in Sidebar</span>
@@ -283,3 +303,4 @@ export function DetectSpecsModal({ isOpen, onClose, onApply }: DetectSpecsModalP
     document.body
   );
 }
+

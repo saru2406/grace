@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, RotateCcw, ArrowRight } from 'lucide-react';
+import { X, RotateCcw, ArrowRight, GripHorizontal } from 'lucide-react';
 import { runAllApiDiagnostics } from '../services/apiDiagnostics.js';
+import { useDraggable } from '../hooks/useDraggable';
 
 interface SettingsPopoutProps {
   isOpen: boolean;
@@ -25,6 +26,9 @@ export function SettingsPopout({
 }: SettingsPopoutProps) {
   const [apiResults, setApiResults] = useState<any[]>([]);
   const [isCheckingApis, setIsCheckingApis] = useState(false);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDraggable(dialogRef, '.modal-drag-handle', isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -58,7 +62,8 @@ export function SettingsPopout({
   return createPortal(
     <div className="detect-modal-backdrop" onClick={onClose}>
       <div
-        className="detect-modal-dialog"
+        className="detect-modal-dialog settings-popout-dialog"
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -70,20 +75,26 @@ export function SettingsPopout({
               <h2 className="detect-modal-title">Preferences</h2>
               <p className="detect-modal-subtitle">Customize benchmark display and interface settings</p>
             </div>
-            <button
-              id="close-settings-popout"
-              className="detect-modal-close"
-              type="button"
-              onClick={onClose}
-              aria-label="Close dialog"
-            >
-              <X size={16} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="modal-drag-handle" title="Drag to move" style={{ padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', borderRadius: '4px' }}>
+                <GripHorizontal size={16} />
+              </div>
+              <button
+                id="close-settings-popout"
+                className="detect-modal-close"
+                type="button"
+                onClick={onClose}
+                aria-label="Close dialog"
+                style={{ position: 'relative' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
 
           {/* Modal Body */}
-          <div className="detect-modal-body">
-            <div className="detect-form-fields">
+          <div className="detect-modal-body settings-popout-body">
+            <div className="detect-form-fields settings-popout-fields">
               {/* Card FPS display */}
               <div className="detect-field">
                 <label className="detect-field-label">
@@ -155,7 +166,7 @@ export function SettingsPopout({
 
               {/* Toggles */}
               <div
-                className="detect-toggle-row"
+                className="detect-toggle-row settings-popout-toggle"
                 onClick={() => onUpdateSetting && onUpdateSetting('showBottlenecks', !showBottlenecks)}
               >
                 <div className="detect-toggle-info">
@@ -168,7 +179,7 @@ export function SettingsPopout({
               </div>
 
               <div
-                className="detect-toggle-row"
+                className="detect-toggle-row settings-popout-toggle"
                 onClick={() => onUpdateSetting && onUpdateSetting('ambientBlur', !ambientBlur)}
               >
                 <div className="detect-toggle-info">
@@ -181,7 +192,7 @@ export function SettingsPopout({
               </div>
 
               {/* Profile */}
-              <div className="detect-field">
+              <div className="detect-field settings-popout-profile">
                 <label className="detect-field-label" htmlFor="profile-name-input">
                   <span>Profile Tag</span>
                 </label>
@@ -266,3 +277,4 @@ export function SettingsPopout({
     document.body
   );
 }
+

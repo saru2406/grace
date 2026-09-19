@@ -57,33 +57,49 @@ export function QuickBuildsPopout({
           </div>
 
           {/* Modal Body */}
-          <div className="detect-modal-body">
-            <div className="quick-builds-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div className="detect-modal-body" style={{ padding: '0 16px 16px 16px' }}>
+            <div className="quick-builds-list" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {SYSTEM_PRESETS.map((p) => {
                 const isSelected = gpu?.id === p.gpuId && cpu?.id === p.cpuId;
                 return (
                   <button
                     key={p.id}
                     type="button"
-                    className={`detect-res-btn preset-chip ${isSelected ? 'active' : ''}`}
-                    title={`${p.badge} — ${p.gpuId.toUpperCase()} + ${p.cpuId.toUpperCase()}`}
+                    className={`detect-res-btn preset-list-item ${isSelected ? 'active' : ''}`}
+                    title={`${p.gpuId.toUpperCase()} + ${p.cpuId.toUpperCase()}`}
                     onClick={() => {
                       if (onApplyPreset) onApplyPreset(p);
                       onClose();
                     }}
                     style={{
                       width: '100%',
-                      padding: '12px 10px',
+                      padding: '12px 16px',
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '4px',
-                      borderRadius: '10px'
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      borderRadius: '8px',
+                      background: isSelected ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+                      border: isSelected ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      textAlign: 'left'
                     }}
                   >
-                    <span style={{ fontSize: '12px', fontWeight: 700 }}>{p.name}</span>
-                    <span style={{ fontSize: '10px', opacity: 0.6, fontWeight: 500 }}>{p.badge}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#fff' }}>{p.name}</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>{p.gpuId.replace('rtx-','RTX ').replace('rx-','RX ')} + {p.cpuId.toUpperCase()}</span>
+                    </div>
+                    <span style={{ 
+                      fontSize: '10px', 
+                      fontWeight: 700, 
+                      padding: '4px 8px', 
+                      background: 'rgba(255,255,255,0.1)', 
+                      borderRadius: '4px',
+                      color: 'rgba(255,255,255,0.8)'
+                    }}>
+                      {p.badge}
+                    </span>
                   </button>
                 );
               })}

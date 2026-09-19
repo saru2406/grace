@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, GripHorizontal } from 'lucide-react';
 import {
   SAMPLE_STEAM_PROFILES,
   resolveSteamAccount,
@@ -8,6 +8,7 @@ import {
   saveSteamApiKey
 } from '../services/authAndSteam.js';
 import { SteamProfileSkeleton } from './SkeletonLoader.jsx';
+import { useDraggable } from '../hooks/useDraggable';
 
 export function SteamImportModal({
   isOpen,
@@ -24,6 +25,10 @@ export function SteamImportModal({
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [resolvedResult, setResolvedResult] = useState(null);
+  const [hasConsent, setHasConsent] = useState(false);
+
+  const dialogRef = useRef(null);
+  useDraggable(dialogRef, '.modal-drag-handle', isOpen);
 
   // Quick Paste state
   const [pasteText, setPasteText] = useState('');
@@ -123,23 +128,30 @@ export function SteamImportModal({
   return (
     <div
       id="steam-import-modal"
-      className="modal-overlay open"
+      className="detect-modal-backdrop open"
+      style={{ zIndex: 9999 }}
       onClick={(e) => {
-        if (e.target.classList.contains('modal-overlay')) onClose();
+        if (e.target instanceof HTMLElement && e.target.classList.contains('detect-modal-backdrop')) onClose();
       }}
     >
-      <div className="modal-box modal-steam" style={{ maxWidth: '640px' }}>
-        <button
-          id="close-steam-modal"
-          className="modal-close-btn"
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X size={16} />
-        </button>
+      <div className="detect-modal-dialog modal-steam" ref={dialogRef} style={{ maxWidth: '640px', overflowY: 'auto' }}>
+        <div className="modal-header" style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '-6px', right: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="modal-drag-handle" title="Drag to move" style={{ padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', borderRadius: '4px' }}>
+              <GripHorizontal size={16} />
+            </div>
+            <button
+              id="close-steam-modal"
+              className="modal-close-btn"
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              style={{ position: 'relative', top: 'auto', right: 'auto' }}
+            >
+              <X size={16} />
+            </button>
+          </div>
 
-        <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#66c0f4' }}>
               <path d="M12 2a10 10 0 0 0-10 9.94c0 4.67 3.2 8.59 7.54 9.68l2.67-3.86a3.2 3.2 0 0 1-.21-1.16c0-.36.06-.7.17-1.02L8.5 13.2a3.7 3.7 0 0 1-1.3-.23l-3.32 1.38A9.97 9.97 0 0 0 12 22a10 10 0 0 0 10-10A10 10 0 0 0 12 2zm-4.8 12.3l2.65-1.1a3.67 3.67 0 0 1 2.35.53l-1.1 1.6a1.8 1.8 0 0 0-1.28.3c-.6.4-.85 1.18-.6 1.82l-2.02-3.15zm7.3 2.1a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4zm0-3.3a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2z"/>
@@ -243,12 +255,26 @@ export function SteamImportModal({
                     id="steam-fetch-btn"
                     className="btn-primary"
                     type="submit"
-                    disabled={isLoading || !steamQuery.trim()}
+                    disabled={isLoading || !steamQuery.trim() || !hasConsent}
                     style={{ minWidth: '85px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
                     {isLoading ? 'Fetching...' : 'Fetch'}
                   </button>
                 </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={hasConsent}
+                    onChange={(e) => setHasConsent(e.target.checked)}
+                    style={{ marginTop: '2px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>
+                    I consent to fetching and storing my public Steam data locally in my browser for the purpose of FPS estimation.
+                  </span>
+                </label>
               </div>
 
               {/* Steam Web API Key Option */}
@@ -524,4 +550,5 @@ export function SteamImportModal({
     </div>
   );
 }
+
 

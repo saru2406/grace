@@ -329,6 +329,18 @@ export const RAM_OPTIONS = [
 
 export const SYSTEM_PRESETS = [
   {
+    id: 'handheld',
+    name: 'Handheld / Mini PC',
+    badge: 'APU Gaming',
+    gpuId: 'radeon-890m',
+    cpuId: 'r-ai9-hx370',
+    ram: 16,
+    resolution: '1080p',
+    preset: 'low',
+    upscaling: 'performance',
+    rayTracing: false
+  },
+  {
     id: 'budget',
     name: 'Budget 1080p',
     badge: 'Budget Friendly',
@@ -341,6 +353,18 @@ export const SYSTEM_PRESETS = [
     rayTracing: false
   },
   {
+    id: 'console-killer',
+    name: 'Console Killer',
+    badge: 'Value 1440p',
+    gpuId: 'rx-7600-xt',
+    cpuId: 'r5-7600',
+    ram: 16,
+    resolution: '1440p',
+    preset: 'medium',
+    upscaling: 'quality',
+    rayTracing: false
+  },
+  {
     id: 'midrange',
     name: '1440p Sweet Spot',
     badge: 'Most Popular',
@@ -348,6 +372,18 @@ export const SYSTEM_PRESETS = [
     cpuId: 'r5-7600x',
     ram: 32,
     resolution: '1440p',
+    preset: 'high',
+    upscaling: 'quality',
+    rayTracing: false
+  },
+  {
+    id: 'amd-all-team',
+    name: 'Team Red Enthusiast',
+    badge: 'AMD Advantage',
+    gpuId: 'rx-7900-xtx',
+    cpuId: 'r7-7800x3d',
+    ram: 32,
+    resolution: '4k',
     preset: 'high',
     upscaling: 'quality',
     rayTracing: false

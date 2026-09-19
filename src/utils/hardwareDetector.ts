@@ -1,4 +1,4 @@
-import { GPUS, CPUS } from '../data/hardware.js';
+import { GPUS, CPUS } from '../data/hardware';
 
 export interface DetectedHardware {
   // Raw readings
@@ -243,32 +243,50 @@ function detectRam(): { raw: string; matched: number } {
  * Public detection function with simulated async step delay for smooth UI experience.
  */
 export async function detectSystemHardware(onProgress?: (step: string) => void): Promise<DetectedHardware> {
-  if (onProgress) onProgress('Detecting display resolution...');
-  await new Promise(resolve => setTimeout(resolve, 120));
-  const res = detectResolution();
+  try {
+    if (onProgress) onProgress('Detecting display resolution...');
+    await new Promise(resolve => setTimeout(resolve, 120));
+    const res = detectResolution();
 
-  if (onProgress) onProgress('Querying graphics card...');
-  await new Promise(resolve => setTimeout(resolve, 140));
-  const gpu = detectGpu();
+    if (onProgress) onProgress('Querying graphics card...');
+    await new Promise(resolve => setTimeout(resolve, 140));
+    const gpu = detectGpu();
 
-  if (onProgress) onProgress('Checking processor cores...');
-  await new Promise(resolve => setTimeout(resolve, 120));
-  const isLaptop = gpu.matched.id.includes('laptop') || gpu.matched.tier.toLowerCase().includes('laptop');
-  const cpu = detectCpu(isLaptop);
+    if (onProgress) onProgress('Checking processor cores...');
+    await new Promise(resolve => setTimeout(resolve, 120));
+    const isLaptop = Boolean(
+      gpu?.matched?.id?.includes('laptop') ||
+      (gpu?.matched?.tier && String(gpu.matched.tier).toLowerCase().includes('laptop'))
+    );
+    const cpu = detectCpu(isLaptop);
 
-  if (onProgress) onProgress('Finalizing specifications...');
-  await new Promise(resolve => setTimeout(resolve, 80));
-  const ram = detectRam();
+    if (onProgress) onProgress('Finalizing specifications...');
+    await new Promise(resolve => setTimeout(resolve, 80));
+    const ram = detectRam();
 
-  return {
-    rawResolution: res.raw,
-    rawGpu: gpu.raw,
-    gpuDetectionReliable: gpu.reliable,
-    rawCpu: cpu.raw,
-    rawRam: ram.raw,
-    matchedResolution: res.matched,
-    matchedGpu: gpu.matched,
-    matchedCpu: cpu.matched,
-    matchedRam: ram.matched
-  };
+    return {
+      rawResolution: res.raw || '1920 × 1080',
+      rawGpu: gpu.raw || 'Standard Display Adapter',
+      gpuDetectionReliable: Boolean(gpu.reliable),
+      rawCpu: cpu.raw || 'Standard Processor',
+      rawRam: ram.raw || '16 GB',
+      matchedResolution: res.matched || '1080p',
+      matchedGpu: gpu.matched || GPUS[0],
+      matchedCpu: cpu.matched || CPUS[0],
+      matchedRam: ram.matched || 16
+    };
+  } catch (err) {
+    console.warn('Hardware detection error, using safe fallback defaults:', err);
+    return {
+      rawResolution: '1920 × 1080',
+      rawGpu: 'Standard Graphics Adapter',
+      gpuDetectionReliable: false,
+      rawCpu: 'Standard 8-Core Processor',
+      rawRam: '16 GB',
+      matchedResolution: '1080p',
+      matchedGpu: GPUS[0],
+      matchedCpu: CPUS[0],
+      matchedRam: 16
+    };
+  }
 }

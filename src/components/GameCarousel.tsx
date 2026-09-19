@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowRight, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { GAME_METADATA } from "../data/gameMetadata.js";
 import { getGameWideCover, getGameHero } from "../services/steamGrid.js";
-import { getSystemPeriod, getGameTrendingScore } from "../services/systemTrending.js";
 import { DEFAULT_PLACEHOLDER_COVER } from "../services/gameAssets.js";
 import { calculateFps } from "../services/fpsEngine.js";
 import { triggerHeartBurst } from "../utils/heartBurst.js";
@@ -17,24 +16,20 @@ export function GameCarousel({
   onToggleFavorite,
   favoriteIds = [],
   transitioningGameId = null
-}) {
-  const systemPeriod = React.useMemo(() => getSystemPeriod(), []);
-
+}: any) {
   const featuredGames = React.useMemo(() => {
     if (!games || games.length === 0) return [];
 
-    // Dynamically score games based on the host system year & month
-    const scored = [...games].map(game => ({
-      game,
-      score: getGameTrendingScore(game, systemPeriod.year, systemPeriod.month)
-    }));
+    // Randomized / shuffled games pool
+    const copy = [...games];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
 
-    // Sort descending by recency to system date and popularity
-    scored.sort((a, b) => b.score - a.score);
-
-    // Pick top 8 dynamic trending titles
-    return scored.slice(0, 8).map(s => s.game);
-  }, [games, systemPeriod]);
+    // Pick 10 diverse shuffled titles
+    return copy.slice(0, 10);
+  }, [games]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);

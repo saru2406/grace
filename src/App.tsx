@@ -10,6 +10,7 @@ import { searchGamesWithContext } from './services/gameSearch.js';
 
 import { AmbientBackdrop } from './components/AmbientBackdrop.jsx';
 import { ArcSidebar } from './components/ArcSidebar.jsx';
+import { TopNavBar } from './components/TopNavBar.jsx';
 import { SystemStatusBar } from './components/SystemStatusBar.jsx';
 import { GameCarousel } from './components/GameCarousel.jsx';
 import { GamesGrid } from './components/GamesGrid.jsx';
@@ -17,6 +18,7 @@ import { Footer } from './components/Footer.jsx';
 import { SplashScreen } from './components/SplashScreen.jsx';
 import { GameDetailPageSkeleton } from './components/SkeletonLoader.jsx';
 import { MobileBottomNav } from './components/MobileBottomNav.jsx';
+import { CookieBanner } from './components/CookieBanner.jsx';
 
 // Code-split heavy modals and detail page for instant initial load
 const GameDetailPage = React.lazy(() => import('./components/GameDetailPage.jsx').then(m => ({ default: m.GameDetailPage })));
@@ -468,7 +470,8 @@ export function App() {
       resolution: preset.resolution,
       preset: preset.preset,
       upscaling: preset.upscaling,
-      rayTracing: canRt ? Boolean(preset.rayTracing) : false
+      rayTracing: canRt ? Boolean(preset.rayTracing) : false,
+      pathTracing: false
     });
     setGpuBrandFilter('all');
     setCpuBrandFilter('all');
@@ -516,7 +519,8 @@ export function App() {
       resolution: '1440p',
       preset: 'high',
       upscaling: 'quality',
-      rayTracing: false
+      rayTracing: false,
+      pathTracing: false
     });
     setGpuBrandFilter('all');
     setCpuBrandFilter('all');
@@ -741,22 +745,40 @@ export function App() {
       {appLoading && <SplashScreen isFadingOut={isSplashFading} />}
       <AmbientBackdrop bgUrl={currentAmbientBg} isActive={isAmbientActive} />
 
-      <div className={`app-shell ${isMobile ? 'mobile-device' : ''}`}>
-        {/* Arc Unified Left Sidebar */}
-        <ArcSidebar
-          profileName={profileName}
+      <div className={`app-shell layout-top-nav ${isMobile ? 'mobile-device' : ''}`}>
+        
+        <TopNavBar
           onGoHome={handleBackToLibrary}
-          onOpenSteamGridSearch={(q) => {
+          onOpenSteamGridSearch={(q: string) => {
             setSteamGridSearchInitialQuery(q || '');
             setIsSteamGridSearchOpen(true);
           }}
-          isPopoutOpen={isPopoutOpen}
-          onTogglePopout={() => setIsPopoutOpen(prev => !prev)}
-          onClosePopout={() => setIsPopoutOpen(false)}
+          profileName={profileName}
           onProfileNameChange={setProfileName}
           onResetData={handleResetAllData}
           userSettings={userSettings}
           onUpdateSetting={handleUpdateSetting}
+          specs={specs}
+          onApplyPreset={handleApplyPreset}
+          onApplyDetectedSpecs={(detected) => {
+            if (!detected) return;
+            setSpecs(prev => ({
+              ...prev,
+              resolution: detected.resolution || prev.resolution,
+              gpu: detected.gpu || prev.gpu,
+              cpu: detected.cpu || prev.cpu,
+              ram: detected.ram || prev.ram,
+              rayTracing: (detected.gpu && detected.gpu.rtScore > 0) ? prev.rayTracing : false,
+              pathTracing: (detected.gpu && detected.gpu.rtScore >= 60) ? prev.pathTracing : false
+            }));
+            if (detected.gpu) setGpuBrandFilter('all');
+            if (detected.cpu) setCpuBrandFilter('all');
+          }}
+        />
+
+        <div className="app-body">
+          {/* Arc Unified Left Sidebar */}
+          <ArcSidebar
           gpu={specs.gpu}
           cpu={specs.cpu}
           ram={specs.ram}
@@ -939,7 +961,6 @@ export function App() {
                   onSelectGame={handleSelectGame}
                   onToggleFavorite={handleToggleFavorite}
                   onDeleteGame={handleDeleteGame}
-                  transitioningGameId={transitioningGameId}
                   favoriteIds={favoriteGameIds}
                   onOpenSearchModal={(q) => {
                     setSteamGridSearchInitialQuery(q || '');
@@ -956,6 +977,7 @@ export function App() {
           <Footer />
         </div>
       </div>
+      </div>
 
       {/* Mobile Bottom Navigation Bar */}
       <MobileBottomNav
@@ -963,6 +985,9 @@ export function App() {
         onSelectTab={handleSelectMobileTab}
         isRigConfigured={isConfigured}
       />
+
+      {/* Analytics & Compliance */}
+      <CookieBanner />
 
       {isSteamGridSearchOpen && (
         <React.Suspense fallback={null}>

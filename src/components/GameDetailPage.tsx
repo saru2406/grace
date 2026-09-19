@@ -4,6 +4,7 @@ import {
   Gauge, Zap, Activity, Layers, AlertTriangle, CheckCircle, XCircle, Info, Shield, ExternalLink
 } from "lucide-react";
 import { calculateFps, calculateResolutionComparison } from "../services/fpsEngine.js";
+import { fetchInternetBenchmarks, BenchmarkData } from "../services/benchmarkService.js";
 import { getGameHero, getGameWideCover, getGameLogo } from "../services/steamGrid.js";
 import { getGameMetadata, getGameReleaseInfo } from "../data/gameMetadata.js";
 import { DEFAULT_PLACEHOLDER_COVER } from "../services/gameAssets.js";
@@ -21,6 +22,8 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
   const [visible, setVisible] = useState(false);
   const [igdbData, setIgdbData] = useState(null);
   const [igdbLoading, setIgdbLoading] = useState(true);
+  const [benchmarkData, setBenchmarkData] = useState<BenchmarkData | null>(null);
+  const [benchLoading, setBenchLoading] = useState(true);
 
   // Trigger entrance animation on mount
   useEffect(() => {
@@ -103,6 +106,25 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
     return () => { cancelled = true; };
   }, [game]);
 
+  // Fetch Internet Benchmarks
+  useEffect(() => {
+    if (!game) return;
+    let cancelled = false;
+    setBenchLoading(true);
+    setBenchmarkData(null);
+    fetchInternetBenchmarks(game.id)
+      .then(data => {
+        if (!cancelled) {
+          setBenchmarkData(data);
+          setBenchLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setBenchLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [game]);
+
   if (!game) return null;
 
   const metadata = getGameMetadata(game);
@@ -110,8 +132,8 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
   const showIgdbSkeleton = igdbLoading && !igdbData;
   const steamRatingDisplay = igdbData?.igdbRating != null ? `${igdbData.igdbRating}%` : metadata.steamRating;
   const isConfigured = Boolean(gpu && cpu);
-  const fpsData = calculateFps(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, pathTracing, upscaling });
-  const resComparison = calculateResolutionComparison(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, pathTracing, upscaling });
+  const fpsData = calculateFps(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, pathTracing, upscaling }, benchmarkData);
+  const resComparison = calculateResolutionComparison(game, gpu, cpu, ram || 16, { resolution, preset, rayTracing, pathTracing, upscaling }, benchmarkData);
 
   let fpsColor = "var(--ctp-subtext0)";
   if (isConfigured) {
@@ -368,9 +390,25 @@ export function GameDetailPage({ game, gpu, cpu, ram, resolution, preset, upscal
 
           {/* FPS Graph */}
           <section className="gdp-section gdp-fps-graph-section">
-            <div className="gdp-section-title-row">
-              <Activity size={15} />
-              <span>FPS Graph</span>
+            <div className="gdp-section-title-row" style={{ alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Monitor size={14} className="gdp-section-icon" />
+                <h3 className="detail-section-title">Performance Profiler</h3>
+              </div>
+              
+              {benchLoading && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 12, marginLeft: 'auto' }}>
+                   <div className="spinner-loader" style={{ width: 12, height: 12, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#66c0f4', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                   <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Fetching Benchmarks...</span>
+                </div>
+              )}
+              
+              {!benchLoading && fpsData.isAnchored && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'rgba(102, 192, 244, 0.1)', borderRadius: 12, border: '1px solid rgba(102, 192, 244, 0.2)', marginLeft: 'auto' }} title="These metrics are scaled from highly accurate, real-world internet benchmarks.">
+                   <Shield size={12} color="#66c0f4" />
+                   <span style={{ fontSize: 10, color: '#66c0f4', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Verified Data</span>
+                </div>
+              )}
             </div>
 
             <div className="fps-graph-wrapper">

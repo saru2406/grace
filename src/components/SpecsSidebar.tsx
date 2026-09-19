@@ -1,8 +1,9 @@
 import React from 'react';
-import { Info } from 'lucide-react';
+import { Info, X } from 'lucide-react';
 import { GPUS, CPUS, RAM_OPTIONS, SYSTEM_PRESETS } from '../data/hardware.js';
 import { GpuVisual, CpuVisual, RamVisual } from './ComponentVisual.jsx';
 import { CustomDropdown } from './CustomDropdown';
+import { FeatureInfoModal } from './FeatureInfoModal';
 
 export function SpecsSidebar({
   gpu,
@@ -75,11 +76,11 @@ export function SpecsSidebar({
   }, []);
 
   const upscalingOptions = React.useMemo(() => [
-    { value: 'none', label: 'Native (Disabled)' },
-    { value: 'quality', label: 'Quality (+20% FPS)' },
-    { value: 'balanced', label: 'Balanced (+35% FPS)' },
-    { value: 'performance', label: 'Performance (+50% FPS)' },
-    { value: 'ultra-performance', label: 'Ultra Performance (+70% FPS)' }
+    { value: 'none', label: '100% (Native)' },
+    { value: 'quality', label: '67%' },
+    { value: 'balanced', label: '58%' },
+    { value: 'performance', label: '50%' },
+    { value: 'ultra-performance', label: '33%' }
   ], []);
 
   const [isSaving, setIsSaving] = React.useState(false);
@@ -180,7 +181,7 @@ export function SpecsSidebar({
           <span>Saved Rigs</span>
           <span className="spec-badge">{savedRigTemplates.length}</span>
         </label>
-        
+
         <div className="saved-rigs-list" id="saved-rig-templates-container">
           {savedRigTemplates.length === 0 ? (
             <div className="empty-template-note">
@@ -249,19 +250,20 @@ export function SpecsSidebar({
 
         <div className="spec-row-with-preview">
           <div className="spec-inputs-col">
-            <div className="brand-filter-pills" id="gpu-brand-filter">
-              {['all', 'NVIDIA', 'AMD', 'Intel'].map(brand => (
-                <button
-                  key={brand}
-                  type="button"
-                  className={`brand-pill ${gpuBrandFilter === brand ? 'active' : ''}`}
-                  data-brand={brand}
-                  onClick={() => onSetGpuBrandFilter(brand)}
-                >
-                  {brand === 'all' ? 'All' : brand}
-                </button>
-              ))}
-            </div>
+            <CustomDropdown
+              id="gpu-brand-filter"
+              className="spec-select"
+              value={gpuBrandFilter}
+              searchable={false}
+              options={[
+                { value: 'all', label: 'All Brands' },
+                { value: 'NVIDIA', label: 'NVIDIA' },
+                { value: 'AMD', label: 'AMD' },
+                { value: 'Intel', label: 'Intel' }
+              ]}
+              onChange={(val) => onSetGpuBrandFilter(val)}
+              ariaLabel="Filter Graphics Card Brand"
+            />
 
             <CustomDropdown
               id="gpu-select"
@@ -292,19 +294,19 @@ export function SpecsSidebar({
 
         <div className="spec-row-with-preview">
           <div className="spec-inputs-col">
-            <div className="brand-filter-pills" id="cpu-brand-filter">
-              {['all', 'AMD', 'Intel'].map(brand => (
-                <button
-                  key={brand}
-                  type="button"
-                  className={`brand-pill ${cpuBrandFilter === brand ? 'active' : ''}`}
-                  data-brand={brand}
-                  onClick={() => onSetCpuBrandFilter(brand)}
-                >
-                  {brand === 'all' ? 'All' : brand}
-                </button>
-              ))}
-            </div>
+            <CustomDropdown
+              id="cpu-brand-filter"
+              className="spec-select"
+              value={cpuBrandFilter}
+              searchable={false}
+              options={[
+                { value: 'all', label: 'All Brands' },
+                { value: 'AMD', label: 'AMD' },
+                { value: 'Intel', label: 'Intel' }
+              ]}
+              onChange={(val) => onSetCpuBrandFilter(val)}
+              ariaLabel="Filter Processor Brand"
+            />
 
             <CustomDropdown
               id="cpu-select"
@@ -358,52 +360,55 @@ export function SpecsSidebar({
       {/* Resolution Segmented Control */}
       <div className="spec-group">
         <label className="spec-label">Target Resolution</label>
-        <div className="segmented-control" id="resolution-control">
-          {['1080p', '1440p', '4k'].map(res => (
-            <button
-              key={res}
-              type="button"
-              className={`segmented-btn ${resolution === res ? 'active' : ''}`}
-              data-res={res}
-              onClick={() => onSelectResolution(res)}
-            >
-              {res === '4k' ? '4K UHD' : res}
-            </button>
-          ))}
-        </div>
+        <CustomDropdown
+          id="resolution-select"
+          className="spec-select"
+          value={resolution}
+          searchable={false}
+          options={[
+            { value: '1080p', label: '1080p' },
+            { value: '1440p', label: '1440p' },
+            { value: '4k', label: '4K UHD' }
+          ]}
+          onChange={(val) => onSelectResolution(val)}
+        />
       </div>
 
       {/* Graphics Preset */}
       <div className="spec-group">
         <label className="spec-label">Graphics Preset</label>
-        <div className="segmented-control" id="preset-control">
-          {['low', 'medium', 'high', 'ultra'].map(p => (
-            <button
-              key={p}
-              type="button"
-              className={`segmented-btn ${preset === p ? 'active' : ''}`}
-              data-preset={p}
-              onClick={() => onSelectPreset(p)}
-            >
-              {p.charAt(0).toUpperCase() + p.slice(1)}
-            </button>
-          ))}
-        </div>
+        <CustomDropdown
+          id="preset-select"
+          className="spec-select"
+          value={preset}
+          searchable={false}
+          options={[
+            { value: 'low', label: 'Low' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'high', label: 'High' },
+            { value: 'ultra', label: 'Ultra' }
+          ]}
+          onChange={(val) => onSelectPreset(val)}
+        />
       </div>
 
       {/* Upscaling */}
       <div className="spec-group">
-        <label className="spec-label" htmlFor="upscaling-select">
+        <label className="spec-label">
           <span>Upscaling (DLSS / FSR / XeSS)</span>
         </label>
         <CustomDropdown
           id="upscaling-select"
           className="spec-select"
-          value={upscaling}
+          value={upscaling === 'none' || upscaling === 'off' ? 'native' : upscaling}
           searchable={false}
-          options={upscalingOptions}
+          options={[
+            { value: 'native', label: 'Native' },
+            { value: 'quality', label: 'Quality' },
+            { value: 'balanced', label: 'Balanced' },
+            { value: 'performance', label: 'Performance' }
+          ]}
           onChange={(val) => onSelectUpscaling(val)}
-          ariaLabel="Select Upscaling Mode"
         />
       </div>
 
@@ -415,7 +420,7 @@ export function SpecsSidebar({
             onClick={(e) => {
               if (!supportsRt) {
                 e.preventDefault();
-                setShowRtInfo(prev => !prev);
+                setShowRtInfo(true);
               }
             }}
           >
@@ -430,30 +435,19 @@ export function SpecsSidebar({
                     aria-label="Ray tracing unsupported."
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowRtInfo(prev => !prev);
+                      setShowRtInfo(true);
                     }}
                   >
                     <Info size={13} className="rt-info-icon" />
                   </button>
-                  <div className={`rt-info-tooltip ${showRtInfo ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
-                    <div className="rt-info-tooltip-header">
-                      <Info size={12} className="rt-info-tooltip-icon" />
-                      <span>No Hardware Ray Tracing</span>
-                    </div>
-                    <p className="rt-info-tooltip-msg">
-                      {gpu
-                        ? `${gpu.name} does not support hardware ray tracing.`
-                        : 'Select a graphics card with ray tracing support to enable this toggle.'}
-                    </p>
-                    <a
-                      href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rt-info-tooltip-link"
-                    >
-                      Learn what ray tracing is on Wikipedia ↗
-                    </a>
-                  </div>
+                  <FeatureInfoModal
+                    isOpen={showRtInfo}
+                    onClose={() => setShowRtInfo(false)}
+                    title="No Hardware Ray Tracing"
+                    message={gpu ? `${gpu.name} does not support hardware ray tracing.` : 'Select a graphics card with ray tracing support to enable this toggle.'}
+                    wikiUrl="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)"
+                    wikiText="Learn what ray tracing is on Wikipedia ↗"
+                  />
                 </div>
               )}
             </div>
@@ -487,7 +481,7 @@ export function SpecsSidebar({
             onClick={(e) => {
               if (!supportsPt) {
                 e.preventDefault();
-                setShowPtInfo(prev => !prev);
+                setShowPtInfo(true);
               }
             }}
           >
@@ -502,30 +496,20 @@ export function SpecsSidebar({
                     aria-label="Path tracing unsupported."
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowPtInfo(prev => !prev);
+                      setShowPtInfo(true);
                     }}
                   >
                     <Info size={13} className="pt-info-icon" />
                   </button>
-                  <div className={`pt-info-tooltip ${showPtInfo ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
-                    <div className="pt-info-tooltip-header">
-                      <Info size={12} className="pt-info-tooltip-icon" />
-                      <span>No Path Tracing Support</span>
-                    </div>
-                    <p className="pt-info-tooltip-msg">
-                      {gpu
-                        ? `${gpu.name} lacks hardware path tracing acceleration (RTX 3070+ / RTX 40 series recommended).`
-                        : 'Select a high-end graphics card with path tracing support to enable this toggle.'}
-                    </p>
-                    <a
-                      href="https://en.wikipedia.org/wiki/Path_tracing"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="pt-info-tooltip-link"
-                    >
-                      Learn what path tracing is on Wikipedia ↗
-                    </a>
-                  </div>
+                  <FeatureInfoModal
+                    isOpen={showPtInfo}
+                    onClose={() => setShowPtInfo(false)}
+                    title="No Path Tracing Support"
+                    message={gpu ? `${gpu.name} lacks hardware path tracing acceleration (RTX 3070+ / RTX 40 series recommended).` : 'Select a high-end graphics card with path tracing support to enable this toggle.'}
+                    wikiUrl="https://en.wikipedia.org/wiki/Path_tracing"
+                    wikiText="Learn what path tracing is on Wikipedia ↗"
+                    isPt={true}
+                  />
                 </div>
               )}
             </div>
